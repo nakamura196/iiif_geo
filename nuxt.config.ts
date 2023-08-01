@@ -4,4 +4,4 @@ export default defineNuxtConfig({
   app: {
     baseURL: "/iiif_geo",
   },
-})
+});

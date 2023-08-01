@@ -5,6 +5,8 @@ const { canvas, featuresMap } = useSettings();
 
 const baseURL = useNuxtApp().$config.app.baseURL;
 
+const ok = ref(false)
+
 onMounted(async () => {
   height.value = window.innerHeight;
 
@@ -26,15 +28,20 @@ onMounted(async () => {
 
   canvas.value = data;
   featuresMap.value = _featuresMap;
+
+  ok.value = true
 });
 </script>
 <template>
   <div :style="`height: ${height * 0.99}px`" v-if="height > 0">
     <div style="display: inline-block; width: 50%; height: 100%">
-      <Map></Map>
+      <Map v-if="ok"></Map>
     </div>
-    <div style="display: inline-block; width: 50%; float: right;" :style="`height: ${100}%`">
-      <Osd></Osd>
+    <div
+      style="display: inline-block; width: 50%; float: right"
+      :style="`height: ${100}%`"
+    >
+      <Osd v-if="ok"></Osd>
     </div>
   </div>
 </template>

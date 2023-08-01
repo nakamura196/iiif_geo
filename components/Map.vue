@@ -26,12 +26,14 @@ const props = withDefaults(defineProps<PropType>(), {
       attribution: "国土地理院ウェブサイト",
       url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
     },
+    /*
     {
       name: "OpenStreetMap",
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     },
+    */
   ],
   coordinates: () => [],
   popup: true,
@@ -42,59 +44,53 @@ const center_ = ref(props.center);
 
 const { canvas, action } = useSettings();
 
-watch(
-  () => canvas.value,
-  (value) => {
-    if(!canvas.value.items) {
-        return
+onMounted(() => {
+  L.Map.addInitHook(function () {
+    const markerCluster = L.markerClusterGroup({
+      removeOutsideVisibleBounds: true,
+      chunkedLoading: true,
+    }).addTo(this);
+
+    let markers = [];
+
+    let x = 0;
+    let y = 0;
+
+    const features = canvas.value.annotations[0].items[0].body.features;
+
+    console.log({ features });
+
+    for (const feature of features) {
+      const coordinates = feature.geometry.coordinates;
+      const marker = L.marker(coordinates);
+
+      marker.on("click", () => {
+        const id = feature.id;
+
+        action.value = {
+          type: "map",
+          id,
+        };
+      });
+
+      x += coordinates[0];
+      y += coordinates[1];
+
+      const popup = L.popup();
+      marker.bindPopup(popup);
+
+      popup.setContent(
+        `<a target="_blank" href="#${feature.id}">${feature.label}</a>`
+      );
+
+      markers.push(marker);
     }
-    L.Map.addInitHook(function () {
-      const markerCluster = L.markerClusterGroup({
-        removeOutsideVisibleBounds: true,
-        chunkedLoading: true,
-      }).addTo(this);
 
-      let markers = [];
+    center_.value = [x / features.length, y / features.length];
 
-      let x = 0;
-      let y = 0;
-
-      const features = canvas.value.annotations[0].items[0].body.features;
-
-      for (const feature of features) {
-        const coordinates = feature.geometry.coordinates;
-        const marker = L.marker(coordinates);
-
-        marker.on("click", () => {
-          const id = feature.id;
-
-          action.value = {
-            type: "map",
-            id,
-          };
-        });
-
-        x += coordinates[0];
-        y += coordinates[1];
-
-        const popup = L.popup();
-        marker.bindPopup(popup);
-
-        popup.setContent(
-          `<a target="_blank" href="#${feature.id}">${feature.label}</a>`
-        );
-
-        markers.push(marker);
-      }
-
-      center_.value = [x / features.length, y / features.length];
-
-      markerCluster.addLayers(markers);
-    });
-  }
-);
-
-onMounted(() => {});
+    markerCluster.addLayers(markers);
+  });
+});
 </script>
 
 <template>
