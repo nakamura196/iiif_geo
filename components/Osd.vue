@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { mdiPlus, mdiMinus, mdiHome, mdiFullscreen, mdiRestore } from "@mdi/js";
+
 const { $OpenSeadragon } = useNuxtApp();
 
 const { canvas, featuresMap, action } = useSettings();
@@ -8,9 +10,6 @@ let viewer: any = null;
 watch(
   () => action.value,
   (value) => {
-    console.log("watch action");
-    console.log({ value });
-
     if (value.type === "map") {
       const feature = featuresMap.value[value.id];
 
@@ -30,8 +29,6 @@ watch(
 
 // async
 onMounted(async () => {
-  console.log("watch canvas");
-
   if (!canvas.value.items) {
     return;
   }
@@ -47,6 +44,12 @@ onMounted(async () => {
       // info
       infoJson,
     ],
+    zoomInButton: "zoom-in",
+    zoomOutButton: "zoom-out",
+    homeButton: "home",
+    fullPageButton: "full-page",
+    nextButton: "next",
+    previousButton: "previous",
   };
 
   viewer = $OpenSeadragon(config);
@@ -57,13 +60,12 @@ const rotate = ref(0);
 watch(
   () => rotate.value,
   (value) => {
-    console.log("watch route");
     viewer.viewport.setRotation(-1 * value);
   }
 );
 
 const update = () => {
-  rotate.value = Number((document.querySelector("input") as any).value);
+  rotate.value = rotate2.value; // Number((document.querySelector("input") as any).value);
 };
 
 const init = () => {
@@ -76,6 +78,46 @@ const rotate2 = ref(0);
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
     <div style="padding: 8px; flex: 0 0 auto">
+      <v-btn class="ma-1" size="small" icon id="zoom-in">
+        <v-icon>{{ mdiPlus }}</v-icon>
+      </v-btn>
+      <v-btn class="ma-1" size="small" icon id="zoom-out">
+        <v-icon>{{ mdiMinus }}</v-icon>
+      </v-btn>
+      <v-btn class="ma-1" size="small" icon id="home">
+        <v-icon>{{ mdiHome }}</v-icon>
+      </v-btn>
+      <v-btn class="ma-1" size="small" icon id="full-page">
+        <v-icon>{{ mdiFullscreen }}</v-icon>
+      </v-btn>
+      <v-btn class="ma-1" size="small" icon @click="init()">
+        <v-icon>{{ mdiRestore }}</v-icon>
+      </v-btn>
+
+      <v-slider
+        v-model="rotate2"
+        :max="180"
+        :step="1"
+        :min="-180"
+        label="角度"
+        hide-details
+        class="ma-1"
+        @update:modelValue="update()"
+      >
+        <template v-slot:append>
+          <v-text-field
+            v-model="rotate2"
+            type="number"
+            style="width: 100px"
+            density="compact"
+            hide-details
+            variant="outlined"
+            @update:modelValue="update()"
+          ></v-text-field>
+        </template>
+      </v-slider>
+
+      <!-- 
       <input
         type="range"
         step="1"
@@ -90,6 +132,7 @@ const rotate2 = ref(0);
       </button>
 
       <span> 角度: {{ rotate2 }} </span>
+      -->
     </div>
 
     <div

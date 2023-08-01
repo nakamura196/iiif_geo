@@ -4,4 +4,12 @@ export default defineNuxtConfig({
   app: {
     baseURL: "/iiif_geo",
   },
+  css: [
+    "@/assets/styles/vuetify.css",
+  ],
+  build: {
+    transpile: [
+      "vuetify"
+    ],
+  },
 });

@@ -58,8 +58,6 @@ onMounted(() => {
 
     const features = canvas.value.annotations[0].items[0].body.features;
 
-    console.log({ features });
-
     for (const feature of features) {
       const coordinates = feature.geometry.coordinates;
       const marker = L.marker(coordinates);

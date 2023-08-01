@@ -14,9 +14,11 @@
     "nuxt": "^3.6.5"
   },
   "dependencies": {
+    "@mdi/js": "^7.2.96",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
-    "openseadragon": "^4.0.0"
+    "openseadragon": "^4.0.0",
+    "vuetify": "^3.3.11"
   }
 }

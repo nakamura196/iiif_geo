@@ -5,7 +5,7 @@ const { canvas, featuresMap } = useSettings();
 
 const baseURL = useNuxtApp().$config.app.baseURL;
 
-const ok = ref(false)
+const ok = ref(false);
 
 onMounted(async () => {
   height.value = window.innerHeight;
@@ -29,24 +29,45 @@ onMounted(async () => {
   canvas.value = data;
   featuresMap.value = _featuresMap;
 
-  ok.value = true
+  ok.value = true;
 });
 </script>
 <template>
-  <div :style="`height: ${height * 0.99}px`" v-if="height > 0">
-    <div style="display: inline-block; width: 50%; height: 100%">
-      <Map v-if="ok"></Map>
+  <v-app>
+    <v-app-bar color="purple" flat :absolute="true" density="compact">
+      <!-- :absolute="false" -->
+      <v-toolbar-title> IIIF Georeference Viewer </v-toolbar-title>
+    </v-app-bar>
+    <v-main>
+      <v-row density="compact" class="ma-0">
+        <v-col class="pa-0">
+          <Map v-if="ok" :style="`height: ${height - 48}px`"></Map>
+        </v-col>
+        <v-col class="pa-0">
+          <Osd v-if="ok" :style="`height: ${height - 48}px`"></Osd>
+        </v-col>
+      </v-row>
+    </v-main>
+    <!-- 
+    <div :style="`height: ${height - 48}px`" v-if="height > 0">
+      
+      <div style="display: inline-block; width: 50%; height: 100%">
+        <Map v-if="ok"></Map>
+      </div>
+      <div
+        style="display: inline-block; width: 50%; float: right"
+        :style="`height: ${100}%`"
+      >
+        <Osd v-if="ok"></Osd>
+      </div>
     </div>
-    <div
-      style="display: inline-block; width: 50%; float: right"
-      :style="`height: ${100}%`"
-    >
-      <Osd v-if="ok"></Osd>
-    </div>
-  </div>
+    -->
+  </v-app>
 </template>
+<!-- 
 <style>
 body {
   margin: 0;
 }
 </style>
+-->
