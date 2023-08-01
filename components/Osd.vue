@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { mdiPlus, mdiMinus, mdiHome, mdiFullscreen, mdiRestore } from "@mdi/js";
+import { mdiPlus, mdiMinus, mdiHome, mdiFullscreen, mdiRestore, mdiEye, mdiEyeOff, mdiMessage, mdiMessageOff } from "@mdi/js";
 
 const { $OpenSeadragon } = useNuxtApp();
 
@@ -74,6 +74,8 @@ const init = () => {
 };
 
 const rotate2 = ref(0);
+
+const showAnnotations = ref(false);
 </script>
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
@@ -92,6 +94,9 @@ const rotate2 = ref(0);
       </v-btn>
       <v-btn class="ma-1" size="small" icon @click="init()">
         <v-icon>{{ mdiRestore }}</v-icon>
+      </v-btn>
+      <v-btn class="ma-1" size="small" icon @click="showAnnotations = !showAnnotations">
+        <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>
 
       <v-slider

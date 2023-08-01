@@ -33,18 +33,16 @@ onMounted(async () => {
 });
 </script>
 <template>
-  <v-app>
-    <v-app-bar color="purple" flat :absolute="true" density="compact">
-      <!-- :absolute="false" -->
-      <v-toolbar-title> IIIF Georeference Viewer </v-toolbar-title>
-    </v-app-bar>
+  <v-app v-if="ok" >
+    <Header></Header>
+
     <v-main>
       <v-row density="compact" class="ma-0">
         <v-col class="pa-0">
-          <Map v-if="ok" :style="`height: ${height - 48}px`"></Map>
+          <Map :style="`height: ${height - 48}px`"></Map>
         </v-col>
         <v-col class="pa-0">
-          <Osd v-if="ok" :style="`height: ${height - 48}px`"></Osd>
+          <Osd :style="`height: ${height - 48}px`"></Osd>
         </v-col>
       </v-row>
     </v-main>

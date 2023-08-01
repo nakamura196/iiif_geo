@@ -78,8 +78,15 @@ onMounted(() => {
       marker.bindPopup(popup);
 
       popup.setContent(
-        `<a target="_blank" href="#${feature.id}">${feature.label}</a>`
+        `<div>
+            <div>[${feature.id}] ${feature.label}</div>
+            <div style="margin-top: 8px;">
+                ${feature.url ? `<a href="${feature.url}">詳細</a>` : ""}
+            </div>
+        </div>`
       );
+
+      // <!-- <a target="_blank" href="${feature.url}">外部リンク</a> -->
 
       markers.push(marker);
     }
