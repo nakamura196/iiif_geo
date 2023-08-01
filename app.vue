@@ -3,6 +3,8 @@ const height = ref(0);
 
 const { canvas, featuresMap } = useSettings();
 
+const baseURL = useNuxtApp().$config.app.baseURL;
+
 onMounted(async () => {
   height.value = window.innerHeight;
 
@@ -10,7 +12,7 @@ onMounted(async () => {
     height.value = window.innerHeight;
   });
 
-  const path = "/canvas.json";
+  const path = baseURL + "/canvas.json";
 
   const data = await fetch(path).then((res) => res.json());
 
