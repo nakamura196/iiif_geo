@@ -97,7 +97,11 @@ onMounted(() => {
         `<div>
             <div>[${feature.id}] ${feature.label}</div>
             <div style="margin-top: 8px;">
-                ${feature.url ? `<a href="${feature.url}">詳細</a>` : ""}
+                ${
+                  feature.url
+                    ? `<a target="_blank" href="${feature.url}">詳細</a>`
+                    : ""
+                }
             </div>
         </div>`
       );

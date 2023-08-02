@@ -1,5 +1,15 @@
 <script lang="ts" setup>
-import { mdiPlus, mdiMinus, mdiHome, mdiFullscreen, mdiRestore, mdiEye, mdiEyeOff, mdiMessage, mdiMessageOff } from "@mdi/js";
+import {
+  mdiPlus,
+  mdiMinus,
+  mdiHome,
+  mdiFullscreen,
+  mdiRestore,
+  mdiEye,
+  mdiEyeOff,
+  mdiMessage,
+  mdiMessageOff,
+} from "@mdi/js";
 
 const { $OpenSeadragon } = useNuxtApp();
 
@@ -56,6 +66,8 @@ onMounted(async () => {
 });
 
 const rotate = ref(0);
+const rotate2 = ref(0);
+const showAnnotations = ref(false);
 
 watch(
   () => rotate.value,
@@ -63,6 +75,72 @@ watch(
     viewer.viewport.setRotation(-1 * value);
   }
 );
+
+watch(
+  () => showAnnotations.value,
+  (value) => {
+    if (value) {
+      const features = featuresMap.value;
+
+      const fullWidth = viewer.world.getItemAt(0).getContentSize().x;
+
+      for (const id in features) {
+        const feature = features[id];
+
+        const xywh = feature.xywh.split(",");
+        const x = Number(xywh[0]) / fullWidth;
+        const y = Number(xywh[1]) / fullWidth;
+        const width = Number(xywh[2]) / fullWidth;
+        const height = Number(xywh[3]) / fullWidth;
+
+        const overlay = {
+          id,
+          x,
+          y,
+          width,
+          height,
+          className: "osdc-highlight osdc-base",
+        };
+
+        viewer.addOverlay(overlay);
+
+        new $OpenSeadragon.MouseTracker({
+          element: overlay.id,
+          clickHandler: function (e: any) {
+            if (e) {
+              const id = e.originalTarget.id;
+
+              removeSelected();
+
+              setSelected(id);
+
+              action.value = {
+                type: "osd",
+                id,
+              };
+            }
+          },
+        });
+      }
+    } else {
+      viewer.clearOverlays();
+    }
+  }
+);
+
+function setSelected(id: string) {
+  const e = document.getElementById(id);
+  if (e) {
+    e.classList.add("osdc-selected");
+  }
+}
+
+function removeSelected() {
+  const e2 = document.getElementsByClassName("osdc-selected");
+  for (let i = 0; i < e2.length; i++) {
+    e2[i].classList.remove("osdc-selected");
+  }
+}
 
 const update = () => {
   rotate.value = rotate2.value; // Number((document.querySelector("input") as any).value);
@@ -72,10 +150,6 @@ const init = () => {
   rotate.value = 0;
   rotate2.value = 0;
 };
-
-const rotate2 = ref(0);
-
-const showAnnotations = ref(false);
 </script>
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
@@ -95,7 +169,12 @@ const showAnnotations = ref(false);
       <v-btn class="ma-1" size="small" icon @click="init()">
         <v-icon>{{ mdiRestore }}</v-icon>
       </v-btn>
-      <v-btn class="ma-1" size="small" icon @click="showAnnotations = !showAnnotations">
+      <v-btn
+        class="ma-1"
+        size="small"
+        icon
+        @click="showAnnotations = !showAnnotations"
+      >
         <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>
 
@@ -146,3 +225,20 @@ const showAnnotations = ref(false);
     ></div>
   </div>
 </template>
+<style scoped>
+:deep(.osdc-highlight) {
+  outline: solid #03a9f4;
+}
+
+:deep(.osdc-selected) {
+  outline: solid #ffeb3b !important;
+}
+
+:deep(.osdc-hover) {
+  outline: solid #9c27b0;
+}
+
+:deep(.osdc-base:hover, .osdc-base:focus) {
+  outline: solid #9c27b0;
+}
+</style>

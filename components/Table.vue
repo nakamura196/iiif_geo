@@ -78,6 +78,7 @@ const select = (id: string) => {
       variant="outlined"
       density="compact"
       class="mt-2 mb-4"
+      clearable
     ></v-text-field>
 
     <v-data-table
