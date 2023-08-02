@@ -48,7 +48,7 @@ const zoom_ = ref(props.zoom);
 const center_ = ref(props.center);
 
 const { canvas, featuresMap, action } = useSettings();
-const {settings } = usePanes();
+const { settings } = usePanes();
 
 let markers = [];
 
@@ -75,6 +75,7 @@ onMounted(() => {
     for (const feature of features) {
       const coordinates = feature.geometry.coordinates;
       const marker = L.marker(coordinates);
+
       marker.id = feature.id;
 
       marker.on("click", () => {
@@ -128,16 +129,33 @@ watch(
 
       center_.value = coordinates;
 
-      /*
-
       for (const marker of markers) {
+        let iconUrl =
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png";
         if (marker.id === value.id) {
+          iconUrl =
+            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png";
+
+          /*
           window.setTimeout(function () {
             marker.openPopup();
           }, 1000 / 2);
+          */
+          //
         }
+
+        marker.setIcon(
+          L.icon({
+            iconUrl,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41], // アイコンのアンカーポイントを指定します。
+            popupAnchor: [0, -41], // ポップアップのアンカーポイントを指定します。
+          })
+        );
       }
-      */
+
+      /*
+       */
     }
   }
 );
