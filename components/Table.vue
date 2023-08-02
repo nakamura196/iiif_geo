@@ -97,8 +97,8 @@ const select = (id: string) => {
           size="small"
           @click="select(item.columns.id)"
         >
-          <v-icon class="mr-1">{{ mdiImageFilterCenterFocus }}</v-icon>
-          フォーカス
+          <v-icon>{{ mdiImageFilterCenterFocus }}</v-icon>
+          <!-- フォーカス class="mr-1" -->
         </v-btn>
       </template>
     </v-data-table>

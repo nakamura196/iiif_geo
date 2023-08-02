@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { mdiMagnify } from "@mdi/js";
+
 const { settings } = usePanes();
 
 const dialog = ref(false);
@@ -27,7 +29,8 @@ watch(
 </script>
 
 <template>
-  <span>
-    <v-btn @click="dialog = !dialog"> 地名一覧</v-btn>
-  </span>
+  <v-btn @click="dialog = !dialog">
+    <v-icon class="mr-1">{{ mdiMagnify }}</v-icon
+    >検索</v-btn
+  >
 </template>
