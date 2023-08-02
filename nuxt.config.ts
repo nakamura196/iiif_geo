@@ -12,4 +12,8 @@ export default defineNuxtConfig({
       "vuetify"
     ],
   },
+  components: {
+    global: true,
+    dirs: ["~/components"],
+  },
 });
