@@ -10,7 +10,7 @@ let viewer: any = null;
 watch(
   () => action.value,
   (value) => {
-    if (value.type === "map") {
+    if (value.type === "map" || value.type === "both") {
       const feature = featuresMap.value[value.id];
 
       const resourceCoords = feature.properties.resourceCoords;

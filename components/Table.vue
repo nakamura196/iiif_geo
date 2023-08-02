@@ -61,7 +61,7 @@ function filterOnlyCapsText(value: string, query: string, item) {
 
 const select = (id: string) => {
   action.value = {
-    type: "map",
+    type: "both",
     id,
   };
 };

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import L from "leaflet";
+import { Map } from "leaflet";
 import "leaflet.markercluster";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -15,6 +16,8 @@ interface PropType {
     attribution: string;
     url: string;
   }[];
+  height?: number;
+  width?: number;
 }
 
 const props = withDefaults(defineProps<PropType>(), {
@@ -37,12 +40,23 @@ const props = withDefaults(defineProps<PropType>(), {
   ],
   coordinates: () => [],
   popup: true,
+  height: 0,
+  width: 0,
 });
 
 const zoom_ = ref(props.zoom);
 const center_ = ref(props.center);
 
-const { canvas, action } = useSettings();
+const { canvas, featuresMap, action } = useSettings();
+const {settings } = usePanes();
+
+let markers = [];
+
+const map = ref<Map | null>(null);
+
+const setMap = (leafletMapObject: Map) => {
+  map.value = leafletMapObject;
+};
 
 onMounted(() => {
   L.Map.addInitHook(function () {
@@ -51,16 +65,17 @@ onMounted(() => {
       chunkedLoading: true,
     }).addTo(this);
 
-    let markers = [];
-
     let x = 0;
     let y = 0;
 
     const features = canvas.value.annotations[0].items[0].body.features;
 
+    markers = [];
+
     for (const feature of features) {
       const coordinates = feature.geometry.coordinates;
       const marker = L.marker(coordinates);
+      marker.id = feature.id;
 
       marker.on("click", () => {
         const id = feature.id;
@@ -96,25 +111,65 @@ onMounted(() => {
     markerCluster.addLayers(markers);
   });
 });
+
+const updateMapSize = () => {
+  nextTick(() => {
+    map.value.invalidateSize();
+  });
+};
+
+watch(
+  () => action.value,
+  (value) => {
+    if (value.type === "osd" || value.type === "both") {
+      const feature = featuresMap.value[value.id];
+
+      const coordinates = feature.geometry.coordinates;
+
+      center_.value = coordinates;
+
+      /*
+
+      for (const marker of markers) {
+        if (marker.id === value.id) {
+          window.setTimeout(function () {
+            marker.openPopup();
+          }, 1000 / 2);
+        }
+      }
+      */
+    }
+  }
+);
+
+watch(
+  () => [props.width, props.height, settings.value.panes.length],
+  () => {
+    updateMapSize();
+  }
+);
 </script>
 
 <template>
-  <l-map
-    :max-zoom="19"
-    v-model:zoom="zoom_"
-    v-model:center="center_"
-    :zoomAnimation="true"
-    :markerZoomAnimation="true"
-  >
-    <l-control-layers v-if="tileProviders.length > 1" />
+  <div style="width: 100%; height: 100%">
+    <l-map
+      :max-zoom="19"
+      v-model:zoom="zoom_"
+      v-model:center="center_"
+      :zoomAnimation="true"
+      :markerZoomAnimation="true"
+      @ready="setMap"
+    >
+      <l-control-layers v-if="tileProviders.length > 1" />
 
-    <l-tile-layer
-      v-for="tileProvider in tileProviders"
-      :key="tileProvider.name"
-      :name="tileProvider.name"
-      :url="tileProvider.url"
-      :attribution="tileProvider.attribution"
-      layer-type="base"
-    />
-  </l-map>
+      <l-tile-layer
+        v-for="tileProvider in tileProviders"
+        :key="tileProvider.name"
+        :name="tileProvider.name"
+        :url="tileProvider.url"
+        :attribution="tileProvider.attribution"
+        layer-type="base"
+      />
+    </l-map>
+  </div>
 </template>
