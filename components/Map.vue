@@ -29,6 +29,12 @@ const props = withDefaults(defineProps<PropType>(), {
       attribution: "国土地理院ウェブサイト",
       url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
     },
+    {
+      name: "空中写真",
+      attribution:
+        '国土地理院ウェブサイト',
+      url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
+    },
     /*
     {
       name: "OpenStreetMap",
