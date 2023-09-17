@@ -41,7 +41,10 @@ export const useSettings = () => {
     }
   });
 
+  const title = useState<string>("title", () => "")
+
   return {
+    title,
     canvas,
     featuresMap,
     action,

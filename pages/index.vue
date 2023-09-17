@@ -11,7 +11,9 @@ interface PanesConfig {
 
 const ready = ref(false);
 const { settings /*, panesConfig*/ } = usePanes();
-const { canvas, featuresMap } = useSettings();
+const { canvas, featuresMap, title } = useSettings();
+
+const snackbar = ref(false)
 
 // const baseURL = useNuxtApp().$config.app.baseURL;
 
@@ -37,7 +39,11 @@ let defaultPanes: PanesConfig[] = [
 ];
 settings.value.panes = defaultPanes;
 
-onMounted(async () => {
+const route = useRoute();
+
+
+
+const display = async () => {
   // const url = new URL(window.location.href);
   const route = useRoute();
   const url = route.query.u as string;
@@ -46,28 +52,89 @@ onMounted(async () => {
   }
   // const path = baseURL + "/canvas.json";
 
-  const data = await fetch(/*path*/url).then((res) => res.json());
+  try {
+    const data = await fetch(/*path*/url).then((res) => res.json());
 
-  const features = data.annotations[0].items[0].body.features;
+    const features = data.annotations[0].items[0].body.features;
 
-  const _featuresMap: any = {};
+    const labelMap = data.label
+    for(const key in labelMap) {
+      const label = labelMap[key]
+      if(label) {
+        // features[key].label = label
+        title.value = label[0]
+      }
+    }
 
-  for (const feature of features) {
-    _featuresMap[feature.id] = feature;
+    const _featuresMap: any = {};
+
+    for (const feature of features) {
+      _featuresMap[feature.id] = feature;
+    }
+
+    canvas.value = data;
+    featuresMap.value = _featuresMap;
+
+    ready.value = true;
+  } catch (e) {
+    snackbar.value = true
+    console.log(e);
   }
+}
 
-  canvas.value = data;
-  featuresMap.value = _featuresMap;
+watch(
+  () => route.fullPath,
+  () => {
+    // const u = route.query.u as string;
+    // console.log({u})
 
-  ready.value = true;
+    // 初期化
+
+    canvas.value = {
+      items: [],
+      annotations: []
+    }
+
+    ready.value = false
+    title.value = ""
+
+    display()
+  }, { immediate: true }
+);
+
+/*
+onMounted(() => {
+  display()
 });
+*/
 </script>
 <template>
   <v-app>
     <Header></Header>
 
     <v-main>
-      <PanesMain v-if="ready"></PanesMain>
+      <template v-if="ready">
+      <PanesMain></PanesMain>
+    </template>
+    <template v-else>
+      <InputForm></InputForm>
+    </template>
+
+    <v-snackbar
+      v-model="snackbar"
+    >
+      {{ "URLが不正です。" }}
+
+      <template v-slot:actions>
+        <v-btn
+          color="pink"
+          variant="text"
+          @click="snackbar = false"
+        >
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
     </v-main>
   </v-app>
 </template>
