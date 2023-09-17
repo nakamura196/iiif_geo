@@ -5,8 +5,8 @@ import {
   mdiHome,
   mdiFullscreen,
   mdiRestore,
-  mdiEye,
-  mdiEyeOff,
+  // mdiEye,
+  // mdiEyeOff,
   mdiMessage,
   mdiMessageOff,
 } from "@mdi/js";

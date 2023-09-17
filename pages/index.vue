@@ -1,11 +1,21 @@
 <script setup lang="ts">
+// import { PanesConfig } from "~/types/panes";
+
+interface PanesConfig {
+  id?: string;
+  label?: string;
+  size?: number;
+  items?: PanesConfig[];
+  componentKey?: string;
+};
+
 const ready = ref(false);
-const { settings, panesConfig } = usePanes();
+const { settings /*, panesConfig*/ } = usePanes();
 const { canvas, featuresMap } = useSettings();
 
-const baseURL = useNuxtApp().$config.app.baseURL;
+// const baseURL = useNuxtApp().$config.app.baseURL;
 
-let defaultPanes: any[] = [
+let defaultPanes: PanesConfig[] = [
   {
     size: 50,
     items: [
@@ -23,16 +33,20 @@ let defaultPanes: any[] = [
         componentKey: "Osd",
       },
     ],
-  }
+  },
 ];
 settings.value.panes = defaultPanes;
 
 onMounted(async () => {
-  
+  // const url = new URL(window.location.href);
+  const route = useRoute();
+  const url = route.query.u as string;
+  if(!url) {
+    return
+  }
+  // const path = baseURL + "/canvas.json";
 
-  const path = baseURL + "/canvas.json";
-
-  const data = await fetch(path).then((res) => res.json());
+  const data = await fetch(/*path*/url).then((res) => res.json());
 
   const features = data.annotations[0].items[0].body.features;
 
@@ -47,8 +61,6 @@ onMounted(async () => {
 
   ready.value = true;
 });
-
-
 </script>
 <template>
   <v-app>

@@ -15,6 +15,8 @@ interface PropType {
     name: string;
     attribution: string;
     url: string;
+    // default?: boolean;
+    visible?: boolean;
   }[];
   height?: number;
   width?: number;
@@ -28,12 +30,16 @@ const props = withDefaults(defineProps<PropType>(), {
       name: "国土地理院ウェブサイト",
       attribution: "国土地理院ウェブサイト",
       url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
+      // default: true,
+      visible: true,
     },
     {
       name: "空中写真",
       attribution:
         '国土地理院ウェブサイト',
       url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
+      // default: false,
+      visible: false,
     },
     /*
     {
@@ -56,7 +62,7 @@ const center_ = ref(props.center);
 const { canvas, featuresMap, action } = useSettings();
 const { settings } = usePanes();
 
-let markers = [];
+let markers: any[] = [];
 
 const map = ref<Map | null>(null);
 
@@ -82,6 +88,7 @@ onMounted(() => {
       const coordinates = feature.geometry.coordinates;
       const marker = L.marker(coordinates);
 
+      // @ts-ignore
       marker.id = feature.id;
 
       marker.on("click", () => {
@@ -125,7 +132,7 @@ onMounted(() => {
 
 const updateMapSize = () => {
   nextTick(() => {
-    map.value.invalidateSize();
+    map.value?.invalidateSize();
   });
 };
 
@@ -197,7 +204,12 @@ watch(
         :url="tileProvider.url"
         :attribution="tileProvider.attribution"
         layer-type="base"
+        :visible="tileProvider.visible"
       />
+      <!-- 
+
+        v-if="tileProvider.default"
+        layer-type="base" -->
     </l-map>
   </div>
 </template>
