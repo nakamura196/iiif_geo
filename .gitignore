@@ -19,7 +19,7 @@ logs
 
 # Local env files
 .env
-.env.*
+# .env.*
 !.env.example
 
 test.sh
