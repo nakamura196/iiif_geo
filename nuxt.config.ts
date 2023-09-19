@@ -8,6 +8,12 @@ export default defineNuxtConfig({
   modules: [
     "@nuxt/content",
   ],
+  content: {
+    experimental: {
+      clientDB: true,
+      stripQueryParameters: true,
+    },
+  },
   app: {
     baseURL // : "/iiif_geo",
   },
