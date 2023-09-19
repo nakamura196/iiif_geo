@@ -5,11 +5,15 @@ const baseURL = process.env.NUXT_PUBLIC_BASE_URL || "";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: false,
+  modules: [
+    "@nuxt/content",
+  ],
   app: {
     baseURL // : "/iiif_geo",
   },
   css: [
     "@/assets/styles/vuetify.css",
+    // "@/assets/styles/content.css"
   ],
   build: {
     transpile: [

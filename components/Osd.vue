@@ -166,7 +166,7 @@ const init = () => {
       <v-btn class="ma-1" size="small" icon id="full-page">
         <v-icon>{{ mdiFullscreen }}</v-icon>
       </v-btn>
-      <v-btn class="ma-1" size="small" icon @click="init()">
+      <v-btn class="ma-1" size="small" icon @click="init()" title="回転の初期化">
         <v-icon>{{ mdiRestore }}</v-icon>
       </v-btn>
       <v-btn
@@ -174,6 +174,7 @@ const init = () => {
         size="small"
         icon
         @click="showAnnotations = !showAnnotations"
+        title="注釈の表示/非表示"
       >
         <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>

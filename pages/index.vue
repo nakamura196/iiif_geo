@@ -78,7 +78,7 @@ const display = async () => {
     ready.value = true;
   } catch (e) {
     snackbar.value = true
-    console.log(e);
+    // console.log(e);
   }
 }
 

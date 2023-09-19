@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { mdiInformation } from "@mdi/js";
 
+const { data } = await useAsyncData('home', () => queryContent('/help').findOne())
+
 const dialog = ref(false);
 </script>
 <template>
@@ -10,7 +12,9 @@ const dialog = ref(false);
 
     <v-dialog v-model="dialog">
       <v-card>
-        <v-card-text> 作成中 </v-card-text>
+        <v-card-text>
+          <ContentRenderer class="nuxt-content" :value="data" />
+        </v-card-text>
         <v-card-actions>
           <v-btn color="primary" block @click="dialog = false">閉じる</v-btn>
         </v-card-actions>
