@@ -1,6 +1,10 @@
-# Nuxt 3 Minimal Starter
+# IIIF Geo App
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+IIIF Viewer with [IIIF Georeference Extension](https://iiif.io/api/extension/georef/)
+
+## 🌐 Website
+
+[Visit the demo page](https://nakamura196.github.io/iiif_geo/) to try it out.
 
 ## Setup
 

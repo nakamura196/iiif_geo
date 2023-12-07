@@ -1,5 +1,6 @@
-import { createVuetify, ThemeDefinition } from "vuetify";
-import { VDataTable, VDataTableVirtual } from 'vuetify/labs/VDataTable'
+import { createVuetify } from "vuetify";
+import type {ThemeDefinition} from "vuetify";
+// import { VDataTable, VDataTableVirtual } from 'vuetify/labs/VDataTable'
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import colors from "vuetify/lib/util/colors";
@@ -8,7 +9,6 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
 
 const primary = colors.blue.base;
 const error = colors.red.base;
-// const teal = "#D50000" // "#80CBC4" // "#4DB6AC" // colors.teal.base;
 const main = "#80CBC4"
 
 const config: any  = {
@@ -38,13 +38,10 @@ const customDarkTheme: ThemeDefinition = {
 export default defineNuxtPlugin((nuxtApp) => {
   const vuetify = createVuetify({
     components: {
-      ... components,
-      VDataTable,
-      VDataTableVirtual
+      ... components
     },
     directives,
     theme: {
-      // defaultTheme: "customTheme",
       themes: {
         light: customLightTheme,
         dark: customDarkTheme,

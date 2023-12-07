@@ -35,8 +35,7 @@ const props = withDefaults(defineProps<PropType>(), {
     },
     {
       name: "空中写真",
-      attribution:
-        '国土地理院ウェブサイト',
+      attribution: "国土地理院ウェブサイト",
       url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
       // default: false,
       visible: false,
@@ -139,7 +138,8 @@ const updateMapSize = () => {
 watch(
   () => action.value,
   (value) => {
-    if (value.type === "osd" || value.type === "both") {
+    // value.type === "osd" || value.type === "both"
+    if (true) {
       const feature = featuresMap.value[value.id];
 
       const coordinates = feature.geometry.coordinates;

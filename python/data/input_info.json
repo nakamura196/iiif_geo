@@ -1,0 +1,92 @@
+{
+  "@context": "http://iiif.io/api/image/2/context.json",
+  "@id": "https://iiif.dl.itc.u-tokyo.ac.jp/iiif/2/agriculture_re%2Fnou_tatemonochokanzu%2F0002.tif",
+  "protocol": "http://iiif.io/api/image",
+  "width": 18415,
+  "height": 12911,
+  "sizes": [
+    {
+      "width": 144,
+      "height": 101
+    },
+    {
+      "width": 288,
+      "height": 202
+    },
+    {
+      "width": 575,
+      "height": 403
+    },
+    {
+      "width": 1151,
+      "height": 807
+    },
+    {
+      "width": 2302,
+      "height": 1614
+    },
+    {
+      "width": 4604,
+      "height": 3228
+    },
+    {
+      "width": 9208,
+      "height": 6456
+    }
+  ],
+  "tiles": [
+    {
+      "width": 512,
+      "height": 512,
+      "scaleFactors": [
+        1,
+        2,
+        4,
+        8,
+        16,
+        32,
+        64,
+        128
+      ]
+    }
+  ],
+  "profile": [
+    "http://iiif.io/api/image/2/level2.json",
+    {
+      "formats": [
+        "jpg",
+        "tif",
+        "gif",
+        "png"
+      ],
+      "maxArea": 100000000,
+      "qualities": [
+        "bitonal",
+        "default",
+        "gray",
+        "color"
+      ],
+      "supports": [
+        "regionByPx",
+        "sizeByW",
+        "sizeByWhListed",
+        "cors",
+        "regionSquare",
+        "sizeByDistortedWh",
+        "canonicalLinkHeader",
+        "sizeByConfinedWh",
+        "sizeByPct",
+        "jsonldMediaType",
+        "regionByPct",
+        "rotationArbitrary",
+        "sizeByH",
+        "baseUriRedirect",
+        "rotationBy90s",
+        "profileLinkHeader",
+        "sizeByForcedWh",
+        "sizeByWh",
+        "mirroring"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// import { PanesConfig } from "~/types/panes";
+import { v4 as uuidv4 } from "uuid";
 
 interface PanesConfig {
   id?: string;
@@ -7,15 +7,13 @@ interface PanesConfig {
   size?: number;
   items?: PanesConfig[];
   componentKey?: string;
-};
+}
 
 const ready = ref(false);
-const { settings /*, panesConfig*/ } = usePanes();
+const { settings } = usePanes();
 const { canvas, featuresMap, title } = useSettings();
 
-const snackbar = ref(false)
-
-// const baseURL = useNuxtApp().$config.app.baseURL;
+const snackbar = ref(false);
 
 let defaultPanes: PanesConfig[] = [
   {
@@ -41,34 +39,37 @@ settings.value.panes = defaultPanes;
 
 const route = useRoute();
 
-
-
 const display = async () => {
-  // const url = new URL(window.location.href);
   const route = useRoute();
   const url = route.query.u as string;
-  if(!url) {
-    return
+  if (!url) {
+    return;
   }
-  // const path = baseURL + "/canvas.json";
 
   try {
-    const data = await fetch(/*path*/url).then((res) => res.json());
+    const data = await fetch(url).then((res) => res.json());
 
     const features = data.annotations[0].items[0].body.features;
 
-    const labelMap = data.label
-    for(const key in labelMap) {
-      const label = labelMap[key]
-      if(label) {
+    const labelMap = data.label;
+    for (const key in labelMap) {
+      const label = labelMap[key];
+      if (label) {
         // features[key].label = label
-        title.value = label[0]
+        title.value = label[0];
       }
     }
 
     const _featuresMap: any = {};
 
     for (const feature of features) {
+      if (!feature.id) {
+        feature.id = uuidv4();
+      }
+
+      if (!feature.label) {
+        feature.label = "";
+      }
       _featuresMap[feature.id] = feature;
     }
 
@@ -77,36 +78,27 @@ const display = async () => {
 
     ready.value = true;
   } catch (e) {
-    snackbar.value = true
-    // console.log(e);
+    snackbar.value = true;
   }
-}
+};
 
 watch(
   () => route.fullPath,
   () => {
-    // const u = route.query.u as string;
-    // console.log({u})
-
     // 初期化
 
     canvas.value = {
       items: [],
-      annotations: []
-    }
+      annotations: [],
+    };
 
-    ready.value = false
-    title.value = ""
+    ready.value = false;
+    title.value = "";
 
-    display()
-  }, { immediate: true }
+    display();
+  },
+  { immediate: true }
 );
-
-/*
-onMounted(() => {
-  display()
-});
-*/
 </script>
 <template>
   <v-app>
@@ -114,27 +106,21 @@ onMounted(() => {
 
     <v-main>
       <template v-if="ready">
-      <PanesMain></PanesMain>
-    </template>
-    <template v-else>
-      <InputForm></InputForm>
-    </template>
-
-    <v-snackbar
-      v-model="snackbar"
-    >
-      {{ "URLが不正です。" }}
-
-      <template v-slot:actions>
-        <v-btn
-          color="pink"
-          variant="text"
-          @click="snackbar = false"
-        >
-          Close
-        </v-btn>
+        <PanesMain></PanesMain>
       </template>
-    </v-snackbar>
+      <template v-else>
+        <InputForm></InputForm>
+      </template>
+
+      <v-snackbar v-model="snackbar">
+        {{ "URLが不正です。" }}
+
+        <template v-slot:actions>
+          <v-btn color="pink" variant="text" @click="snackbar = false">
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>

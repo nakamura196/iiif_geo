@@ -55,7 +55,6 @@ const resizeV = (e: any, c: number) => {
 };
 
 const resizeH = (e: any) => {
-  // console.log({e});
   for (let i = 0; i < e.length; i++) {
     items.value[i].size = e[i].size;
   }
@@ -64,12 +63,10 @@ const resizeH = (e: any) => {
 const layoutHeight = 0; // 32
 
 function getLabel(id: string) {
-  // console.log(panesConfig.value)
   let label = ""
   panesConfig.value.forEach((pane) => {
     if (pane.id === id) {
-      // return pane.label;
-      label = pane.label;
+      label = pane.label || "";
     }
   });
 

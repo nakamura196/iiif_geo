@@ -33,6 +33,9 @@ watch(
       const point = viewport.imageToViewportCoordinates(x, y);
 
       viewport.panTo(point);
+
+      removeSelected();
+      setSelected(value.id);
     }
   }
 );
@@ -87,20 +90,46 @@ watch(
       for (const id in features) {
         const feature = features[id];
 
-        const xywh = feature.xywh.split(",");
-        const x = Number(xywh[0]) / fullWidth;
-        const y = Number(xywh[1]) / fullWidth;
-        const width = Number(xywh[2]) / fullWidth;
-        const height = Number(xywh[3]) / fullWidth;
+        let overlay: any = null;
 
-        const overlay = {
-          id,
-          x,
-          y,
-          width,
-          height,
-          className: "osdc-highlight osdc-base",
-        };
+        if (!feature.xywh) {
+          const resourceCoords = feature.properties.resourceCoords;
+          const x = Number(resourceCoords[0]) / fullWidth;
+          const y = Number(resourceCoords[1]) / fullWidth;
+
+          const overlay_ = document.createElement("div");
+          overlay_.id = id;
+          overlay_.className = "pin-icon"; // CSSでスタイルを定義するクラス名
+
+          overlay = {
+            id,
+            x,
+            y,
+
+            /*
+            element: overlay_,
+            location: new $OpenSeadragon.Point(x, y),
+            */
+            placement: "RIGHT",
+            checkResize: false,
+            className: "pin-icon",
+          };
+        } else {
+          const xywh = feature.xywh.split(",");
+          const x = Number(xywh[0]) / fullWidth;
+          const y = Number(xywh[1]) / fullWidth;
+          const width = Number(xywh[2]) / fullWidth;
+          const height = Number(xywh[3]) / fullWidth;
+
+          overlay = {
+            id,
+            x,
+            y,
+            width,
+            height,
+            className: "osdc-highlight osdc-base",
+          };
+        }
 
         viewer.addOverlay(overlay);
 
@@ -131,15 +160,30 @@ watch(
 function setSelected(id: string) {
   const e = document.getElementById(id);
   if (e) {
-    e.classList.add("osdc-selected");
+    if (e.classList.contains("pin-icon")) {
+      e.classList.add("pin-selected");
+    } else {
+      e.classList.add("osdc-selected");
+    }
+    // e.classList.add("osdc-selected");
   }
 }
 
 function removeSelected() {
+  const classList = ["pin-selected", "osdc-selected"];
+  for (const className of classList) {
+    const e = document.getElementsByClassName(className);
+    for (let i = 0; i < e.length; i++) {
+      e[i].classList.remove(className);
+    }
+  }
+
+  /*
   const e2 = document.getElementsByClassName("osdc-selected");
   for (let i = 0; i < e2.length; i++) {
     e2[i].classList.remove("osdc-selected");
   }
+  */
 }
 
 const update = () => {
@@ -166,7 +210,13 @@ const init = () => {
       <v-btn class="ma-1" size="small" icon id="full-page">
         <v-icon>{{ mdiFullscreen }}</v-icon>
       </v-btn>
-      <v-btn class="ma-1" size="small" icon @click="init()" title="回転の初期化">
+      <v-btn
+        class="ma-1"
+        size="small"
+        icon
+        @click="init()"
+        title="回転の初期化"
+      >
         <v-icon>{{ mdiRestore }}</v-icon>
       </v-btn>
       <v-btn
@@ -233,6 +283,13 @@ const init = () => {
 
 :deep(.osdc-selected) {
   outline: solid #ffeb3b !important;
+  /* border: 2px solid #ffeb3b !important; */ /* アイコンの境界線 */
+}
+
+:deep(.pin-selected) {
+  /* outline: solid #ffeb3b !important; */
+  /* border: 2px solid #ffeb3b !important; */ /* アイコンの境界線 */
+  background-color: #f44336 !important;
 }
 
 :deep(.osdc-hover) {
@@ -241,5 +298,22 @@ const init = () => {
 
 :deep(.osdc-base:hover, .osdc-base:focus) {
   outline: solid #9c27b0;
+}
+:deep(.pin-icon) {
+  width: 12px; /* アイコンの幅 */
+  height: 12px; /* アイコンの高さ */
+  background-color: #2196f3; /* アイコンの背景色 */
+  /* border: 2px solid #fff; */ /* アイコンの境界線 */
+  /* outline: solid #fff;*/ /* 2px */
+  border-radius: 50%; /* 円形にする */
+  box-shadow: 0 0 2px #333; /* 影をつける */
+
+  /* アイコンを中央に配置するための設定 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* ピンの先端部分を作成 */
+  position: relative;
 }
 </style>
