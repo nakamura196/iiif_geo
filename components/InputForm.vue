@@ -14,7 +14,7 @@ const examples = [
       ja: "ラベルを含む例",
       en: "Example with labels",
     },
-    value: baseURL + "/canvas.json",
+    value: baseURL + "/canvas_extra.json",
   },
   {
     label: {
