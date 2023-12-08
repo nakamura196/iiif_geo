@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { mdiMagnify, mdiImageFilterCenterFocus } from "@mdi/js";
 
+interface Item {
+  id: string;
+  name: string;
+  tag: string;
+}
+
 interface PropType {
   height?: number;
 }
@@ -10,14 +16,17 @@ withDefaults(defineProps<PropType>(), {
 });
 
 const itemsPerPage = ref(100);
+
+const {t} = useI18n();
+
 const headers = [
   { title: "ID", key: "id" },
   {
-    title: "名前",
+    title: t("name"),
     key: "name",
   },
   {
-    title: "タグ",
+    title: t("tag"),
     key: "tag",
   },
   {
@@ -26,7 +35,7 @@ const headers = [
   },
 ];
 
-const desserts = [];
+const items: Item[] = [];
 
 const search = ref("");
 
@@ -39,7 +48,7 @@ for (const feature of features) {
 
   const metadata = feature.metadata || {};
 
-  desserts.push({
+  items.push({
     id: feature.id,
     name: metadata.label,
     tag: metadata.tags?.join(",") || "",
@@ -55,7 +64,7 @@ function kanaToHira(str: string) {
   });
 }
 
-function filterOnlyCapsText(value: string, query: string, item) {
+function filterOnlyCapsText(value: string, query: string) {
   value = kanaToHira(value);
   query = kanaToHira(query);
 
@@ -80,7 +89,7 @@ const select = (id: string) => {
     <v-text-field
       v-model="search"
       :append-icon="mdiMagnify"
-      label="Search"
+      :label="$t('search')"
       single-line
       hide-details
       variant="outlined"
@@ -94,7 +103,7 @@ const select = (id: string) => {
       :_height="height"
       v-model:items-per-page="itemsPerPage"
       :headers="headers"
-      :items="desserts"
+      :items="items"
       item-value="id"
       density="compact"
       :search="search"

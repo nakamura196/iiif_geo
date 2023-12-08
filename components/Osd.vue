@@ -215,16 +215,17 @@ const init = () => {
         size="small"
         icon
         @click="init()"
-        title="回転の初期化"
+        :title="/*回転の初期化*/$t('reset')"
       >
         <v-icon>{{ mdiRestore }}</v-icon>
       </v-btn>
       <v-btn
         class="ma-1"
+        color="primary"
         size="small"
         icon
         @click="showAnnotations = !showAnnotations"
-        title="注釈の表示/非表示"
+        :title="/*注釈の表示/非表示*/$t('annotation')"
       >
         <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>
@@ -234,7 +235,7 @@ const init = () => {
         :max="180"
         :step="1"
         :min="-180"
-        label="角度"
+        :label="/*角度*/$t('angle')"
         hide-details
         class="ma-1"
         @update:modelValue="update()"
@@ -251,23 +252,6 @@ const init = () => {
           ></v-text-field>
         </template>
       </v-slider>
-
-      <!-- 
-      <input
-        type="range"
-        step="1"
-        min="-180"
-        max="180"
-        v-model="rotate2"
-        @change="update()"
-      />
-
-      <button style="margin-left: 8px; margin-right: 8px" @click="init()">
-        初期値
-      </button>
-
-      <span> 角度: {{ rotate2 }} </span>
-      -->
     </div>
 
     <div

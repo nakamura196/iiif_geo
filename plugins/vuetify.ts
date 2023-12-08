@@ -3,6 +3,7 @@ import type {ThemeDefinition} from "vuetify";
 // import { VDataTable, VDataTableVirtual } from 'vuetify/labs/VDataTable'
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
+// @ts-ignore
 import colors from "vuetify/lib/util/colors";
 
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';

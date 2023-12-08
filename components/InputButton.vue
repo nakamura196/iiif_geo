@@ -6,7 +6,7 @@ const dialog = ref(false);
 <template>
   <v-btn @click="dialog = !dialog" class="ma-1">
     <v-icon class="mr-1">{{ mdiPlusCircle }}</v-icon>
-    {{ /*("add")*/ "登録" }}
+    {{ $t("add") }}
 
     <v-dialog v-model="dialog">
       <v-card>
@@ -14,7 +14,7 @@ const dialog = ref(false);
           <InputForm />
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" block @click="dialog = false">閉じる</v-btn>
+          <v-btn color="primary" block @click="dialog = false">{{ $t("close") }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

@@ -31,6 +31,6 @@ watch(
 <template>
   <v-btn @click="dialog = !dialog">
     <v-icon class="mr-1">{{ mdiMagnify }}</v-icon
-    >検索</v-btn
+    >{{ $t("search") }}</v-btn
   >
 </template>

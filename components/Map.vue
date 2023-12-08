@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import L from "leaflet";
+import "leaflet.markercluster/dist/leaflet.markercluster.js";
 import { Map } from "leaflet";
 import "leaflet.markercluster";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-
+// @ts-ignore
+import { MarkerClusterGroup } from "leaflet.markercluster";
 import { LMap, LTileLayer, LControlLayers } from "@vue-leaflet/vue-leaflet";
 
 interface PropType {
   zoom?: number;
   center?: any;
+  /*
   tileProviders?: {
     name: string;
     attribution: string;
@@ -18,42 +21,52 @@ interface PropType {
     // default?: boolean;
     visible?: boolean;
   }[];
+  */
   height?: number;
   width?: number;
 }
 
+const { t } = useI18n();
+
 const props = withDefaults(defineProps<PropType>(), {
   zoom: 6,
   center: () => [54, 28],
-  tileProviders: () => [
-    {
-      name: "国土地理院ウェブサイト",
-      attribution: "国土地理院ウェブサイト",
-      url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-      // default: true,
-      visible: true,
-    },
-    {
-      name: "空中写真",
-      attribution: "国土地理院ウェブサイト",
-      url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
-      // default: false,
-      visible: false,
-    },
-    /*
-    {
-      name: "OpenStreetMap",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    },
-    */
-  ],
+
   coordinates: () => [],
   popup: true,
   height: 0,
   width: 0,
 });
+
+const tileProviders = [
+  {
+    name: "OpenStreetMap",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    visible: true,
+  },
+  {
+    name: t("国土地理院ウェブサイト"),
+    attribution: t("国土地理院ウェブサイト"),
+    url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
+    // default: true,
+    visible: false,
+  },
+  {
+    name: t("空中写真"),
+    attribution: t("国土地理院ウェブサイト"),
+    url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
+    // default: false,
+    visible: false,
+  },
+];
+
+// Leaflet マップの準備ができたかどうかを追跡
+const leafletReady = ref(false);
+
+// MarkerCluster グループのインスタンス
+let markerCluster: MarkerClusterGroup | null = null;
 
 const zoom_ = ref(props.zoom);
 const center_ = ref(props.center);
@@ -69,67 +82,93 @@ const setMap = (leafletMapObject: Map) => {
   map.value = leafletMapObject;
 };
 
-onMounted(() => {
-  L.Map.addInitHook(function () {
-    const markerCluster = L.markerClusterGroup({
+// Leaflet マップの準備ができた際の処理
+const onLeafletReady = (map: L.Map) => {
+  leafletReady.value = true;
+  initializeMarkerCluster(map);
+  display();
+};
+
+// MarkerCluster グループの初期化
+const initializeMarkerCluster = (map: L.Map) => {
+  if (!markerCluster) {
+    // @ts-ignore
+    markerCluster = L.markerClusterGroup({
       removeOutsideVisibleBounds: true,
       chunkedLoading: true,
-    }).addTo(this);
+    });
+    map.addLayer(markerCluster);
+  }
+};
 
-    let x = 0;
-    let y = 0;
+const display = () => {
+  let x = 0;
+  let y = 0;
 
-    const features = canvas.value.annotations[0].items[0].body.features;
+  const features = canvas.value.annotations[0].items[0].body.features;
 
-    markers = [];
+  markers = [];
 
-    for (const feature of features) {
-      const coordinates = feature.geometry.coordinates;
-      const marker = L.marker(coordinates);
+  for (const feature of features) {
+    const coordinates = feature.geometry.coordinates;
+    const marker = L.marker(coordinates);
 
-      // @ts-ignore
-      marker.id = feature.id;
+    // @ts-ignore
+    marker.id = feature.id;
 
-      marker.on("click", () => {
-        const id = feature.id;
+    marker.on("click", () => {
+      const id = feature.id;
 
-        action.value = {
-          type: "map",
-          id,
-        };
-      });
+      action.value = {
+        type: "map",
+        id,
+      };
+    });
 
-      x += coordinates[0];
-      y += coordinates[1];
+    x += coordinates[0];
+    y += coordinates[1];
 
-      const popup = L.popup();
-      marker.bindPopup(popup);
+    const popup = L.popup();
+    marker.bindPopup(popup);
 
-      const metadata = feature.metadata || {};
+    const metadata = feature.metadata || {};
 
-      popup.setContent(
-        `<div>
+    popup.setContent(
+      `<div>
             <div>ID: ${feature.id}</div>
-            ${metadata.label ? `<div style="margin-top: 4px;">名前: ${metadata.label}</div>` : ""}
-            ${metadata.tags ? `<div style="margin-top: 4px;">タグ: ${metadata.tags.join(",")}</div>` : ""}
+            ${
+              metadata.label
+                ? `<div style="margin-top: 4px;">${t("name")}: ${
+                    metadata.label
+                  }</div>`
+                : ""
+            }
+            ${
+              metadata.tags
+                ? `<div style="margin-top: 4px;">${t(
+                    "tag"
+                  )}: ${metadata.tags.join(",")}</div>`
+                : ""
+            }
             <div style="margin-top: 8px;">
                 ${
                   metadata.url
-                    ? `<a target="_blank" href="${metadata.url}">詳細</a>`
+                    ? `<a target="_blank" href="${
+                        metadata.url
+                      }">${"detail"}</a>`
                     : ""
                 }
             </div>
         </div>`
-      );
+    );
 
-      markers.push(marker);
-    }
+    markers.push(marker);
+  }
 
-    center_.value = [x / features.length, y / features.length];
+  center_.value = [x / features.length, y / features.length];
 
-    markerCluster.addLayers(markers);
-  });
-});
+  markerCluster.addLayers(markers);
+};
 
 const updateMapSize = () => {
   nextTick(() => {
@@ -195,7 +234,7 @@ watch(
       v-model:center="center_"
       :zoomAnimation="true"
       :markerZoomAnimation="true"
-      @ready="setMap"
+      @ready="onLeafletReady"
     >
       <l-control-layers v-if="tileProviders.length > 1" />
 

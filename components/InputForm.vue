@@ -1,22 +1,31 @@
 <script setup lang="ts">
 const u = ref("");
 
-const ex1 = () => {
-  const baseURL = useNuxtApp().$config.app.baseURL;
-  const path = baseURL + "/canvas.json";
-  u.value = path;
-};
-
-const ex2 = () => {
-  const baseURL = useNuxtApp().$config.app.baseURL;
-  const path = baseURL + "/canvas_extra.json";
-  u.value = path;
-};
+const baseURL = useNuxtApp().$config.app.baseURL;
 
 const add = () => {
   const router = useRouter();
   router.push({ query: { u: u.value } });
 };
+
+const examples = [
+  {
+    label: {
+      ja: "ラベルを含む例",
+      en: "Example with labels",
+    },
+    value: baseURL + "/canvas.json",
+  },
+  {
+    label: {
+      ja: "シンプルな例",
+      en: "Simple example",
+    },
+    value: baseURL + "/canvas.json",
+  },
+];
+
+const { locale } = useI18n();
 </script>
 <template>
   <v-container>
@@ -31,12 +40,10 @@ const add = () => {
       clearable
     ></v-text-field>
 
-    <v-btn @click="add" class="ma-1" color="primary">{{
-      /*("add")*/ "追加"
+    <v-btn @click="add" class="ma-1" color="primary">{{ $t("add") }}</v-btn>
+
+    <v-btn v-for="(ex, i) in examples" @click="u = ex.value" class="ma-1">{{
+      `${$t("ex")} ${i + 1}: ${ex.label[locale === "en" ? "en" : "ja"]}`
     }}</v-btn>
-
-<v-btn @click="ex2" class="ma-1">{{ /*("add")*/ "例1: ラベルを含む" }}</v-btn>
-
-    <v-btn @click="ex1" class="ma-1">{{ /*("add")*/ "例2: シンプル" }}</v-btn>
   </v-container>
 </template>

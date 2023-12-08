@@ -2,7 +2,7 @@
 
 IIIF Viewer with [IIIF Georeference Extension](https://iiif.io/api/extension/georef/)
 
-<img src="public/assets/images/demo.webp" width="100%" title="demo">
+<img src="public/assets/images/home.webp" width="100%" title="demo">
 
 ## 🌐 Website
 
