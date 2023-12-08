@@ -190,7 +190,7 @@ watch(
 <template>
   <div style="width: 100%; height: 100%">
     <l-map
-      :max-zoom="19"
+      :max-zoom="18"
       v-model:zoom="zoom_"
       v-model:center="center_"
       :zoomAnimation="true"
