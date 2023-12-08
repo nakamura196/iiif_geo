@@ -7,6 +7,12 @@ const appURL = origin + baseURL;
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  runtimeConfig: {
+    // footer: process.env.footer,
+    public: {
+      appURL,
+    },
+  },
   modules: [
     "@nuxt/content",
     "@nuxtjs/i18n", 

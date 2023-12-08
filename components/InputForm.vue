@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const u = ref("");
 
-const baseURL = useNuxtApp().$config.app.baseURL;
+const baseURL = useRuntimeConfig().public.appURL; // useNuxtApp().$config.app.baseURL;
 
 const add = () => {
   const router = useRouter();
