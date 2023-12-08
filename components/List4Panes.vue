@@ -29,7 +29,7 @@ watch(
 </script>
 
 <template>
-  <v-btn @click="dialog = !dialog">
+  <v-btn rounded color="error" variant="flat" @click="dialog = !dialog">
     <v-icon class="mr-1">{{ mdiMagnify }}</v-icon
     >{{ $t("search") }}</v-btn
   >
