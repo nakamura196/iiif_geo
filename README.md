@@ -1,10 +1,72 @@
-# IIIF Geo App
+# IIIF Georeference Viewer
 
 IIIF Viewer with [IIIF Georeference Extension](https://iiif.io/api/extension/georef/)
+
+<img src="public/assets/images/demo.webp" width="100%" title="demo">
 
 ## 🌐 Website
 
 [Visit the demo page](https://nakamura196.github.io/iiif_geo/) to try it out.
+
+## 📖 Data
+
+Prepare a JSON file following the Full Canvas Example of the Georeference Extension.
+
+https://iiif.io/api/extension/georef/#41-full-canvas-example
+
+The JSON file used on the demo site is as follows.
+
+https://nakamura196.github.io/iiif_geo/canvas.json
+
+### Extra metadata fields
+
+Extra metadata fields can be added to the Feature data.
+
+```json
+{
+    "type": "Feature",
+    "properties": {
+        "resourceCoords": [
+            6690,
+            7517
+        ]
+    },
+    "geometry": {
+    "type": "Point",
+    "coordinates": [
+        35.7151233,
+        139.7623182
+    ]
+    },
+    "metadata": {
+        "label": "電気実験室",
+        "tags": ["工学部"],
+        "url": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8"
+    }
+}
+```
+
+The `metadata` field is used to display the label, tags, and URL of the place.
+
+| Field | Description |
+| ---- | ---- |
+| label | Label of the place |
+| tags | Tags of the place |
+| url | URL of the place |
+
+These fields are used for the popup of the marker and the search function.
+
+#### Example
+
+https://nakamura196.github.io/iiif_geo/canvas_extra.json
+
+#### Marker popup
+
+![](public/assets/images/marker.webp)
+
+#### Search
+
+![](public/assets/images/search.webp)
 
 ## Setup
 

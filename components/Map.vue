@@ -105,20 +105,22 @@ onMounted(() => {
       const popup = L.popup();
       marker.bindPopup(popup);
 
+      const metadata = feature.metadata || {};
+
       popup.setContent(
         `<div>
-            <div>[${feature.id}] ${feature.label}</div>
+            <div>ID: ${feature.id}</div>
+            ${metadata.label ? `<div style="margin-top: 4px;">名前: ${metadata.label}</div>` : ""}
+            ${metadata.tags ? `<div style="margin-top: 4px;">タグ: ${metadata.tags.join(",")}</div>` : ""}
             <div style="margin-top: 8px;">
                 ${
-                  feature.url
-                    ? `<a target="_blank" href="${feature.url}">詳細</a>`
+                  metadata.url
+                    ? `<a target="_blank" href="${metadata.url}">詳細</a>`
                     : ""
                 }
             </div>
         </div>`
       );
-
-      // <!-- <a target="_blank" href="${feature.url}">外部リンク</a> -->
 
       markers.push(marker);
     }

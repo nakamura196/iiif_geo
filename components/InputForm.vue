@@ -7,6 +7,12 @@ const ex1 = () => {
   u.value = path;
 };
 
+const ex2 = () => {
+  const baseURL = useNuxtApp().$config.app.baseURL;
+  const path = baseURL + "/canvas_extra.json";
+  u.value = path;
+};
+
 const add = () => {
   const router = useRouter();
   router.push({ query: { u: u.value } });
@@ -29,6 +35,8 @@ const add = () => {
       /*("add")*/ "追加"
     }}</v-btn>
 
-    <v-btn @click="ex1" class="ma-1">{{ /*("add")*/ "例" }}</v-btn>
+<v-btn @click="ex2" class="ma-1">{{ /*("add")*/ "例1: ラベルを含む" }}</v-btn>
+
+    <v-btn @click="ex1" class="ma-1">{{ /*("add")*/ "例2: シンプル" }}</v-btn>
   </v-container>
 </template>

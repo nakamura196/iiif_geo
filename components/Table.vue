@@ -17,6 +17,10 @@ const headers = [
     key: "name",
   },
   {
+    title: "タグ",
+    key: "tag",
+  },
+  {
     title: "",
     key: "btn",
   },
@@ -32,9 +36,13 @@ const features = canvas.value.annotations[0].items[0].body.features;
 
 for (const feature of features) {
   // .slice(0, 10)
+
+  const metadata = feature.metadata || {};
+
   desserts.push({
     id: feature.id,
-    name: feature.label,
+    name: metadata.label,
+    tag: metadata.tags?.join(",") || "",
   });
 }
 
