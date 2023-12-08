@@ -2,7 +2,7 @@ import { headConfig } from "./meta.config";
 
 const baseURL = process.env.NUXT_PUBLIC_BASE_URL || "";
 
-const origin = process.env.ORIGIN || "";
+const origin = process.env.NUXT_PUBLIC_ORIGIN || "";
 const appURL = origin + baseURL;
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
