@@ -39,6 +39,7 @@ Extra metadata fields can be added to the Feature data.
         ]
     },
     "metadata": {
+        "id": "http://example.org/dJdXXQEA8dWSptgt8",
         "label": "電気実験室",
         "tags": ["工学部"],
         "url": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8",
@@ -49,12 +50,13 @@ Extra metadata fields can be added to the Feature data.
 
 The `metadata` field is used to display the label, tags, and URL of the place.
 
-| Field | Description |
-| ---- | ---- |
-| label | Label of the place |
-| tags | Tags of the place |
-| url | URL of the place |
-| xywh | XYWH region of the place |
+| Field | Description | Required | Format |
+| ---- | ---- | ---- | ---- |
+| id | URI of the place | False | String |
+| label | Label of the place | False | String |
+| tags | Tags of the place | False | Array |
+| url | URL of the place | False | String |
+| xywh | XYWH region of the place | False | String |
 
 These fields are used for the popup of the marker and the search function.
 
