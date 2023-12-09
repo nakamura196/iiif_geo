@@ -32,16 +32,17 @@ Extra metadata fields can be added to the Feature data.
         ]
     },
     "geometry": {
-    "type": "Point",
-    "coordinates": [
-        35.7151233,
-        139.7623182
-    ]
+        "type": "Point",
+        "coordinates": [
+            35.7151233,
+            139.7623182
+        ]
     },
     "metadata": {
         "label": "電気実験室",
         "tags": ["工学部"],
-        "url": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8"
+        "url": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8",
+        "xywh": "5936,6344,976,1384",
     }
 }
 ```
@@ -53,6 +54,7 @@ The `metadata` field is used to display the label, tags, and URL of the place.
 | label | Label of the place |
 | tags | Tags of the place |
 | url | URL of the place |
+| xywh | XYWH region of the place |
 
 These fields are used for the popup of the marker and the search function.
 
