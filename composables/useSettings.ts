@@ -9,6 +9,7 @@ interface FeaturesMap {
 }
 
 interface Feature {
+[x: string]: any;
   properties: {
     resourceCoords: number[];
   },
@@ -17,6 +18,9 @@ interface Feature {
     type: string,
     coordinates: number[][],
   },
+  metadata?: {
+    [key: string]: any;
+  }
 }
 
 interface Canvas {

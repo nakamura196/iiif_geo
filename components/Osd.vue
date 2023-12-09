@@ -92,29 +92,8 @@ watch(
 
         let overlay: any = null;
 
-        if (!feature.xywh) {
-          const resourceCoords = feature.properties.resourceCoords;
-          const x = Number(resourceCoords[0]) / fullWidth;
-          const y = Number(resourceCoords[1]) / fullWidth;
-
-          const overlay_ = document.createElement("div");
-          overlay_.id = id;
-          overlay_.className = "pin-icon"; // CSSでスタイルを定義するクラス名
-
-          overlay = {
-            id,
-            x,
-            y,
-
-            /*
-            element: overlay_,
-            location: new $OpenSeadragon.Point(x, y),
-            */
-            placement: "RIGHT",
-            checkResize: false,
-            className: "pin-icon",
-          };
-        } else {
+        if (feature.xywh) {
+          // deprecated
           const xywh = feature.xywh.split(",");
           const x = Number(xywh[0]) / fullWidth;
           const y = Number(xywh[1]) / fullWidth;
@@ -128,6 +107,38 @@ watch(
             width,
             height,
             className: "osdc-highlight osdc-base",
+          };
+        } else if (feature.metadata?.xywh) {
+          const xywh = feature.metadata.xywh.split(",");
+          const x = Number(xywh[0]) / fullWidth;
+          const y = Number(xywh[1]) / fullWidth;
+          const width = Number(xywh[2]) / fullWidth;
+          const height = Number(xywh[3]) / fullWidth;
+
+          overlay = {
+            id,
+            x,
+            y,
+            width,
+            height,
+            className: "osdc-highlight osdc-base",
+          };
+        } else {
+          const resourceCoords = feature.properties.resourceCoords;
+          const x = Number(resourceCoords[0]) / fullWidth;
+          const y = Number(resourceCoords[1]) / fullWidth;
+
+          const overlay_ = document.createElement("div");
+          overlay_.id = id;
+          overlay_.className = "pin-icon";
+
+          overlay = {
+            id,
+            x,
+            y,
+            placement: "RIGHT",
+            checkResize: false,
+            className: "pin-icon",
           };
         }
 
@@ -215,7 +226,7 @@ const init = () => {
         size="small"
         icon
         @click="init()"
-        :title="/*回転の初期化*/$t('reset')"
+        :title="/*回転の初期化*/ $t('reset')"
       >
         <v-icon>{{ mdiRestore }}</v-icon>
       </v-btn>
@@ -225,7 +236,7 @@ const init = () => {
         size="small"
         icon
         @click="showAnnotations = !showAnnotations"
-        :title="/*注釈の表示/非表示*/$t('annotation')"
+        :title="/*注釈の表示/非表示*/ $t('annotation')"
       >
         <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>
@@ -235,7 +246,7 @@ const init = () => {
         :max="180"
         :step="1"
         :min="-180"
-        :label="/*角度*/$t('angle')"
+        :label="/*角度*/ $t('angle')"
         hide-details
         class="ma-1"
         @update:modelValue="update()"
