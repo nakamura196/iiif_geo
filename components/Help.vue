@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { mdiInformation } from "@mdi/js";
 
-const {locale} = useI18n()
+const { locale } = useI18n();
 
-const { data } = await useAsyncData('home', () => queryContent(`/help/${locale.value}`).findOne())
+interface ContentData extends Record<string, any> {}
+
+const { data } = await useAsyncData<ContentData | null>("home", () =>
+  queryContent(`/help/${locale.value}`).findOne()
+);
 
 const dialog = ref(false);
 </script>
@@ -18,7 +22,9 @@ const dialog = ref(false);
           <ContentRenderer class="nuxt-content" :value="data" />
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" block @click="dialog = false">{{ $t("close") }}</v-btn>
+          <v-btn color="primary" block @click="dialog = false">{{
+            $t("close")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
