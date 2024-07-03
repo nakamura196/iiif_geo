@@ -78,9 +78,11 @@ let markers: any[] = [];
 
 const map = ref<Map | null>(null);
 
+/*
 const setMap = (leafletMapObject: Map) => {
   map.value = leafletMapObject;
 };
+*/
 
 // Leaflet マップの準備ができた際の処理
 const onLeafletReady = (map: L.Map) => {
@@ -111,7 +113,7 @@ const display = () => {
 
   for (const feature of features) {
     const coordinates = feature.geometry.coordinates;
-    const marker = L.marker(coordinates);
+    const marker = L.marker([coordinates[1], coordinates[0]]);
 
     // @ts-ignore
     marker.id = feature.id;
@@ -125,8 +127,8 @@ const display = () => {
       };
     });
 
-    x += coordinates[0];
-    y += coordinates[1];
+    x += coordinates[1];
+    y += coordinates[0];
 
     const popup = L.popup();
     marker.bindPopup(popup);
@@ -185,7 +187,7 @@ watch(
 
       const coordinates = feature.geometry.coordinates;
 
-      center_.value = coordinates;
+      center_.value = [coordinates[1], coordinates[0]];
 
       for (const marker of markers) {
         let iconUrl =
