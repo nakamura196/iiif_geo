@@ -15,7 +15,7 @@ const dialog = ref(false);
 <template>
   <v-btn @click="dialog = !dialog" class="ma-1">
     <v-icon class="mr-1">{{ mdiInformation }}</v-icon>
-    {{ /*("add")*/ $t("help") }}
+    {{ $t("help") }}
 
     <v-dialog v-model="dialog">
       <v-card>

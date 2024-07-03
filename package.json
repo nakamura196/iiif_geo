@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
+    "@nuxt/image": "^1.7.0",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
