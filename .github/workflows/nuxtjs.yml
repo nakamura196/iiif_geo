@@ -32,19 +32,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          cache: "pnpm" # Cache pnpm modules
+          node-version: 20
+          cache: "pnpm"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install # 使用pnpm来安装依赖
+        run: pnpm install
 
       - name: Static HTML export with Nuxt
         run: pnpm generate # 使用pnpm来运行脚本
