@@ -35,7 +35,6 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: latest
           cache: "pnpm" # Cache pnpm modules
 
       - name: Setup Pages
