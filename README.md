@@ -34,8 +34,8 @@ Extra metadata fields can be added to the Feature data.
     "geometry": {
         "type": "Point",
         "coordinates": [
-            35.7151233,
-            139.7623182
+            139.7623182,
+            35.7151233
         ]
     },
     "metadata": {
