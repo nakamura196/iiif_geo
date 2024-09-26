@@ -3,9 +3,16 @@ const u = ref("");
 
 const baseURL = useRuntimeConfig().public.appURL; // useNuxtApp().$config.app.baseURL;
 
+const localePath = useLocalePath();
+
 const add = () => {
   const router = useRouter();
-  router.push({ query: { u: u.value } });
+  router.push(
+    localePath({
+      name: "index",
+      query: { u: u.value },
+    })
+  );
 };
 
 const examples = [

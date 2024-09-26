@@ -13,28 +13,29 @@ export default defineNuxtConfig({
       appURL,
     },
   },
-  modules: [
-    "@nuxt/content",
-    "@nuxtjs/i18n", 
-  ],
+
+  modules: ["@nuxt/content", "@nuxtjs/i18n"],
+
   typescript: {
     typeCheck: true,
     strict: true,
   },
+
   i18n: {
     locales: [
-      { code: "ja", iso: "ja_JP", file: "ja.js" },
-      { code: "en", iso: "en-US", file: "en.js" },
+      { code: "ja", language: "ja", file: "ja.js" },
+      { code: "en", language: "en", file: "en.js" },
     ],
     langDir: "locales/",
     defaultLocale: headConfig.lang,
     lazy: true,
     detectBrowserLanguage: {
       useCookie: true,
-      cookieKey: 'i18n_redirected',
-      redirectOn: 'root',  // recommended
-    }
+      cookieKey: "i18n_redirected",
+      redirectOn: "root", // recommended
+    },
   },
+
   app: {
     baseURL,
     head: {
@@ -84,17 +85,17 @@ export default defineNuxtConfig({
       ],
     },
   },
-  css: [
-    "@/assets/styles/vuetify.css",
-    "@/assets/styles/main.css",
-  ],
+
+  css: ["@/assets/styles/vuetify.css", "@/assets/styles/main.css"],
+
   build: {
-    transpile: [
-      "vuetify"
-    ],
+    transpile: ["vuetify"],
   },
+
   components: {
     global: true,
     dirs: ["~/components"],
   },
+
+  compatibilityDate: "2024-09-26",
 });

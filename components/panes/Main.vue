@@ -2,10 +2,7 @@
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import {
-  mdiChevronDown,
-  mdiCog,
-} from "@mdi/js";
+import { mdiChevronDown, mdiCog } from "@mdi/js";
 
 const { settings, panesConfig } = usePanes();
 
@@ -63,14 +60,14 @@ const resizeH = (e: any) => {
 const layoutHeight = 0; // 32
 
 function getLabel(id: string) {
-  let label = ""
+  let label = "";
   panesConfig.value.forEach((pane) => {
     if (pane.id === id) {
       label = pane.label || "";
     }
   });
 
-  return label
+  return label;
 }
 </script>
 <template>
@@ -87,9 +84,7 @@ function getLabel(id: string) {
               <v-system-bar window>
                 <!-- <v-icon icon="mdi-message" class="me-2"></v-icon> -->
 
-                <span>{{
-                  getLabel(e.componentKey)
-                }}</span>
+                <span>{{ getLabel(e.componentKey) }}</span>
 
                 <v-spacer></v-spacer>
 
@@ -132,9 +127,11 @@ function getLabel(id: string) {
                       v-for="(item, index) in panesConfig"
                       :key="index"
                       :value="item.id"
-                      @click="() => {
-                        e.componentKey = item.id;
-                      }"
+                      @click="
+                        () => {
+                          e.componentKey = item.id;
+                        }
+                      "
                     >
                       <v-list-item-title>{{ item.label }}</v-list-item-title>
                     </v-list-item>
@@ -150,7 +147,10 @@ function getLabel(id: string) {
               :width="(windowWidth * item.size) / 100"
               :key="e.id"
               :id="e.id"
-              :is="resolveComponent(e.componentKey)"
+              :is="
+                // @ts-ignore
+                resolveComponent(e.componentKey)
+              "
               v-bind="e.props"
             ></component>
           </pane>

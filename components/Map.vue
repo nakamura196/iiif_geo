@@ -104,8 +104,8 @@ const initializeMarkerCluster = (map: L.Map) => {
 };
 
 const display = () => {
-  let x = 0;
-  let y = 0;
+  let xs = [];
+  let ys = [];
 
   const features = canvas.value.annotations[0].items[0].body.features;
 
@@ -113,6 +113,11 @@ const display = () => {
 
   for (const feature of features) {
     const coordinates = feature.geometry.coordinates;
+
+    if (!coordinates[0] || !coordinates[1]) {
+      continue;
+    }
+
     const marker = L.marker([coordinates[1], coordinates[0]]);
 
     // @ts-ignore
@@ -127,8 +132,8 @@ const display = () => {
       };
     });
 
-    x += coordinates[1];
-    y += coordinates[0];
+    xs.push(coordinates[1]); // 緯度
+    ys.push(coordinates[0]); // 経度
 
     const popup = L.popup();
     marker.bindPopup(popup);
@@ -167,7 +172,12 @@ const display = () => {
     markers.push(marker);
   }
 
-  center_.value = [x / features.length, y / features.length];
+  // 中心座標の計算
+  const centerX = xs.reduce((acc, val) => acc + val, 0) / xs.length; // 緯度の平均
+  const centerY = ys.reduce((acc, val) => acc + val, 0) / ys.length; // 経度の平均
+
+  // 中心座標をセット
+  center_.value = [centerX, centerY];
 
   markerCluster.addLayers(markers);
 };
