@@ -17,7 +17,7 @@ withDefaults(defineProps<PropType>(), {
 
 const itemsPerPage = ref(100);
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 const headers = [
   { title: "ID", key: "id" },
@@ -35,25 +35,28 @@ const headers = [
   },
 ];
 
-const items: Item[] = [];
-
 const search = ref("");
 
-const { canvas, action } = useSettings();
+const { action, canvases, pageIndex } = useSettings();
 
-const features = canvas.value.annotations[0].items[0].body.features;
+const items = computed(() => {
+  const items: Item[] = [];
+  const features =
+    canvases.value[pageIndex.value]?.annotations[0].items[0].body.features ||
+    [];
 
-for (const feature of features) {
-  // .slice(0, 10)
+  for (const feature of features) {
+    const metadata = feature.metadata || {};
 
-  const metadata = feature.metadata || {};
+    items.push({
+      id: feature.id,
+      name: metadata.label,
+      tag: metadata.tags?.join(",") || "",
+    });
+  }
 
-  items.push({
-    id: feature.id,
-    name: metadata.label,
-    tag: metadata.tags?.join(",") || "",
-  });
-}
+  return items;
+});
 
 function kanaToHira(str: string) {
   if (!str) return str;

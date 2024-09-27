@@ -4,7 +4,7 @@ import { mdiPlusCircle } from "@mdi/js";
 const dialog = ref(false);
 </script>
 <template>
-  <v-btn @click="dialog = !dialog" class="ma-1">
+  <v-btn variant="text" @click="dialog = !dialog" class="ma-1">
     <v-icon class="mr-1">{{ mdiPlusCircle }}</v-icon>
     {{ $t("add") }}
 

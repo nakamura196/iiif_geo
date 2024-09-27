@@ -13,7 +13,7 @@ const { data } = await useAsyncData<ContentData | null>("home", async () => {
 const dialog = ref(false);
 </script>
 <template>
-  <v-btn @click="dialog = !dialog" class="ma-1">
+  <v-btn variant="text" @click="dialog = !dialog" class="ma-1">
     <v-icon class="mr-1">{{ mdiInformation }}</v-icon>
     {{ $t("help") }}
 

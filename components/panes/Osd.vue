@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { v4 as uuidv4 } from "uuid";
 import {
   mdiPlus,
   mdiMinus,
@@ -9,11 +10,13 @@ import {
   // mdiEyeOff,
   mdiMessage,
   mdiMessageOff,
+  mdiArrowLeft,
+  mdiArrowRight,
 } from "@mdi/js";
 
 const { $OpenSeadragon } = useNuxtApp();
 
-const { canvas, featuresMap, action } = useSettings();
+const { canvas, featuresMap, action, canvases, pageIndex } = useSettings();
 
 let viewer: any = null;
 
@@ -42,21 +45,27 @@ watch(
 
 // async
 onMounted(async () => {
-  if (!canvas.value.items) {
-    return;
-  }
-  const info = canvas.value.items[0].items[0].body.service[0].id + "/info.json";
+  const index = 0;
+
+  const canvas_ = canvases.value[index];
+
+  const info = canvas_.items[0].items[0].body.service[0].id + "/info.json";
 
   const infoJson = await fetch(info).then((res) => res.json());
+
+  const tileSources = canvases.value.map((canvas_) => {
+    return canvas_.items[0].items[0].body.service[0].id + "/info.json";
+  });
 
   const config: any = {
     // sequenceMode: true,
     id: "osd",
     prefixUrl: "https://openseadragon.github.io/openseadragon/images/",
-    tileSources: [
+    sequenceMode: true,
+    tileSources /*: [
       // info
       infoJson,
-    ],
+    ]*/,
     zoomInButton: "zoom-in",
     zoomOutButton: "zoom-out",
     homeButton: "home",
@@ -66,6 +75,44 @@ onMounted(async () => {
   };
 
   viewer = $OpenSeadragon(config);
+
+  const updateFeatureMap = () => {
+    // pageIndex.value = value.page;
+
+    const pageIndex_ = pageIndex.value;
+
+    const canvas_ = canvases.value[pageIndex_];
+
+    if (!canvas_.annotations) {
+      return;
+    }
+
+    const features = canvas_.annotations[0].items[0].body.features;
+
+    const _featuresMap: any = {};
+
+    for (const feature of features) {
+      if (!feature.id) {
+        feature.id = uuidv4();
+      }
+      if (!feature.label) {
+        feature.label = "";
+      }
+      _featuresMap[feature.id] = feature;
+    }
+
+    featuresMap.value = _featuresMap;
+  };
+
+  viewer.addHandler("open", () => {
+    updateFeatureMap();
+  });
+
+  viewer.addHandler("page", (value) => {
+    pageIndex.value = value.page;
+
+    updateFeatureMap();
+  });
 });
 
 const rotate = ref(0);
@@ -188,17 +235,10 @@ function removeSelected() {
       e[i].classList.remove(className);
     }
   }
-
-  /*
-  const e2 = document.getElementsByClassName("osdc-selected");
-  for (let i = 0; i < e2.length; i++) {
-    e2[i].classList.remove("osdc-selected");
-  }
-  */
 }
 
 const update = () => {
-  rotate.value = rotate2.value; // Number((document.querySelector("input") as any).value);
+  rotate.value = rotate2.value;
 };
 
 const init = () => {
@@ -209,6 +249,12 @@ const init = () => {
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
     <div style="padding: 8px; flex: 0 0 auto">
+      <v-btn class="ma-1" size="small" icon id="previous">
+        <v-icon>{{ mdiArrowLeft }}</v-icon>
+      </v-btn>
+      <v-btn class="ma-1" size="small" icon id="next">
+        <v-icon>{{ mdiArrowRight }}</v-icon>
+      </v-btn>
       <v-btn class="ma-1" size="small" icon id="zoom-in">
         <v-icon>{{ mdiPlus }}</v-icon>
       </v-btn>

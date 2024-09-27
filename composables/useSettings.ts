@@ -34,12 +34,7 @@ interface Manifest {
 }
 
 export const useSettings = () => {
-  const canvas = useState<Canvas>("canvas", () => {
-    return {
-      items: [],
-      annotations: [],
-    };
-  });
+
   const featuresMap = useState<FeaturesMap>("featuresMap", () => {
     return {};
   });
@@ -56,11 +51,16 @@ export const useSettings = () => {
     return {};
   });
 
+  const canvases = useState<Canvas[]>("canvases", () => []);
+
+  const pageIndex = useState<number>("pageIndex", () => 0);
+
   return {
     title,
-    canvas,
     featuresMap,
     action,
     manifest,
+    canvases,
+    pageIndex,
   };
 };

@@ -71,7 +71,7 @@ let markerCluster: MarkerClusterGroup | null = null;
 const zoom_ = ref(props.zoom);
 const center_ = ref(props.center);
 
-const { canvas, featuresMap, action } = useSettings();
+const { canvas, featuresMap, action, canvases, pageIndex } = useSettings();
 const { settings } = usePanes();
 
 let markers: any[] = [];
@@ -104,10 +104,21 @@ const initializeMarkerCluster = (map: L.Map) => {
 };
 
 const display = () => {
-  let xs = [];
-  let ys = [];
+  // 現在のマーカーをすべて削除
+  if (markerCluster) {
+    markerCluster.clearLayers();
+  }
 
-  const features = canvas.value.annotations[0].items[0].body.features;
+  let xs: number[] = [];
+  let ys: number[] = [];
+
+  const features =
+    canvases.value[pageIndex.value]?.annotations[0]?.items[0]?.body?.features ||
+    [];
+
+  if (features.length === 0) {
+    return;
+  }
 
   markers = [];
 
@@ -187,6 +198,14 @@ const updateMapSize = () => {
     map.value?.invalidateSize();
   });
 };
+
+// pageIndexが変更された際にdisplay()を呼び出す
+watch(
+  () => pageIndex.value,
+  () => {
+    display();
+  }
+);
 
 watch(
   () => action.value,

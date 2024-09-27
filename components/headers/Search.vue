@@ -32,6 +32,13 @@ watch(
     }
   }
 );
+
+onMounted(() => {
+  const route = useRoute();
+  if (route.query.search === "1") {
+    dialog.value = true;
+  }
+});
 </script>
 
 <template>
