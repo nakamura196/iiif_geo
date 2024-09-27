@@ -19,10 +19,16 @@ watch(
             size: 100,
           },
         ],
+        id: "search",
       });
     } else {
       const panes = settings.value.panes;
-      panes.pop();
+      // panes.pop();
+
+      const index = panes.findIndex((pane) => pane.id === "search");
+      if (index > -1) {
+        panes.splice(index, 1);
+      }
     }
   }
 );

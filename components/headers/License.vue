@@ -19,10 +19,16 @@ watch(
             size: 100,
           },
         ],
+        id: "license",
       });
     } else {
       const panes = settings.value.panes;
-      panes.pop();
+      // panes.pop();
+
+      const index = panes.findIndex((pane) => pane.id === "license");
+      if (index > -1) {
+        panes.splice(index, 1);
+      }
     }
   }
 );
