@@ -13,14 +13,14 @@ watch(
 </script>
 <template>
   <v-app>
-    <Header></Header>
+    <Headers></Headers>
 
     <v-main>
       <template v-if="ready">
         <PanesMain></PanesMain>
       </template>
       <template v-else>
-        <InputForm></InputForm>
+        <HeadersForm></HeadersForm>
       </template>
 
       <v-snackbar v-model="snackbar">

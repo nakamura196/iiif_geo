@@ -11,10 +11,12 @@ const dialog = ref(false);
     <v-dialog v-model="dialog">
       <v-card>
         <v-card-text>
-          <InputForm />
+          <HeadersForm />
         </v-card-text>
         <v-card-actions>
-          <v-btn color="primary" block @click="dialog = false">{{ $t("close") }}</v-btn>
+          <v-btn color="primary" block @click="dialog = false">{{
+            $t("close")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

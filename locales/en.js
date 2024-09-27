@@ -12,5 +12,7 @@ export default {
     "detail": "Detail",
     "空中写真": "Aerial Photograph",
     "国土地理院ウェブサイト": "Geospatial Information Authority of Japan Website",
-    "ex": "Example"
+    "ex": "Example",
+    "license": "License",
+    "rights": "Rights",
 }

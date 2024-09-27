@@ -19,11 +19,10 @@ const localePath = useLocalePath();
 
     <v-spacer></v-spacer>
 
-    
-
     <template v-if="canvas.items && Object.keys(canvas.items).length > 0">
-      <List4Panes></List4Panes>
-      <InputButton></InputButton>
+      <HeadersSearch></HeadersSearch>
+      <HeadersLicense></HeadersLicense>
+      <HeadersFormButton></HeadersFormButton>
     </template>
 
     <template
@@ -44,12 +43,8 @@ const localePath = useLocalePath();
       {{ $t("home") }}</v-btn
     >
 
-    
+    <HeadersHelp></HeadersHelp>
 
-    <Help></Help>
-
-    <Language></Language>
-
-    
+    <HeadersLanguage></HeadersLanguage>
   </v-app-bar>
 </template>

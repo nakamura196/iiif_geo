@@ -13,7 +13,7 @@ export interface PanesConfig {
 export function useDisplay() {
   const ready = ref(false);
   const snackbar = ref(false);
-  const { canvas, featuresMap, title } = useSettings();
+  const { canvas, featuresMap, title, manifest } = useSettings();
   const { settings } = usePanes();
   const defaultPanes: PanesConfig[] = [
     {
@@ -21,7 +21,7 @@ export function useDisplay() {
       items: [
         {
           id: "0-0",
-          componentKey: "Map",
+          componentKey: "PanesMap",
         },
       ],
     },
@@ -30,7 +30,7 @@ export function useDisplay() {
       items: [
         {
           id: "1-0",
-          componentKey: "Osd",
+          componentKey: "PanesOsd",
         },
       ],
     },
@@ -58,6 +58,10 @@ export function useDisplay() {
       const features = data.annotations
         ? data.annotations[0].items[0].body.features
         : data.items[0].annotations[0].items[0].body.features;
+
+      if (data.items) {
+        manifest.value = data;
+      }
 
       let titles = [];
 

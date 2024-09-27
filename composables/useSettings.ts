@@ -9,24 +9,26 @@ interface FeaturesMap {
 }
 
 interface Feature {
-[x: string]: any;
+  [x: string]: any;
   properties: {
     resourceCoords: number[];
-  },
-  xywh: string,
+  };
+  xywh: string;
   geometry: {
-    type: string,
-    coordinates: number[][],
-  },
+    type: string;
+    coordinates: number[][];
+  };
   metadata?: {
     [key: string]: any;
-  }
+  };
 }
 
 interface Canvas {
   items: any[];
   annotations: any[];
 }
+
+interface Manifest {}
 
 export const useSettings = () => {
   const canvas = useState<Canvas>("canvas", () => {
@@ -42,15 +44,20 @@ export const useSettings = () => {
     return {
       id: "",
       type: "",
-    }
+    };
   });
 
-  const title = useState<string>("title", () => "")
+  const title = useState<string>("title", () => "");
+
+  const manifest = useState<Manifest>("manifest", () => {
+    return {};
+  });
 
   return {
     title,
     canvas,
     featuresMap,
     action,
+    manifest,
   };
 };

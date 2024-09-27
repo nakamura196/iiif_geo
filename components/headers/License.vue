@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiMagnify } from "@mdi/js";
+import { mdiLicense } from "@mdi/js";
 
 const { settings } = usePanes();
 
@@ -14,8 +14,8 @@ watch(
         size: 30,
         items: [
           {
-            id: "3-0",
-            componentKey: "Table",
+            id: "4-0",
+            componentKey: "PanesLicense",
             size: 100,
           },
         ],
@@ -26,11 +26,18 @@ watch(
     }
   }
 );
+
+onMounted(() => {
+  const route = useRoute();
+  if (route.query.license === "1") {
+    dialog.value = true;
+  }
+});
 </script>
 
 <template>
-  <v-btn rounded color="error" variant="flat" @click="dialog = !dialog">
-    <v-icon class="mr-1">{{ mdiMagnify }}</v-icon
-    >{{ $t("search") }}</v-btn
+  <v-btn class="mx-1" variant="text" @click="dialog = !dialog">
+    <v-icon class="mr-1">{{ mdiLicense }}</v-icon>
+    {{ $t("rights") }}</v-btn
   >
 </template>
