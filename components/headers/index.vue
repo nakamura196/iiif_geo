@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { mdiGithub, mdiHome } from "@mdi/js";
+import { mdiHome } from "@mdi/js";
+import { useDisplay } from "vuetify";
 
 const { canvases, title } = useSettings();
 
@@ -12,10 +13,12 @@ onMounted(() => {
 const localePath = useLocalePath();
 
 const drawer = ref(false);
+
+const { mobile, mdAndUp } = useDisplay();
 </script>
 <template>
   <v-app-bar color="purple" flat :absolute="true" density="compact">
-    <template v-if="!$vuetify.display.mdAndUp">
+    <template v-if="!mdAndUp">
       <v-app-bar-nav-icon
         variant="text"
         @click.stop="drawer = !drawer"
@@ -28,26 +31,14 @@ const drawer = ref(false);
 
     <v-spacer></v-spacer>
 
-    <template v-if="$vuetify.display.mdAndUp">
+    <template v-if="mdAndUp">
       <template v-if="canvases.length > 0">
         <HeadersSearch></HeadersSearch>
         <HeadersLicense></HeadersLicense>
         <HeadersFormButton></HeadersFormButton>
       </template>
 
-      <template
-        v-if="url.indexOf('github.io') > -1 || url.indexOf('localhost') > -1"
-      >
-        <v-btn
-          variant="text"
-          target="_blank"
-          href="https://github.com/nakamura196/iiif_geo"
-          class="ma-1"
-        >
-          <v-icon class="mr-1">{{ mdiGithub }}</v-icon>
-          GitHub</v-btn
-        >
-      </template>
+      <HeadersGitHub></HeadersGitHub>
 
       <v-btn :active="false" :to="localePath({ name: 'index' })" class="ma-1">
         <v-icon class="mr-1">{{ mdiHome }}</v-icon>
@@ -62,7 +53,7 @@ const drawer = ref(false);
 
   <v-navigation-drawer
     v-model="drawer"
-    :location="$vuetify.display.mobile ? 'bottom' : undefined"
+    :location="mobile ? 'bottom' : undefined"
     temporary
   >
     <v-list>
@@ -77,21 +68,10 @@ const drawer = ref(false);
           <HeadersFormButton></HeadersFormButton>
         </v-list-item>
       </template>
-      <template
-        v-if="url.indexOf('github.io') > -1 || url.indexOf('localhost') > -1"
-      >
-        <v-list-item>
-          <v-btn
-            variant="text"
-            target="_blank"
-            href="https://github.com/nakamura196/iiif_geo"
-            class="ma-1"
-          >
-            <v-icon class="mr-1">{{ mdiGithub }}</v-icon>
-            GitHub</v-btn
-          >
-        </v-list-item>
-      </template>
+
+      <v-list-item>
+        <HeadersGitHub></HeadersGitHub>
+      </v-list-item>
       <v-list-item>
         <HeadersHelp></HeadersHelp>
       </v-list-item>

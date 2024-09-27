@@ -60,7 +60,7 @@ let markerCluster: MarkerClusterGroup | null = null;
 const zoom_ = ref(props.zoom);
 const center_ = ref(props.center);
 
-const { canvas, featuresMap, action, canvases, pageIndex } = useSettings();
+const { featuresMap, action, canvases, pageIndex } = useSettings();
 const { settings } = usePanes();
 
 let markers: any[] = [];

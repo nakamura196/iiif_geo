@@ -13,7 +13,7 @@ import {
 
 const { $OpenSeadragon } = useNuxtApp();
 
-const { canvas, featuresMap, action, canvases, pageIndex } = useSettings();
+const { featuresMap, action, canvases, pageIndex } = useSettings();
 
 let viewer: any = null;
 
@@ -97,11 +97,14 @@ onMounted(async () => {
     updateFeatureMap();
   });
 
-  viewer.addHandler("page", (value) => {
-    pageIndex.value = value.page;
+  viewer.addHandler(
+    "page",
+    (value: { eventSource: any; page: number; previousPage: number }) => {
+      pageIndex.value = value.page;
 
-    updateFeatureMap();
-  });
+      updateFeatureMap();
+    }
+  );
 });
 
 const rotate = ref(0);
