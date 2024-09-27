@@ -28,7 +28,10 @@ interface Canvas {
   annotations: any[];
 }
 
-interface Manifest {}
+interface Manifest {
+  requiredStatement?: any;
+  rights?: string;
+}
 
 export const useSettings = () => {
   const canvas = useState<Canvas>("canvas", () => {
