@@ -1,13 +1,10 @@
 <script lang="ts" setup>
-import { v4 as uuidv4 } from "uuid";
 import {
   mdiPlus,
   mdiMinus,
   mdiHome,
   mdiFullscreen,
   mdiRestore,
-  // mdiEye,
-  // mdiEyeOff,
   mdiMessage,
   mdiMessageOff,
   mdiArrowLeft,
@@ -58,14 +55,10 @@ onMounted(async () => {
   });
 
   const config: any = {
-    // sequenceMode: true,
     id: "osd",
     prefixUrl: "https://openseadragon.github.io/openseadragon/images/",
     sequenceMode: true,
-    tileSources /*: [
-      // info
-      infoJson,
-    ]*/,
+    tileSources,
     zoomInButton: "zoom-in",
     zoomOutButton: "zoom-out",
     homeButton: "home",
@@ -77,11 +70,13 @@ onMounted(async () => {
   viewer = $OpenSeadragon(config);
 
   const updateFeatureMap = () => {
-    // pageIndex.value = value.page;
-
     const pageIndex_ = pageIndex.value;
 
     const canvas_ = canvases.value[pageIndex_];
+
+    if (!canvas_) {
+      return;
+    }
 
     if (!canvas_.annotations) {
       return;
@@ -92,12 +87,6 @@ onMounted(async () => {
     const _featuresMap: any = {};
 
     for (const feature of features) {
-      if (!feature.id) {
-        feature.id = uuidv4();
-      }
-      if (!feature.label) {
-        feature.label = "";
-      }
       _featuresMap[feature.id] = feature;
     }
 

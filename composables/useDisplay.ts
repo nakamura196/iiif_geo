@@ -1,6 +1,6 @@
 // composables/useDisplay.ts
 import { ref } from "vue";
-
+import { v4 as uuidv4 } from "uuid";
 export interface PanesConfig {
   id?: string;
   label?: string;
@@ -62,6 +62,20 @@ export function useDisplay() {
           items: [data],
         };
       }
+
+      for (const item of manifestData.items) {
+        const features = item.annotations[0].items[0].body.features;
+        for (const feature of features) {
+          if (!feature.id) {
+            feature.id = uuidv4();
+          }
+
+          if (!feature.label) {
+            feature.label = "";
+          }
+        }
+      }
+
       let titles = [];
 
       const labelMap = manifestData.label;

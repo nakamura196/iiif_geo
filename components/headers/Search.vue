@@ -8,8 +8,16 @@ const dialog = ref(false);
 watch(
   () => dialog.value,
   () => {
+    const panes = settings.value.panes;
+    const index = panes.findIndex((pane) => pane.id === "search");
     if (dialog.value) {
-      const panes = settings.value.panes;
+      
+
+      if (index !== -1) {
+        return;
+      }
+
+      
       panes.push({
         size: 30,
         items: [
@@ -22,10 +30,8 @@ watch(
         id: "search",
       });
     } else {
-      const panes = settings.value.panes;
-      // panes.pop();
 
-      const index = panes.findIndex((pane) => pane.id === "search");
+      
       if (index > -1) {
         panes.splice(index, 1);
       }

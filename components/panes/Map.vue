@@ -13,15 +13,6 @@ import { LMap, LTileLayer, LControlLayers } from "@vue-leaflet/vue-leaflet";
 interface PropType {
   zoom?: number;
   center?: any;
-  /*
-  tileProviders?: {
-    name: string;
-    attribution: string;
-    url: string;
-    // default?: boolean;
-    visible?: boolean;
-  }[];
-  */
   height?: number;
   width?: number;
 }
@@ -50,14 +41,12 @@ const tileProviders = [
     name: t("国土地理院ウェブサイト"),
     attribution: t("国土地理院ウェブサイト"),
     url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-    // default: true,
     visible: false,
   },
   {
     name: t("空中写真"),
     attribution: t("国土地理院ウェブサイト"),
     url: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
-    // default: false,
     visible: false,
   },
 ];
@@ -77,12 +66,6 @@ const { settings } = usePanes();
 let markers: any[] = [];
 
 const map = ref<Map | null>(null);
-
-/*
-const setMap = (leafletMapObject: Map) => {
-  map.value = leafletMapObject;
-};
-*/
 
 // Leaflet マップの準備ができた際の処理
 const onLeafletReady = (map: L.Map) => {
