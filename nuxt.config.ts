@@ -5,6 +5,13 @@ const baseURL = process.env.NUXT_PUBLIC_BASE_URL || "";
 const origin = process.env.NUXT_PUBLIC_ORIGIN || "";
 const appURL = origin + baseURL;
 
+let defaultLocale;
+if (headConfig.lang === "en") {
+  defaultLocale = "en" as const
+} else {
+  defaultLocale = "ja" as const
+}
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   runtimeConfig: {
@@ -27,7 +34,7 @@ export default defineNuxtConfig({
       { code: "en", language: "en", file: "en.js" },
     ],
     langDir: "locales/",
-    defaultLocale: headConfig.lang,
+    defaultLocale,
     lazy: true,
     detectBrowserLanguage: {
       useCookie: true,

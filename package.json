@@ -9,25 +9,25 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@nuxt/content": "^2.13.2",
+    "@nuxt/content": "^3.3.0",
     "@nuxt/devtools": "latest",
-    "@nuxtjs/i18n": "^8.5.5",
-    "@types/leaflet": "^1.9.12",
-    "@types/node": "^22.7.3",
+    "@nuxtjs/i18n": "^9.3.1",
+    "@types/leaflet": "^1.9.16",
+    "@types/node": "^22.13.10",
     "@types/splitpanes": "^2.2.6",
     "@types/uuid": "^10.0.0",
-    "nuxt": "^3.13.2",
-    "vue-tsc": "^2.1.6"
+    "nuxt": "^3.16.0",
+    "vue-tsc": "^2.2.8"
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
-    "@nuxt/image": "^1.8.0",
+    "@nuxt/image": "^1.9.0",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
-    "openseadragon": "^5.0.0",
-    "splitpanes": "^3.1.5",
-    "uuid": "^10.0.0",
-    "vuetify": "^3.7.2"
+    "openseadragon": "^5.0.1",
+    "splitpanes": "^4.0.3",
+    "uuid": "^11.1.0",
+    "vuetify": "^3.7.17"
   }
 }

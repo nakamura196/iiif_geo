@@ -25,3 +25,4 @@ logs
 test.sh
 
 .venv
+.data

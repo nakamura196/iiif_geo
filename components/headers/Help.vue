@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { mdiInformation } from "@mdi/js";
 
+
 const { locale } = useI18n();
 
 interface ContentData extends Record<string, any> {}
 
-const { data } = await useAsyncData<ContentData | null>("home", async () => {
-  const result = await queryContent(`/help/${locale.value}`).findOne();
-  return result || {}; // Provide an empty object as a fallback
+const { data } = await useAsyncData<ContentData | null>("help", async () => {
+  const result = await queryCollection("docs").path(`/help/${locale.value}`).first();
+  return result || {};
 });
 
 const dialog = ref(false);

@@ -56,6 +56,35 @@ export function useDisplay() {
       if (data.type === "Manifest") {
         manifest.value = data;
         manifestData = data;
+      } else if (data.type === "AnnotationPage") {
+        manifestData = {
+          items: [
+            {
+              items: [
+                {
+                  "items": [
+                    {
+                      "body": {
+                        "id": "ddd",
+                        "type": "Image",
+                        "format": "image/jpeg",
+                        "height": data.items[0].target.source.height,
+                        "width": data.items[0].target.source.width,
+                        "service": [
+                        {
+                        "id": data.items[0].target.source.id,
+                        "type": "ImageService2"
+                        }
+                        ]
+                        },
+                    }
+                  ]
+                }
+              ],
+              annotations: [data],
+            }
+          ],
+        };
       } else {
         manifestData = {
           label: data.label,

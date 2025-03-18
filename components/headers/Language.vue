@@ -3,7 +3,7 @@ import { mdiChevronDown } from "@mdi/js";
 
 const i18n = useI18n();
 
-const changeLocale = (locale: string) => {
+const changeLocale = (locale: "ja" | "en") => {
   i18n.setLocale(locale);
 };
 </script>
