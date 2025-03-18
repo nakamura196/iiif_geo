@@ -6,7 +6,7 @@ const { locale } = useI18n();
 
 interface ContentData extends Record<string, any> {}
 
-const { data } = await useAsyncData<ContentData | null>("help", async () => {
+const { data } = await useAsyncData<ContentData | null>(`help-${locale.value}`, async () => {
   const result = await queryCollection("docs").path(`/help/${locale.value}`).first();
   return result || {};
 });
