@@ -2,6 +2,7 @@
 import { mdiMagnify, mdiImageFilterCenterFocus } from "@mdi/js";
 
 interface Item {
+  uuid: string;
   id: string;
   name: string;
   tag: string;
@@ -49,7 +50,8 @@ const items = computed(() => {
     const metadata = feature.metadata || {};
 
     items.push({
-      id: feature.id,
+      uuid: feature.id,
+      id: metadata.id || feature.id,
       name: metadata.label,
       tag: metadata.tags?.join(",") || "",
     });
@@ -85,6 +87,22 @@ const select = (id: string) => {
     id,
   };
 };
+
+// 選択された行へのスクロール機能を追加
+const selectedRowRef = ref(null);
+
+// actionが変更されたときに該当行にスクロールする
+watch(() => action.value?.id, (newId) => {
+  if (newId) {
+    // 次のティックで実行してDOMが更新された後にスクロールするようにする
+    nextTick(() => {
+      const selectedRow = document.querySelector('.selected-row');
+      if (selectedRow) {
+        selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+}, { immediate: true });
 </script>
 
 <template>
@@ -111,16 +129,29 @@ const select = (id: string) => {
       density="compact"
       :search="search"
     >
-      <template v-slot:item.btn="{ item }">
-        <v-btn
-          class="ma-1"
-          color="primary"
-          size="small"
-          @click="select(item.id)"
-        >
-          <v-icon>{{ mdiImageFilterCenterFocus }}</v-icon>
-        </v-btn>
+      <template v-slot:item="{ item, index }">
+        <tr :class="{ 'selected-row': item.uuid === action.id }">
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.tag }}</td>
+          <td>
+            <v-btn
+              class="ma-1"
+              color="primary"
+              size="small"
+              @click="select(item.uuid)"
+            >
+              <v-icon>{{ mdiImageFilterCenterFocus }}</v-icon>
+            </v-btn>
+          </td>
+        </tr>
       </template>
     </v-data-table>
   </div>
 </template>
+
+<style scoped>
+.selected-row {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+</style>

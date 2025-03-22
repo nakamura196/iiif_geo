@@ -136,7 +136,7 @@ const display = () => {
 
     popup.setContent(
       `<div>
-            <div>ID: ${feature.id}</div>
+            <div>ID: ${metadata.id || feature.id}</div>
             ${
               metadata.label
                 ? `<div style="margin-top: 4px;">${t("name")}: ${
@@ -156,7 +156,7 @@ const display = () => {
                   metadata.url
                     ? `<a target="_blank" href="${
                         metadata.url
-                      }">${"detail"}</a>`
+                      }">${t("detail")}</a>`
                     : ""
                 }
             </div>
