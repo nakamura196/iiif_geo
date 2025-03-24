@@ -5,6 +5,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev --dotenv .env.local",
     "generate": "nuxt generate --dotenv .env.production",
+    "generate:hi": "nuxt generate --dotenv .env.hi",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },

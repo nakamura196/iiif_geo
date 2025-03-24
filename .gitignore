@@ -26,3 +26,6 @@ test.sh
 
 .venv
 .data
+
+.env.hi
+dist.zip
