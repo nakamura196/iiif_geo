@@ -1,6 +1,5 @@
 // composables/useDisplay.ts
 import { ref } from "vue";
-import { v4 as uuidv4 } from "uuid";
 export interface PanesConfig {
   id?: string;
   label?: string;
@@ -92,11 +91,14 @@ export function useDisplay() {
         };
       }
 
-      for (const item of manifestData.items) {
+      for (let itemIndex = 0; itemIndex < manifestData.items.length; itemIndex++) {
+        const item = manifestData.items[itemIndex];
         const features = item.annotations[0].items[0].body.features;
-        for (const feature of features) {
+        for (let featureIndex = 0; featureIndex < features.length; featureIndex++) {
+          const feature = features[featureIndex];
           if (!feature.id) {
-            feature.id = uuidv4();
+            // ページインデックスとフィーチャーインデックスを組み合わせたIDを作成（1ベース）
+            feature.id = `feature_${itemIndex + 1}_${featureIndex + 1}`;
           }
 
           if (!feature.label) {

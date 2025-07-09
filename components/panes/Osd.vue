@@ -39,6 +39,8 @@ watch(
       removeSelected();
       setSelected(value.id);
     }
+    // actionが変更されたらURLを更新
+    debouncedUpdateURLParams();
   }
 );
 
@@ -124,6 +126,42 @@ onMounted(async () => {
         rotate.value = rotation;
         rotate2.value = rotation;
       }
+    } else {
+      // rotateパラメータが未指定の場合は自動回転を実行
+      setTimeout(() => {
+        if (Object.keys(featuresMap.value).length >= 2) {
+          calculateRotation();
+        }
+      }, 500); // featuresMapが更新されるまで待つ
+    }
+    // 選択IDの復元と中心表示
+    if (query.id) {
+      const id = query.id as string;
+      setTimeout(() => {
+        if (featuresMap.value[id]) {
+          const feature = featuresMap.value[id];
+          
+          // 画像上でその位置を中心に表示
+          if (feature.properties?.resourceCoords) {
+            const x = feature.properties.resourceCoords[0];
+            const y = feature.properties.resourceCoords[1];
+            const point = viewer.viewport.imageToViewportCoordinates(x, y);
+            viewer.viewport.panTo(point);
+          }
+          
+          // アノテーションが表示されている場合は選択状態にする
+          if (showAnnotations.value) {
+            removeSelected();
+            setSelected(id);
+          }
+          
+          // actionに設定して地図と同期
+          action.value = {
+            type: "both", // 地図も更新するため
+            id,
+          };
+        }
+      }, 500); // 初期化が完了するまで少し待つ
     }
   });
 
@@ -176,6 +214,11 @@ const updateURLParams = () => {
   
   // 回転角度
   params.set('rotation', rotate.value.toString());
+  
+  // 選択されているIDを追加
+  if (action.value.id) {
+    params.set('id', action.value.id);
+  }
   
   // 既存のパラメータを保持
   if (route.query.u) {

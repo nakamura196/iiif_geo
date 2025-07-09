@@ -103,7 +103,7 @@ const updateMapURLParams = () => {
   
   
   // 既存のパラメータを保持
-  const existingParams = ['u', 'annotations', 'zoom', 'centerX', 'centerY', 'rotation'];
+  const existingParams = ['u', 'annotations', 'zoom', 'centerX', 'centerY', 'rotation', 'id'];
   for (const param of existingParams) {
     if (route.query[param]) {
       params.set(param, route.query[param] as string);
@@ -163,10 +163,29 @@ const onLeafletReady = (mapInstance: L.Map) => {
     debouncedUpdateMapURLParams();
   });
   
+  // URLにIDが指定されている場合、その位置を中心に表示
+  if (query.id && !query.mapLat && !query.mapLng) {
+    setTimeout(() => {
+      const id = query.id as string;
+      if (featuresMap.value[id]) {
+        const feature = featuresMap.value[id];
+        if (feature.geometry?.coordinates) {
+          const lng = feature.geometry.coordinates[0];
+          const lat = feature.geometry.coordinates[1];
+          center_.value = [lat, lng];
+          // ズームレベルも適切に設定
+          if (!query.mapZoom) {
+            zoom_.value = 15; // デフォルトで詳細表示
+          }
+        }
+      }
+    }, 200); // featuresMapが更新されるまで待つ
+  }
+  
   // 初期化完了後、URL更新を一度実行
   setTimeout(() => {
     updateMapURLParams();
-  }, 100);
+  }, 300);
 };
 
 // MarkerCluster グループの初期化
