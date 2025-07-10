@@ -96,9 +96,18 @@ export function useDisplay() {
         const features = item.annotations[0].items[0].body.features;
         for (let featureIndex = 0; featureIndex < features.length; featureIndex++) {
           const feature = features[featureIndex];
+          
+          // 事前定義されたIDを確認（properties.id または metadata.id）
+          const predefinedId = feature.properties?.id || feature.metadata?.id;
+          
           if (!feature.id) {
-            // ページインデックスとフィーチャーインデックスを組み合わせたIDを作成（1ベース）
-            feature.id = `feature_${itemIndex + 1}_${featureIndex + 1}`;
+            if (predefinedId) {
+              // 事前定義されたIDがある場合はそれを使用
+              feature.id = predefinedId;
+            } else {
+              // 事前定義されたIDがない場合は自動生成
+              feature.id = `feature_${itemIndex + 1}_${featureIndex + 1}`;
+            }
           }
 
           if (!feature.label) {
