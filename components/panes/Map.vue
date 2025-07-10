@@ -168,27 +168,35 @@ const onLeafletReady = (mapInstance: L.Map) => {
   // URLにIDが指定されている場合、その位置を中心に表示
   if (query.id) {
     const id = query.id as string;
-    // featuresMapが準備できるまで監視
+    // featuresMapが準備できるまで監視（デプロイ環境対応）
+    let attempts = 0;
+    const maxAttempts = 100; // 10秒間待機
     const checkFeature = () => {
+      attempts++;
+      
       if (Object.keys(featuresMap.value).length > 0 && featuresMap.value[id]) {
         const feature = featuresMap.value[id];
         if (feature.geometry?.coordinates) {
-          // GeoJSONの座標は[longitude, latitude]の順序
-          const lng = feature.geometry.coordinates[0];
-          const lat = feature.geometry.coordinates[1];
-          center_.value = [lat, lng]; // Leafletは[latitude, longitude]の順序
+          // URLパラメータで座標が指定されていない場合のみ、IDの位置に移動
+          if (!query.mapLat || !query.mapLng) {
+            // GeoJSONの座標は[longitude, latitude]の順序
+            const lng = feature.geometry.coordinates[0];
+            const lat = feature.geometry.coordinates[1];
+            center_.value = [lat, lng]; // Leafletは[latitude, longitude]の順序
+          }
           // ズームレベルも適切に設定（IDが指定されている場合は既存のズームレベルを維持）
           if (!query.mapZoom && !query.mapLat && !query.mapLng) {
             zoom_.value = 15; // デフォルトで詳細表示
           }
         }
-      } else {
+      } else if (attempts < maxAttempts) {
         // まだ準備できていない場合は再試行
         setTimeout(checkFeature, 100);
+      } else {
       }
     };
-    // 初回実行を少し遅延
-    setTimeout(checkFeature, 100);
+    // 初回実行を少し遅延（デプロイ環境ではさらに遅延）
+    setTimeout(checkFeature, 500);
   }
   
   // 初期化完了後、URL更新を一度実行

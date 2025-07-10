@@ -139,8 +139,12 @@ onMounted(async () => {
     // 選択IDの復元と中心表示
     if (query.id) {
       const id = query.id as string;
-      // featuresMapが準備できるまで監視
+      // featuresMapが準備できるまで監視（デプロイ環境対応）
+      let attempts = 0;
+      const maxAttempts = 100; // 10秒間待機
       const checkFeature = () => {
+        attempts++;
+        
         if (Object.keys(featuresMap.value).length > 0 && featuresMap.value[id]) {
           const feature = featuresMap.value[id];
           
@@ -171,13 +175,14 @@ onMounted(async () => {
             type: "both", // 地図も更新するため
             id,
           };
-        } else {
+        } else if (attempts < maxAttempts) {
           // まだ準備できていない場合は再試行
           setTimeout(checkFeature, 100);
+        } else {
         }
       };
-      // 初回実行を少し遅延
-      setTimeout(checkFeature, 100);
+      // 初回実行を少し遅延（デプロイ環境ではさらに遅延）
+      setTimeout(checkFeature, 500);
     }
   });
 
