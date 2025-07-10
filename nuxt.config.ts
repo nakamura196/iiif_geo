@@ -1,108 +1,55 @@
-import { headConfig } from "./meta.config";
-
-const baseURL = process.env.NUXT_PUBLIC_BASE_URL || "";
-
-const origin = process.env.NUXT_PUBLIC_ORIGIN || "";
-const appURL = origin + baseURL;
-
-let defaultLocale;
-if (headConfig.lang === "en") {
-  defaultLocale = "en" as const
-} else {
-  defaultLocale = "ja" as const
-}
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  runtimeConfig: {
-    // footer: process.env.footer,
-    public: {
-      appURL,
+  devtools: { enabled: true },
+
+  app: {
+    head: {
+      link: [
+        { rel: "icon", type: "image/x-icon", href: "/favicon.ico" }
+      ]
     },
   },
 
-  modules: ["@nuxt/content", "@nuxtjs/i18n"],
+  css: ["leaflet/dist/leaflet.css", "leaflet.markercluster/dist/MarkerCluster.Default.css", "vuetify/lib/styles/main.sass"],
 
-  typescript: {
-    typeCheck: true,
-    strict: true,
+  build: {
+    transpile: ["vuetify", /^@vue-leaflet.*$/],
+  },
+
+  vite: {
+    define: {
+      "process.env.DEBUG": false,
+    },
+    server: {
+      hmr: {
+        port: 3001,
+      },
+    },
+  },
+
+  modules: ["@nuxt/content", "@nuxtjs/i18n", "@nuxt/image", "@nuxt/test-utils/module"],
+
+  runtimeConfig: {
+    public: {
+      manifest: 'https://iiif.dl.itc.u-tokyo.ac.jp/repo/iiif/kurosiwo/manifest.json'
+    }
   },
 
   i18n: {
+    vueI18n: "./i18n.config.ts",
     locales: [
-      { code: "ja", language: "ja", file: "ja.js" },
-      { code: "en", language: "en", file: "en.js" },
-    ],
-    langDir: "locales/",
-    defaultLocale,
-    lazy: true,
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: "i18n_redirected",
-      redirectOn: "root", // recommended
-    },
-  },
-
-  app: {
-    baseURL,
-    head: {
-      htmlAttrs: {
-        lang: headConfig.lang,
+      {
+        code: 'en',
+        name: 'English'
       },
-      title: headConfig.siteName,
-      meta: [
-        { charset: "utf-8" },
-        { "http-equiv": "x-ua-compatible", content: "ie=edge" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
-        {
-          name: "format-detection",
-          content: "telephone=no, email=no, address=no",
-        },
-        // SEO関連
-        { name: "description", content: headConfig.description },
-        { name: "keywords", content: headConfig.keywords },
-        // ogp関連
-        {
-          property: "og:site_name",
-          content: headConfig.siteName,
-        },
-        { property: "og:type", content: "website" },
-        { property: "og:url", content: appURL },
-        { property: "og:title", content: headConfig.siteName },
-        {
-          property: "og:description",
-          content: headConfig.description,
-        },
-        {
-          property: "og:image",
-          content: `${appURL}${headConfig.image}`,
-        },
-        {
-          property: "og:locale",
-          content: "ja_JP",
-        },
-        { name: "twitter:card", content: "summary" },
-      ],
-      link: [
-        {
-          rel: "icon",
-          type: "image/x-icon",
-          href: `${appURL}${headConfig.favicon}`,
-        },
-      ],
-    },
+      {
+        code: 'ja',
+        name: '日本語'
+      }
+    ],
+    defaultLocale: 'ja',
+    strategy: 'prefix_except_default'
   },
 
-  css: ["@/assets/styles/vuetify.css", "@/assets/styles/main.css"],
-
-  build: {
-    transpile: ["vuetify"],
-  },
-
-  components: {
-    global: true,
-    dirs: ["~/components"],
-  },
-
-  compatibilityDate: "2024-09-26",
-});
+  compatibilityDate: "2025-01-09",
+})
