@@ -9,6 +9,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 // @ts-ignore
 import { MarkerClusterGroup } from "leaflet.markercluster";
 import { LMap, LTileLayer, LControlLayers } from "@vue-leaflet/vue-leaflet";
+import { useDisplay } from "vuetify";
 
 interface PropType {
   zoom?: number;
@@ -18,6 +19,7 @@ interface PropType {
 }
 
 const { t } = useI18n();
+const { mobile, mdAndUp } = useDisplay();
 
 const props = withDefaults(defineProps<PropType>(), {
   zoom: 6,
@@ -164,22 +166,23 @@ const onLeafletReady = (mapInstance: L.Map) => {
   });
   
   // URLにIDが指定されている場合、その位置を中心に表示
-  if (query.id && !query.mapLat && !query.mapLng) {
+  if (query.id) {
     setTimeout(() => {
       const id = query.id as string;
       if (featuresMap.value[id]) {
         const feature = featuresMap.value[id];
         if (feature.geometry?.coordinates) {
+          // GeoJSONの座標は[longitude, latitude]の順序
           const lng = feature.geometry.coordinates[0];
           const lat = feature.geometry.coordinates[1];
-          center_.value = [lat, lng];
-          // ズームレベルも適切に設定
-          if (!query.mapZoom) {
+          center_.value = [lat, lng]; // Leafletは[latitude, longitude]の順序
+          // ズームレベルも適切に設定（IDが指定されている場合は既存のズームレベルを維持）
+          if (!query.mapZoom && !query.mapLat && !query.mapLng) {
             zoom_.value = 15; // デフォルトで詳細表示
           }
         }
       }
-    }, 200); // featuresMapが更新されるまで待つ
+    }, 500); // featuresMapが更新されるまで待つ
   }
   
   // 初期化完了後、URL更新を一度実行
@@ -415,6 +418,7 @@ onUnmounted(() => {
       :zoomAnimation="true"
       :markerZoomAnimation="true"
       @ready="onLeafletReady"
+      :zoomControl="mdAndUp"
     >
       <l-control-layers v-if="tileProviders.length > 1" />
 

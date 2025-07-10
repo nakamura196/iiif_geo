@@ -12,8 +12,10 @@ import {
   mdiAutoFix,
 } from "@mdi/js";
 import { calculateImageRotation, calculateImageRotationAdvanced } from "~/utils/calculateImageRotation";
+import { useDisplay } from "vuetify";
 
 const { $OpenSeadragon } = useNuxtApp();
+const { mobile, mdAndUp } = useDisplay();
 
 const { featuresMap, action, canvases, pageIndex } = useSettings();
 
@@ -435,43 +437,50 @@ const calculateRotation = () => {
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
     <div style="padding: 8px; flex: 0 0 auto">
+      <!-- モバイルでは基本的なボタンのみ表示 -->
       <v-btn class="ma-1" size="small" icon id="previous">
         <v-icon>{{ mdiArrowLeft }}</v-icon>
       </v-btn>
       <v-btn class="ma-1" size="small" icon id="next">
         <v-icon>{{ mdiArrowRight }}</v-icon>
       </v-btn>
-      <v-btn class="ma-1" size="small" icon id="zoom-in">
-        <v-icon>{{ mdiPlus }}</v-icon>
-      </v-btn>
-      <v-btn class="ma-1" size="small" icon id="zoom-out">
-        <v-icon>{{ mdiMinus }}</v-icon>
-      </v-btn>
-      <v-btn class="ma-1" size="small" icon id="home">
-        <v-icon>{{ mdiHome }}</v-icon>
-      </v-btn>
-      <v-btn class="ma-1" size="small" icon id="full-page">
-        <v-icon>{{ mdiFullscreen }}</v-icon>
-      </v-btn>
-      <v-btn
-        class="ma-1"
-        size="small"
-        icon
-        @click="init()"
-        :title="/*回転の初期化*/ $t('reset')"
-      >
-        <v-icon>{{ mdiRestore }}</v-icon>
-      </v-btn>
-      <v-btn
-        class="ma-1"
-        size="small"
-        icon
-        @click="calculateRotation()"
-        :title="/*自動回転*/ $t('autoRotate')"
-        color="secondary"
-      >
-        <v-icon>{{ mdiAutoFix }}</v-icon>
-      </v-btn>
+      
+      <!-- デスクトップでのみ表示するボタン -->
+      <template v-if="mdAndUp">
+        <v-btn class="ma-1" size="small" icon id="zoom-in">
+          <v-icon>{{ mdiPlus }}</v-icon>
+        </v-btn>
+        <v-btn class="ma-1" size="small" icon id="zoom-out">
+          <v-icon>{{ mdiMinus }}</v-icon>
+        </v-btn>
+        <v-btn class="ma-1" size="small" icon id="home">
+          <v-icon>{{ mdiHome }}</v-icon>
+        </v-btn>
+        <v-btn class="ma-1" size="small" icon id="full-page">
+          <v-icon>{{ mdiFullscreen }}</v-icon>
+        </v-btn>
+        <v-btn
+          class="ma-1"
+          size="small"
+          icon
+          @click="init()"
+          :title="/*回転の初期化*/ $t('reset')"
+        >
+          <v-icon>{{ mdiRestore }}</v-icon>
+        </v-btn>
+        <v-btn
+          class="ma-1"
+          size="small"
+          icon
+          @click="calculateRotation()"
+          :title="/*自動回転*/ $t('autoRotate')"
+          color="secondary"
+        >
+          <v-icon>{{ mdiAutoFix }}</v-icon>
+        </v-btn>
+      </template>
+      
+      <!-- 注釈ボタンはモバイルでも表示 -->
       <v-btn
         class="ma-1"
         color="primary"
@@ -483,7 +492,9 @@ const calculateRotation = () => {
         <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>
 
+      <!-- スライダーはデスクトップのみ -->
       <v-slider
+        v-if="mdAndUp"
         v-model="rotate2"
         :max="180"
         :step="1"
