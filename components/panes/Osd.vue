@@ -9,9 +9,13 @@ import {
   mdiMessageOff,
   mdiArrowLeft,
   mdiArrowRight,
+  mdiAutoFix,
 } from "@mdi/js";
+import { calculateImageRotation, calculateImageRotationAdvanced } from "~/utils/calculateImageRotation";
+import { useDisplay } from "vuetify";
 
 const { $OpenSeadragon } = useNuxtApp();
+const { mobile, mdAndUp } = useDisplay();
 
 const { featuresMap, action, canvases, pageIndex } = useSettings();
 
@@ -37,6 +41,8 @@ watch(
       removeSelected();
       setSelected(value.id);
     }
+    // actionが変更されたらURLを更新
+    debouncedUpdateURLParams();
   }
 );
 
@@ -95,6 +101,70 @@ onMounted(async () => {
 
   viewer.addHandler("open", () => {
     updateFeatureMap();
+    
+    // URLパラメータから初期状態を復元
+    const query = route.query;
+    if (query.annotations === 'true') {
+      showAnnotations.value = true;
+    }
+    if (query.zoom) {
+      const zoom = parseFloat(query.zoom as string);
+      if (!isNaN(zoom)) {
+        viewer.viewport.zoomTo(zoom);
+      }
+    }
+    // 中央座標の復元
+    if (query.centerX && query.centerY) {
+      const centerX = parseFloat(query.centerX as string);
+      const centerY = parseFloat(query.centerY as string);
+      if (!isNaN(centerX) && !isNaN(centerY)) {
+        viewer.viewport.panTo(new $OpenSeadragon.Point(centerX, centerY));
+      }
+    }
+    // 回転角度の復元
+    if (query.rotation) {
+      const rotation = parseFloat(query.rotation as string);
+      if (!isNaN(rotation)) {
+        rotate.value = rotation;
+        rotate2.value = rotation;
+      }
+    } else {
+      // rotateパラメータが未指定の場合は自動回転を実行
+      setTimeout(() => {
+        if (Object.keys(featuresMap.value).length >= 2) {
+          calculateRotation();
+        }
+      }, 500); // featuresMapが更新されるまで待つ
+    }
+    // 選択IDの復元と中心表示
+    if (query.id) {
+      const id = query.id as string;
+      setTimeout(() => {
+        if (featuresMap.value[id]) {
+          const feature = featuresMap.value[id];
+          
+          // 画像上でその位置を中心に表示
+          if (feature.properties?.resourceCoords) {
+            const x = feature.properties.resourceCoords[0];
+            const y = feature.properties.resourceCoords[1];
+            const point = viewer.viewport.imageToViewportCoordinates(x, y);
+            viewer.viewport.panTo(point);
+          }
+          
+          // アノテーションが表示されている場合は選択状態にする
+          if (showAnnotations.value) {
+            removeSelected();
+            setSelected(id);
+          }
+          
+          // actionに設定して地図と同期
+          action.value = {
+            type: "both", // 地図も更新するため
+            id,
+          };
+        }
+      }, 500); // 初期化が完了するまで少し待つ
+    }
   });
 
   viewer.addHandler(
@@ -111,16 +181,111 @@ const rotate = ref(0);
 const rotate2 = ref(0);
 const showAnnotations = ref(false);
 
+const route = useRoute();
+const router = useRouter();
+
 watch(
   () => rotate.value,
   (value) => {
     viewer.viewport.setRotation(-1 * value);
+    debouncedUpdateURLParams();
   }
 );
+
+// URLパラメータを更新する関数
+const updateURLParams = () => {
+  const params = new URLSearchParams(window.location.search);
+  
+  // アノテーション表示状態
+  if (showAnnotations.value) {
+    params.set('annotations', 'true');
+  } else {
+    params.delete('annotations');
+  }
+  
+  // ズームレベル
+  if (viewer && viewer.viewport) {
+    const zoom = viewer.viewport.getZoom();
+    params.set('zoom', zoom.toFixed(2));
+    
+    // ビューポートの中央座標
+    const center = viewer.viewport.getCenter();
+    params.set('centerX', center.x.toFixed(4));
+    params.set('centerY', center.y.toFixed(4));
+  }
+  
+  // 回転角度
+  params.set('rotation', rotate.value.toString());
+  
+  // 選択されているIDを追加
+  if (action.value.id) {
+    params.set('id', action.value.id);
+  }
+  
+  // 既存のパラメータを保持
+  if (route.query.u) {
+    params.set('u', route.query.u as string);
+  }
+  // 地図のパラメータも保持
+  const mapParams = ['mapZoom', 'mapLat', 'mapLng'];
+  for (const param of mapParams) {
+    if (route.query[param]) {
+      params.set(param, route.query[param] as string);
+    }
+  }
+  
+  // URLを更新（History APIを使用してリロードを防ぐ）
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', newUrl);
+};
+
+// ズーム変更を監視（デバウンス付き）
+let zoomHandler: any = null;
+let zoomTimeout: any = null;
+
+const debouncedUpdateURLParams = () => {
+  if (zoomTimeout) {
+    clearTimeout(zoomTimeout);
+  }
+  zoomTimeout = setTimeout(() => {
+    updateURLParams();
+  }, 500); // 500ms のデバウンス
+};
+
+// パン（移動）イベントも監視
+let panHandler: any = null;
+
+onMounted(() => {
+  setTimeout(() => {
+    if (viewer) {
+      zoomHandler = viewer.addHandler('zoom', () => {
+        debouncedUpdateURLParams();
+      });
+      panHandler = viewer.addHandler('pan', () => {
+        debouncedUpdateURLParams();
+      });
+    }
+  }, 1000);
+});
+
+onUnmounted(() => {
+  if (viewer) {
+    if (zoomHandler) {
+      viewer.removeHandler('zoom', zoomHandler);
+    }
+    if (panHandler) {
+      viewer.removeHandler('pan', panHandler);
+    }
+  }
+  if (zoomTimeout) {
+    clearTimeout(zoomTimeout);
+  }
+});
 
 watch(
   () => showAnnotations.value,
   (value) => {
+    updateURLParams();
     if (value) {
       const features = featuresMap.value;
 
@@ -237,37 +402,85 @@ const init = () => {
   rotate.value = 0;
   rotate2.value = 0;
 };
+
+// 180度回転を追加
+const rotate180 = () => {
+  rotate.value += 180;
+  rotate2.value += 180;
+  // -180〜180の範囲に正規化
+  if (rotate.value > 180) {
+    rotate.value -= 360;
+    rotate2.value -= 360;
+  }
+};
+
+// 画像座標と地理座標から回転角度を計算
+const calculateRotation = () => {
+  const features = Object.values(featuresMap.value);
+  if (features.length < 2) {
+    return;
+  }
+  
+  // 3点以上ある場合は分布パターンを使用、それ以外は2点間の角度を使用
+  const result = features.length >= 3 
+    ? calculateImageRotationAdvanced(features as any)
+    : calculateImageRotation(features as any);
+    
+  if (!result) {
+    return;
+  }
+  
+  rotate.value = result.rotation;
+  rotate2.value = result.rotation;
+};
 </script>
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
     <div style="padding: 8px; flex: 0 0 auto">
+      <!-- モバイルでは基本的なボタンのみ表示 -->
       <v-btn class="ma-1" size="small" icon id="previous">
         <v-icon>{{ mdiArrowLeft }}</v-icon>
       </v-btn>
       <v-btn class="ma-1" size="small" icon id="next">
         <v-icon>{{ mdiArrowRight }}</v-icon>
       </v-btn>
-      <v-btn class="ma-1" size="small" icon id="zoom-in">
-        <v-icon>{{ mdiPlus }}</v-icon>
-      </v-btn>
-      <v-btn class="ma-1" size="small" icon id="zoom-out">
-        <v-icon>{{ mdiMinus }}</v-icon>
-      </v-btn>
-      <v-btn class="ma-1" size="small" icon id="home">
-        <v-icon>{{ mdiHome }}</v-icon>
-      </v-btn>
-      <v-btn class="ma-1" size="small" icon id="full-page">
-        <v-icon>{{ mdiFullscreen }}</v-icon>
-      </v-btn>
-      <v-btn
-        class="ma-1"
-        size="small"
-        icon
-        @click="init()"
-        :title="/*回転の初期化*/ $t('reset')"
-      >
-        <v-icon>{{ mdiRestore }}</v-icon>
-      </v-btn>
+      
+      <!-- デスクトップでのみ表示するボタン -->
+      <template v-if="mdAndUp">
+        <v-btn class="ma-1" size="small" icon id="zoom-in">
+          <v-icon>{{ mdiPlus }}</v-icon>
+        </v-btn>
+        <v-btn class="ma-1" size="small" icon id="zoom-out">
+          <v-icon>{{ mdiMinus }}</v-icon>
+        </v-btn>
+        <v-btn class="ma-1" size="small" icon id="home">
+          <v-icon>{{ mdiHome }}</v-icon>
+        </v-btn>
+        <v-btn class="ma-1" size="small" icon id="full-page">
+          <v-icon>{{ mdiFullscreen }}</v-icon>
+        </v-btn>
+        <v-btn
+          class="ma-1"
+          size="small"
+          icon
+          @click="init()"
+          :title="/*回転の初期化*/ $t('reset')"
+        >
+          <v-icon>{{ mdiRestore }}</v-icon>
+        </v-btn>
+        <v-btn
+          class="ma-1"
+          size="small"
+          icon
+          @click="calculateRotation()"
+          :title="/*自動回転*/ $t('autoRotate')"
+          color="secondary"
+        >
+          <v-icon>{{ mdiAutoFix }}</v-icon>
+        </v-btn>
+      </template>
+      
+      <!-- 注釈ボタンはモバイルでも表示 -->
       <v-btn
         class="ma-1"
         color="primary"
@@ -279,7 +492,9 @@ const init = () => {
         <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>
 
+      <!-- スライダーはデスクトップのみ -->
       <v-slider
+        v-if="mdAndUp"
         v-model="rotate2"
         :max="180"
         :step="1"

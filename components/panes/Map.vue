@@ -9,6 +9,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 // @ts-ignore
 import { MarkerClusterGroup } from "leaflet.markercluster";
 import { LMap, LTileLayer, LControlLayers } from "@vue-leaflet/vue-leaflet";
+import { useDisplay } from "vuetify";
 
 interface PropType {
   zoom?: number;
@@ -18,6 +19,7 @@ interface PropType {
 }
 
 const { t } = useI18n();
+const { mobile, mdAndUp } = useDisplay();
 
 const props = withDefaults(defineProps<PropType>(), {
   zoom: 6,
@@ -63,15 +65,130 @@ const center_ = ref(props.center);
 const { featuresMap, action, canvases, pageIndex } = useSettings();
 const { settings } = usePanes();
 
+const route = useRoute();
+const router = useRouter();
+
 let markers: any[] = [];
 
 const map = ref<Map | null>(null);
 
+// URLパラメータを更新する関数
+const updateMapURLParams = () => {
+  
+  // center_が正しく初期化されていない場合は処理をスキップ
+  let lat, lng;
+  if (center_.value) {
+    // LatLngオブジェクトの場合
+    if (center_.value.lat !== undefined && center_.value.lng !== undefined) {
+      lat = center_.value.lat;
+      lng = center_.value.lng;
+    } 
+    // 配列の場合
+    else if (Array.isArray(center_.value) && center_.value.length >= 2) {
+      lat = center_.value[0];
+      lng = center_.value[1];
+    }
+  }
+  
+  if (lat === undefined || lng === undefined) {
+    return;
+  }
+  
+  const params = new URLSearchParams(window.location.search);
+  
+  // 地図のズームレベル
+  params.set('mapZoom', zoom_.value.toString());
+  
+  // 地図の中央座標
+  params.set('mapLat', lat.toFixed(6));
+  params.set('mapLng', lng.toFixed(6));
+  
+  
+  // 既存のパラメータを保持
+  const existingParams = ['u', 'annotations', 'zoom', 'centerX', 'centerY', 'rotation', 'id'];
+  for (const param of existingParams) {
+    if (route.query[param]) {
+      params.set(param, route.query[param] as string);
+    }
+  }
+  
+  // URLを更新（History APIを使用してリロードを防ぐ）
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', newUrl);
+};
+
+// デバウンス付きのURL更新
+let mapUpdateTimeout: any = null;
+const debouncedUpdateMapURLParams = () => {
+  if (mapUpdateTimeout) {
+    clearTimeout(mapUpdateTimeout);
+  }
+  mapUpdateTimeout = setTimeout(() => {
+    updateMapURLParams();
+  }, 500);
+};
+
 // Leaflet マップの準備ができた際の処理
-const onLeafletReady = (map: L.Map) => {
+const onLeafletReady = (mapInstance: L.Map) => {
   leafletReady.value = true;
-  initializeMarkerCluster(map);
-  display();
+  map.value = mapInstance;
+  initializeMarkerCluster(mapInstance);
+  
+  // URLパラメータから初期状態を復元
+  const query = route.query;
+  if (query.mapZoom) {
+    const mapZoom = parseInt(query.mapZoom as string);
+    if (!isNaN(mapZoom)) {
+      zoom_.value = mapZoom;
+    }
+  }
+  if (query.mapLat && query.mapLng) {
+    const mapLat = parseFloat(query.mapLat as string);
+    const mapLng = parseFloat(query.mapLng as string);
+    if (!isNaN(mapLat) && !isNaN(mapLng)) {
+      center_.value = [mapLat, mapLng];
+    }
+  }
+  
+  // canvasesデータが読み込まれているか確認してdisplayを実行
+  if (canvases.value && canvases.value.length > 0) {
+    display();
+  } else {
+    // データがまだない場合は、watchで後から実行される
+  }
+  
+  // 地図の移動・ズームイベントを監視
+  mapInstance.on('moveend', () => {
+    debouncedUpdateMapURLParams();
+  });
+  mapInstance.on('zoomend', () => {
+    debouncedUpdateMapURLParams();
+  });
+  
+  // URLにIDが指定されている場合、その位置を中心に表示
+  if (query.id) {
+    setTimeout(() => {
+      const id = query.id as string;
+      if (featuresMap.value[id]) {
+        const feature = featuresMap.value[id];
+        if (feature.geometry?.coordinates) {
+          // GeoJSONの座標は[longitude, latitude]の順序
+          const lng = feature.geometry.coordinates[0];
+          const lat = feature.geometry.coordinates[1];
+          center_.value = [lat, lng]; // Leafletは[latitude, longitude]の順序
+          // ズームレベルも適切に設定（IDが指定されている場合は既存のズームレベルを維持）
+          if (!query.mapZoom && !query.mapLat && !query.mapLng) {
+            zoom_.value = 15; // デフォルトで詳細表示
+          }
+        }
+      }
+    }, 500); // featuresMapが更新されるまで待つ
+  }
+  
+  // 初期化完了後、URL更新を一度実行
+  setTimeout(() => {
+    updateMapURLParams();
+  }, 300);
 };
 
 // MarkerCluster グループの初期化
@@ -87,6 +204,7 @@ const initializeMarkerCluster = (map: L.Map) => {
 };
 
 const display = () => {
+  
   // 現在のマーカーをすべて削除
   if (markerCluster) {
     markerCluster.clearLayers();
@@ -96,7 +214,7 @@ const display = () => {
   let ys: number[] = [];
 
   const features =
-    canvases.value[pageIndex.value]?.annotations[0]?.items[0]?.body?.features ||
+    canvases.value[pageIndex.value]?.annotations?.[0]?.items?.[0]?.body?.features ||
     [];
 
   if (features.length === 0) {
@@ -166,14 +284,28 @@ const display = () => {
     markers.push(marker);
   }
 
-  // 中心座標の計算
-  const centerX = xs.reduce((acc, val) => acc + val, 0) / xs.length; // 緯度の平均
-  const centerY = ys.reduce((acc, val) => acc + val, 0) / ys.length; // 経度の平均
+  // 中心座標の計算（URLパラメータがない場合のみ）
+  if (!route.query.mapLat && !route.query.mapLng) {
+    const centerX = xs.reduce((acc, val) => acc + val, 0) / xs.length; // 緯度の平均
+    const centerY = ys.reduce((acc, val) => acc + val, 0) / ys.length; // 経度の平均
 
-  // 中心座標をセット
-  center_.value = [centerX, centerY];
+    // 中心座標をセット
+    center_.value = [centerX, centerY];
+  }
 
   markerCluster.addLayers(markers);
+  
+  // 強制的に再描画
+  if (map.value) {
+    setTimeout(() => {
+      if (map.value) {
+        map.value.invalidateSize();
+      }
+      if (markerCluster) {
+        markerCluster.refreshClusters();
+      }
+    }, 100);
+  }
 };
 
 const updateMapSize = () => {
@@ -186,9 +318,35 @@ const updateMapSize = () => {
 watch(
   () => pageIndex.value,
   () => {
-    display();
+    if (leafletReady.value) {
+      display();
+    }
   }
 );
+
+// canvasesが変更された際にもdisplay()を呼び出す（初回読み込み対応）
+watch(
+  () => canvases.value,
+  () => {
+    if (leafletReady.value && canvases.value && canvases.value.length > 0) {
+      display();
+    }
+  },
+  { immediate: true }
+);
+
+// zoom_とcenter_の変更を監視してURL更新
+watch(() => zoom_.value, () => {
+  if (leafletReady.value && map.value) {
+    debouncedUpdateMapURLParams();
+  }
+});
+
+watch(() => center_.value, () => {
+  if (leafletReady.value && map.value) {
+    debouncedUpdateMapURLParams();
+  }
+}, { deep: true });
 
 watch(
   () => action.value,
@@ -238,6 +396,17 @@ watch(
     updateMapSize();
   }
 );
+
+// クリーンアップ
+onUnmounted(() => {
+  if (mapUpdateTimeout) {
+    clearTimeout(mapUpdateTimeout);
+  }
+  if (map.value) {
+    map.value.off('moveend', debouncedUpdateMapURLParams);
+    map.value.off('zoomend', debouncedUpdateMapURLParams);
+  }
+});
 </script>
 
 <template>
@@ -249,6 +418,7 @@ watch(
       :zoomAnimation="true"
       :markerZoomAnimation="true"
       @ready="onLeafletReady"
+      :zoomControl="mdAndUp"
     >
       <l-control-layers v-if="tileProviders.length > 1" />
 

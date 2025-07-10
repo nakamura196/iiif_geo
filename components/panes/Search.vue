@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { mdiMagnify, mdiImageFilterCenterFocus } from "@mdi/js";
+import { useI18n } from "vue-i18n";
 
 interface Item {
   uuid: string;

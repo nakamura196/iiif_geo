@@ -35,6 +35,7 @@ const { mobile, mdAndUp } = useDisplay();
       <template v-if="canvases.length > 0">
         <HeadersSearch></HeadersSearch>
         <HeadersLicense></HeadersLicense>
+        <HeadersJsonViewer></HeadersJsonViewer>
         <HeadersFormButton></HeadersFormButton>
       </template>
 
@@ -63,6 +64,9 @@ const { mobile, mdAndUp } = useDisplay();
         </v-list-item>
         <v-list-item>
           <HeadersLicense></HeadersLicense>
+        </v-list-item>
+        <v-list-item>
+          <HeadersJsonViewer></HeadersJsonViewer>
         </v-list-item>
         <v-list-item>
           <HeadersFormButton></HeadersFormButton>
