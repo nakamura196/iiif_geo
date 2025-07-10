@@ -139,8 +139,9 @@ onMounted(async () => {
     // 選択IDの復元と中心表示
     if (query.id) {
       const id = query.id as string;
-      setTimeout(() => {
-        if (featuresMap.value[id]) {
+      // featuresMapが準備できるまで監視
+      const checkFeature = () => {
+        if (Object.keys(featuresMap.value).length > 0 && featuresMap.value[id]) {
           const feature = featuresMap.value[id];
           
           // 画像上でその位置を中心に表示
@@ -151,8 +152,16 @@ onMounted(async () => {
             viewer.viewport.panTo(point);
           }
           
-          // アノテーションが表示されている場合は選択状態にする
-          if (showAnnotations.value) {
+          // IDが指定されている場合はアノテーションを自動表示
+          if (!showAnnotations.value) {
+            showAnnotations.value = true;
+            // アノテーション表示後に選択状態を設定
+            setTimeout(() => {
+              removeSelected();
+              setSelected(id);
+            }, 100);
+          } else {
+            // アノテーションが表示されている場合は選択状態にする
             removeSelected();
             setSelected(id);
           }
@@ -162,8 +171,13 @@ onMounted(async () => {
             type: "both", // 地図も更新するため
             id,
           };
+        } else {
+          // まだ準備できていない場合は再試行
+          setTimeout(checkFeature, 100);
         }
-      }, 500); // 初期化が完了するまで少し待つ
+      };
+      // 初回実行を少し遅延
+      setTimeout(checkFeature, 100);
     }
   });
 
