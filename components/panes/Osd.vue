@@ -27,19 +27,31 @@ watch(
     if (value.type === "map" || value.type === "both") {
       const feature = featuresMap.value[value.id];
 
-      const resourceCoords = feature.properties.resourceCoords;
+      if (feature && feature.properties?.resourceCoords) {
+        const resourceCoords = feature.properties.resourceCoords;
 
-      const x = resourceCoords[0];
-      const y = resourceCoords[1];
+        const x = resourceCoords[0];
+        const y = resourceCoords[1];
 
-      const viewport = viewer.viewport;
+        const viewport = viewer.viewport;
 
-      const point = viewport.imageToViewportCoordinates(x, y);
+        const point = viewport.imageToViewportCoordinates(x, y);
 
-      viewport.panTo(point);
+        viewport.panTo(point);
 
-      removeSelected();
-      setSelected(value.id);
+        // IDが指定されている場合はアノテーションを自動表示
+        if (useRoute().query.id && !showAnnotations.value) {
+          showAnnotations.value = true;
+          // アノテーション表示後に選択状態を設定
+          nextTick(() => {
+            removeSelected();
+            setSelected(value.id);
+          });
+        } else {
+          removeSelected();
+          setSelected(value.id);
+        }
+      }
     }
     // actionが変更されたらURLを更新
     debouncedUpdateURLParams();
@@ -102,6 +114,12 @@ onMounted(async () => {
   viewer.addHandler("open", () => {
     updateFeatureMap();
     
+    // featuresMap更新後にイベントを発行
+    nextTick(() => {
+      // featuresMapが更新されたことを他のコンポーネントに通知
+      console.log('[OSD] featuresMap updated, total features:', Object.keys(featuresMap.value).length);
+    });
+    
     // URLパラメータから初期状態を復元
     const query = route.query;
     if (query.annotations === 'true') {
@@ -136,49 +154,7 @@ onMounted(async () => {
         }
       }, 500); // featuresMapが更新されるまで待つ
     }
-    // 選択IDの復元と中心表示
-    if (query.id) {
-      const id = query.id as string;
-      // featuresMapが準備できるまで監視
-      const checkFeature = () => {
-        if (Object.keys(featuresMap.value).length > 0 && featuresMap.value[id]) {
-          const feature = featuresMap.value[id];
-          
-          // 画像上でその位置を中心に表示
-          if (feature.properties?.resourceCoords) {
-            const x = feature.properties.resourceCoords[0];
-            const y = feature.properties.resourceCoords[1];
-            const point = viewer.viewport.imageToViewportCoordinates(x, y);
-            viewer.viewport.panTo(point);
-          }
-          
-          // IDが指定されている場合はアノテーションを自動表示
-          if (!showAnnotations.value) {
-            showAnnotations.value = true;
-            // アノテーション表示後に選択状態を設定
-            setTimeout(() => {
-              removeSelected();
-              setSelected(id);
-            }, 100);
-          } else {
-            // アノテーションが表示されている場合は選択状態にする
-            removeSelected();
-            setSelected(id);
-          }
-          
-          // actionに設定して地図と同期
-          action.value = {
-            type: "both", // 地図も更新するため
-            id,
-          };
-        } else {
-          // まだ準備できていない場合は再試行
-          setTimeout(checkFeature, 100);
-        }
-      };
-      // 初回実行を少し遅延
-      setTimeout(checkFeature, 100);
-    }
+    // ID選択はプラグインで処理される
   });
 
   viewer.addHandler(

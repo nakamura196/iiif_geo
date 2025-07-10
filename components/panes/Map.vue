@@ -165,31 +165,21 @@ const onLeafletReady = (mapInstance: L.Map) => {
     debouncedUpdateMapURLParams();
   });
   
-  // URLにIDが指定されている場合、その位置を中心に表示
-  if (query.id) {
-    const id = query.id as string;
-    // featuresMapが準備できるまで監視
-    const checkFeature = () => {
-      if (Object.keys(featuresMap.value).length > 0 && featuresMap.value[id]) {
-        const feature = featuresMap.value[id];
-        if (feature.geometry?.coordinates) {
-          // GeoJSONの座標は[longitude, latitude]の順序
-          const lng = feature.geometry.coordinates[0];
-          const lat = feature.geometry.coordinates[1];
-          center_.value = [lat, lng]; // Leafletは[latitude, longitude]の順序
-          // ズームレベルも適切に設定（IDが指定されている場合は既存のズームレベルを維持）
-          if (!query.mapZoom && !query.mapLat && !query.mapLng) {
-            zoom_.value = 15; // デフォルトで詳細表示
-          }
+  // ID選択はプラグインで処理されるため、actionの変更を監視
+  watch(() => action.value, (newAction) => {
+    if (newAction.type === 'map' || newAction.type === 'both') {
+      const feature = featuresMap.value[newAction.id];
+      if (feature && feature.geometry?.coordinates) {
+        const lng = feature.geometry.coordinates[0];
+        const lat = feature.geometry.coordinates[1];
+        center_.value = [lat, lng];
+        // IDが指定されている場合はデフォルトズームを設定
+        if (route.query.id && !route.query.mapZoom) {
+          zoom_.value = 15;
         }
-      } else {
-        // まだ準備できていない場合は再試行
-        setTimeout(checkFeature, 100);
       }
-    };
-    // 初回実行を少し遅延
-    setTimeout(checkFeature, 100);
-  }
+    }
+  }, { immediate: true });
   
   // 初期化完了後、URL更新を一度実行
   setTimeout(() => {
