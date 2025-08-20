@@ -202,7 +202,7 @@ const focusCurrentLocation = () => {
         currentLocationMarker.value = new Marker({ color: '#4080FF' })
           .setLngLat(currentLngLat)
           .setPopup(new Popup().setHTML(t('現在地')))
-          .addTo(mapInstance.value!);
+          .addTo(mapInstance.value as any);
         
         currentLocationMarker.value.togglePopup();
         
@@ -319,8 +319,9 @@ const initializeMap = () => {
   });
 
   // Add navigation control
-  if (mdAndUp.value) {
-    (mapInstance.value as any).addControl(new NavigationControl(), 'top-right');
+  if (mdAndUp.value && mapInstance.value) {
+    const navControl = new NavigationControl();
+    (mapInstance.value as any).addControl(navControl, 'top-right');
   }
 
   // Add current location button
@@ -460,8 +461,8 @@ watch(
       const coordinates = feature.geometry.coordinates;
       
       if (mapInstance.value) {
-        const lng = coordinates[0] as number;
-        const lat = coordinates[1] as number;
+        const lng = (coordinates[0] as unknown) as number;
+        const lat = (coordinates[1] as unknown) as number;
         mapInstance.value.flyTo({
           center: [lng, lat],
           zoom: zoom_.value
