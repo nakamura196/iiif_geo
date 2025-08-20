@@ -13,13 +13,19 @@ export function useDisplay() {
   const snackbar = ref(false);
   const { title, manifest, canvases } = useSettings();
   const { settings } = usePanes();
+  const route = useRoute();
+  
+  // Check URL parameter for map type (default to MapGL)
+  const useMapGL = route.query.mapType !== 'leaflet';
+  const mapComponent = useMapGL ? "PanesMapGL" : "PanesMap";
+  
   const defaultPanes: PanesConfig[] = [
     {
       size: 50,
       items: [
         {
           id: "0-0",
-          componentKey: "PanesMap",
+          componentKey: mapComponent,
         },
       ],
     },

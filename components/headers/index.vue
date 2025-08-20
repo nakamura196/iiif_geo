@@ -18,38 +18,23 @@ const { mobile, mdAndUp } = useDisplay();
 </script>
 <template>
   <v-app-bar color="purple" flat :absolute="true" density="compact">
-    <template v-if="!mdAndUp">
-      <v-app-bar-nav-icon
-        variant="text"
-        @click.stop="drawer = !drawer"
-      ></v-app-bar-nav-icon>
-    </template>
-
     <v-toolbar-title>
       {{ title || "IIIF Georeference Viewer" }}
     </v-toolbar-title>
 
     <v-spacer></v-spacer>
 
-    <template v-if="mdAndUp">
-      <template v-if="canvases.length > 0">
-        <HeadersSearch></HeadersSearch>
-        <HeadersLicense></HeadersLicense>
-        <HeadersJsonViewer></HeadersJsonViewer>
-        <HeadersFormButton></HeadersFormButton>
-      </template>
-
-      <HeadersGitHub></HeadersGitHub>
-
-      <v-btn :active="false" :to="localePath({ name: 'index' })" class="ma-1">
-        <v-icon class="mr-1">{{ mdiHome }}</v-icon>
-        {{ $t("home") }}</v-btn
-      >
-
-      <HeadersHelp></HeadersHelp>
-
-      <HeadersLanguage></HeadersLanguage>
+    <!-- Always show Search and License in header, regardless of screen size -->
+    <template v-if="canvases.length > 0">
+      <HeadersSearch></HeadersSearch>
+      <HeadersLicense></HeadersLicense>
     </template>
+
+    <!-- Always show hamburger menu for other items -->
+    <v-app-bar-nav-icon
+      variant="text"
+      @click.stop="drawer = !drawer"
+    ></v-app-bar-nav-icon>
   </v-app-bar>
 
   <v-navigation-drawer
@@ -58,13 +43,8 @@ const { mobile, mdAndUp } = useDisplay();
     temporary
   >
     <v-list>
+      <!-- Only show JsonViewer and FormButton if canvases exist (Search and License are in header) -->
       <template v-if="canvases.length > 0">
-        <v-list-item>
-          <HeadersSearch></HeadersSearch>
-        </v-list-item>
-        <v-list-item>
-          <HeadersLicense></HeadersLicense>
-        </v-list-item>
         <v-list-item>
           <HeadersJsonViewer></HeadersJsonViewer>
         </v-list-item>
@@ -73,6 +53,13 @@ const { mobile, mdAndUp } = useDisplay();
         </v-list-item>
       </template>
 
+      <v-list-item>
+        <v-btn :active="false" :to="localePath({ name: 'index' })" variant="text" class="ma-1">
+          <v-icon class="mr-1">{{ mdiHome }}</v-icon>
+          {{ $t("home") }}
+        </v-btn>
+      </v-list-item>
+      
       <v-list-item>
         <HeadersGitHub></HeadersGitHub>
       </v-list-item>
