@@ -26,6 +26,11 @@ watch(
   (value) => {
     if (value.type === "map" || value.type === "both") {
       const feature = featuresMap.value[value.id];
+      
+      if (!feature || !feature.properties || !feature.properties.resourceCoords) {
+        console.warn('Feature or resourceCoords not found for id:', value.id);
+        return;
+      }
 
       const resourceCoords = feature.properties.resourceCoords;
 
@@ -51,14 +56,23 @@ onMounted(async () => {
   const index = 0;
 
   const canvas_ = canvases.value[index];
+  
+  if (!canvas_ || !canvas_.items?.[0]?.items?.[0]?.body?.service?.[0]?.id) {
+    console.error('Canvas data structure is incomplete');
+    return;
+  }
 
   const info = canvas_.items[0].items[0].body.service[0].id + "/info.json";
 
   const infoJson = await fetch(info).then((res) => res.json());
 
   const tileSources = canvases.value.map((canvas_) => {
+    if (!canvas_.items?.[0]?.items?.[0]?.body?.service?.[0]?.id) {
+      console.warn('Canvas missing service data:', canvas_);
+      return '';
+    }
     return canvas_.items[0].items[0].body.service[0].id + "/info.json";
-  });
+  }).filter(Boolean);
 
   const config: any = {
     id: "osd",
@@ -84,7 +98,7 @@ onMounted(async () => {
       return;
     }
 
-    if (!canvas_.annotations) {
+    if (!canvas_.annotations || !canvas_.annotations[0] || !canvas_.annotations[0].items?.[0]?.body?.features) {
       return;
     }
 
@@ -149,11 +163,13 @@ onMounted(async () => {
           const feature = featuresMap.value[id];
           
           // 画像上でその位置を中心に表示
-          if (feature.properties?.resourceCoords) {
+          if (feature.properties?.resourceCoords && Array.isArray(feature.properties.resourceCoords) && feature.properties.resourceCoords.length >= 2) {
             const x = feature.properties.resourceCoords[0];
             const y = feature.properties.resourceCoords[1];
-            const point = viewer.viewport.imageToViewportCoordinates(x, y);
-            viewer.viewport.panTo(point);
+            if (typeof x === 'number' && typeof y === 'number') {
+              const point = viewer.viewport.imageToViewportCoordinates(x, y);
+              viewer.viewport.panTo(point);
+            }
           }
           
           // IDが指定されている場合はアノテーションを自動表示
@@ -225,19 +241,23 @@ const updateURLParams = () => {
   // ズームレベル
   if (viewer && viewer.viewport) {
     const zoom = viewer.viewport.getZoom();
-    params.set('zoom', zoom.toFixed(2));
+    if (typeof zoom === 'number') {
+      params.set('zoom', zoom.toFixed(2));
+    }
     
     // ビューポートの中央座標
     const center = viewer.viewport.getCenter();
-    params.set('centerX', center.x.toFixed(4));
-    params.set('centerY', center.y.toFixed(4));
+    if (center && typeof center.x === 'number' && typeof center.y === 'number') {
+      params.set('centerX', center.x.toFixed(4));
+      params.set('centerY', center.y.toFixed(4));
+    }
   }
   
   // 回転角度
   params.set('rotation', rotate.value.toString());
   
   // 選択されているIDを追加
-  if (action.value.id) {
+  if (action.value && action.value.id) {
     params.set('id', action.value.id);
   }
   
@@ -308,10 +328,25 @@ watch(
     if (value) {
       const features = featuresMap.value;
 
-      const fullWidth = viewer.world.getItemAt(0).getContentSize().x;
+      const worldItem = viewer.world.getItemAt(0);
+      if (!worldItem) {
+        console.error('No world item found');
+        return;
+      }
+      const contentSize = worldItem.getContentSize();
+      if (!contentSize) {
+        console.error('No content size found');
+        return;
+      }
+      const fullWidth = contentSize.x;
 
       for (const id in features) {
         const feature = features[id];
+        
+        if (!feature) {
+          console.warn('Feature not found for id:', id);
+          continue;
+        }
 
         let overlay: any = null;
 
@@ -346,7 +381,7 @@ watch(
             height,
             className: "osdc-highlight osdc-base",
           };
-        } else {
+        } else if (feature.properties && feature.properties.resourceCoords && Array.isArray(feature.properties.resourceCoords) && feature.properties.resourceCoords.length >= 2) {
           const resourceCoords = feature.properties.resourceCoords;
           const x = Number(resourceCoords[0]) / fullWidth;
           const y = Number(resourceCoords[1]) / fullWidth;
@@ -363,14 +398,22 @@ watch(
             checkResize: false,
             className: "pin-icon",
           };
+        } else {
+          console.warn('Feature missing required coordinate data:', id);
+          continue;
         }
 
-        viewer.addOverlay(overlay);
+        if (overlay) {
+          viewer.addOverlay(overlay);
+        } else {
+          console.warn('No overlay created for feature:', id);
+          continue;
+        }
 
         new $OpenSeadragon.MouseTracker({
           element: overlay.id,
           clickHandler: function (e: any) {
-            if (e) {
+            if (e && e.originalTarget) {
               const id = e.originalTarget.id;
 
               removeSelected();
@@ -406,9 +449,12 @@ function setSelected(id: string) {
 function removeSelected() {
   const classList = ["pin-selected", "osdc-selected"];
   for (const className of classList) {
-    const e = document.getElementsByClassName(className);
-    for (let i = 0; i < e.length; i++) {
-      e[i].classList.remove(className);
+    const elements = document.getElementsByClassName(className);
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      if (element) {
+        element.classList.remove(className);
+      }
     }
   }
 }
@@ -442,10 +488,16 @@ const calculateRotation = () => {
   
   // 3点以上ある場合は分布パターンを使用、それ以外は2点間の角度を使用
   const result = features.length >= 3 
-    ? calculateImageRotationAdvanced(features as any)
-    : calculateImageRotation(features as any);
+    ? calculateImageRotationAdvanced(features as any[])
+    : calculateImageRotation(features as any[]);
     
   if (!result) {
+    console.warn('Failed to calculate rotation');
+    return;
+  }
+  
+  if (typeof result.rotation !== 'number' || isNaN(result.rotation)) {
+    console.warn('Invalid rotation result:', result.rotation);
     return;
   }
   

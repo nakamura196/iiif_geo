@@ -12,6 +12,18 @@ export interface Feature {
   [key: string]: any;
 }
 
+interface ValidFeature {
+  properties: {
+    resourceCoords: [number, number, ...number[]];
+    [key: string]: any;
+  };
+  geometry: {
+    coordinates: [number, number, ...number[]];
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export interface RotationCalculationResult {
   rotation: number;
   debug?: {
@@ -24,6 +36,21 @@ export interface RotationCalculationResult {
   };
 }
 
+function isValidFeature(feature: Feature): feature is ValidFeature {
+  return !!(
+    feature.properties?.resourceCoords && 
+    Array.isArray(feature.properties.resourceCoords) && 
+    feature.properties.resourceCoords.length >= 2 &&
+    typeof feature.properties.resourceCoords[0] === 'number' &&
+    typeof feature.properties.resourceCoords[1] === 'number' &&
+    feature.geometry?.coordinates && 
+    Array.isArray(feature.geometry.coordinates) && 
+    feature.geometry.coordinates.length >= 2 &&
+    typeof feature.geometry.coordinates[0] === 'number' &&
+    typeof feature.geometry.coordinates[1] === 'number'
+  );
+}
+
 /**
  * 画像座標と地理座標の対応点から、画像を北が上になるように回転させる角度を計算
  * @param features - 対応点の配列
@@ -31,9 +58,7 @@ export interface RotationCalculationResult {
  */
 export function calculateImageRotation(features: Feature[]): RotationCalculationResult | null {
   // すべての特徴点を配列に変換
-  const validFeatures = features.filter((f) => 
-    f.properties?.resourceCoords && f.geometry?.coordinates
-  );
+  const validFeatures: ValidFeature[] = features.filter(isValidFeature);
   
   if (validFeatures.length < 2) {
     return null;
@@ -41,15 +66,16 @@ export function calculateImageRotation(features: Feature[]): RotationCalculation
   
   // 最も離れた2点を見つける（より正確な角度計算のため）
   let maxDistance = 0;
-  let feature1 = validFeatures[0];
-  let feature2 = validFeatures[1];
+  let feature1: ValidFeature = validFeatures[0]!;
+  let feature2: ValidFeature = validFeatures[1]!;
   
   for (let i = 0; i < validFeatures.length; i++) {
     for (let j = i + 1; j < validFeatures.length; j++) {
-      const f1 = validFeatures[i];
-      const f2 = validFeatures[j];
-      const dx = f2.properties!.resourceCoords![0] - f1.properties!.resourceCoords![0];
-      const dy = f2.properties!.resourceCoords![1] - f1.properties!.resourceCoords![1];
+      const f1 = validFeatures[i]!;
+      const f2 = validFeatures[j]!;
+      
+      const dx = f2.properties.resourceCoords[0] - f1.properties.resourceCoords[0];
+      const dy = f2.properties.resourceCoords[1] - f1.properties.resourceCoords[1];
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance > maxDistance) {
         maxDistance = distance;
@@ -61,22 +87,22 @@ export function calculateImageRotation(features: Feature[]): RotationCalculation
   
   // 画像座標系での2点
   const img1 = {
-    x: feature1.properties!.resourceCoords![0],
-    y: feature1.properties!.resourceCoords![1]
+    x: feature1.properties.resourceCoords[0],
+    y: feature1.properties.resourceCoords[1]
   };
   const img2 = {
-    x: feature2.properties!.resourceCoords![0],
-    y: feature2.properties!.resourceCoords![1]
+    x: feature2.properties.resourceCoords[0],
+    y: feature2.properties.resourceCoords[1]
   };
   
   // 地理座標系での2点（経度、緯度）
   const geo1 = {
-    lng: feature1.geometry!.coordinates![0],
-    lat: feature1.geometry!.coordinates![1]
+    lng: feature1.geometry.coordinates[0],
+    lat: feature1.geometry.coordinates[1]
   };
   const geo2 = {
-    lng: feature2.geometry!.coordinates![0],
-    lat: feature2.geometry!.coordinates![1]
+    lng: feature2.geometry.coordinates[0],
+    lat: feature2.geometry.coordinates[1]
   };
   
   // 画像座標系でのベクトル（右がX正、下がY正）
@@ -175,9 +201,7 @@ function calculatePrincipalAxis(points: { x: number; y: number }[]): { angle: nu
  * @returns 回転角度（度）とデバッグ情報
  */
 export function calculateImageRotationFromDistribution(features: Feature[]): RotationCalculationResult | null {
-  const validFeatures = features.filter((f) => 
-    f.properties?.resourceCoords && f.geometry?.coordinates
-  );
+  const validFeatures: ValidFeature[] = features.filter(isValidFeature);
   
   if (validFeatures.length < 3) {
     return calculateImageRotation(features); // フォールバック
@@ -185,20 +209,20 @@ export function calculateImageRotationFromDistribution(features: Feature[]): Rot
 
   // 画像座標の点群
   const imagePoints = validFeatures.map(f => ({
-    x: f.properties!.resourceCoords![0],
-    y: f.properties!.resourceCoords![1]
+    x: f.properties.resourceCoords[0],
+    y: f.properties.resourceCoords[1]
   }));
 
   // 地理座標の点群（緯度経度を平面に投影）
   const geoCenter = {
-    lat: validFeatures.reduce((sum, f) => sum + f.geometry!.coordinates![1], 0) / validFeatures.length,
-    lng: validFeatures.reduce((sum, f) => sum + f.geometry!.coordinates![0], 0) / validFeatures.length
+    lat: validFeatures.reduce((sum, f) => sum + f.geometry.coordinates[1], 0) / validFeatures.length,
+    lng: validFeatures.reduce((sum, f) => sum + f.geometry.coordinates[0], 0) / validFeatures.length
   };
   
   const cosLat = Math.cos(geoCenter.lat * Math.PI / 180);
   const geoPoints = validFeatures.map(f => ({
-    x: (f.geometry!.coordinates![0] - geoCenter.lng) * cosLat * 111000, // 経度 → X（東向き正）
-    y: (f.geometry!.coordinates![1] - geoCenter.lat) * 111000  // 緯度 → Y（北向き正）
+    x: (f.geometry.coordinates[0] - geoCenter.lng) * cosLat * 111000, // 経度 → X（東向き正）
+    y: (f.geometry.coordinates[1] - geoCenter.lat) * 111000  // 緯度 → Y（北向き正）
   }));
 
   // 各点群の主軸を計算
@@ -230,11 +254,11 @@ export function calculateImageRotationFromDistribution(features: Feature[]): Rot
   
   // 最も北（緯度が最大）の点と最も南（緯度が最小）の点を見つける
   let northIdx = 0, southIdx = 0;
-  let maxLat = validFeatures[0].geometry!.coordinates![1];
-  let minLat = validFeatures[0].geometry!.coordinates![1];
+  let maxLat = validFeatures[0]!.geometry.coordinates[1];
+  let minLat = validFeatures[0]!.geometry.coordinates[1];
   
   for (let i = 1; i < validFeatures.length; i++) {
-    const lat = validFeatures[i].geometry!.coordinates![1];
+    const lat = validFeatures[i]!.geometry.coordinates[1];
     if (lat > maxLat) {
       maxLat = lat;
       northIdx = i;
@@ -248,11 +272,11 @@ export function calculateImageRotationFromDistribution(features: Feature[]): Rot
   // 北と南が同じ点の場合は、東西で判断
   if (northIdx === southIdx) {
     let eastIdx = 0, westIdx = 0;
-    let maxLng = validFeatures[0].geometry!.coordinates![0];
-    let minLng = validFeatures[0].geometry!.coordinates![0];
+    let maxLng = validFeatures[0]!.geometry.coordinates[0];
+    let minLng = validFeatures[0]!.geometry.coordinates[0];
     
     for (let i = 1; i < validFeatures.length; i++) {
-      const lng = validFeatures[i].geometry!.coordinates![0];
+      const lng = validFeatures[i]!.geometry.coordinates[0];
       if (lng > maxLng) {
         maxLng = lng;
         eastIdx = i;
@@ -269,6 +293,11 @@ export function calculateImageRotationFromDistribution(features: Feature[]): Rot
   // 画像上での北の点と南の点の位置関係
   const northImgPoint = imagePoints[northIdx];
   const southImgPoint = imagePoints[southIdx];
+  
+  if (!northImgPoint || !southImgPoint) {
+    console.error('Failed to get image points for north/south indices');
+    return null;
+  }
   
   // 回転後の画像で、北の点が南の点より上（Y座標が小さい）にあるべき
   // 現在の回転角度で北の点と南の点の位置を計算

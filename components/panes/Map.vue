@@ -294,13 +294,15 @@ const onLeafletReady = (mapInstance: L.Map) => {
       
       if (Object.keys(featuresMap.value).length > 0 && featuresMap.value[id]) {
         const feature = featuresMap.value[id];
-        if (feature.geometry?.coordinates) {
+        if (feature.geometry?.coordinates && feature.geometry.coordinates.length >= 2) {
           // URLパラメータで座標が指定されていない場合のみ、IDの位置に移動
           if (!query.mapLat || !query.mapLng) {
             // GeoJSONの座標は[longitude, latitude]の順序
             const lng = feature.geometry.coordinates[0];
             const lat = feature.geometry.coordinates[1];
-            center_.value = [lat, lng]; // Leafletは[latitude, longitude]の順序
+            if (typeof lng === 'number' && typeof lat === 'number' && !isNaN(lng) && !isNaN(lat)) {
+              center_.value = [lat, lng]; // Leafletは[latitude, longitude]の順序
+            }
           }
           // ズームレベルも適切に設定（IDが指定されている場合は既存のズームレベルを維持）
           if (!query.mapZoom && !query.mapLat && !query.mapLng) {
@@ -356,6 +358,11 @@ const display = () => {
   markers = [];
 
   for (const feature of features) {
+    if (!feature.geometry || !feature.geometry.coordinates) {
+      console.warn('Feature missing geometry:', feature.id);
+      continue;
+    }
+    
     const coordinates = feature.geometry.coordinates;
 
     if (!coordinates[0] || !coordinates[1]) {
@@ -486,6 +493,11 @@ watch(
     // value.type === "osd" || value.type === "both"
     if (true) {
       const feature = featuresMap.value[value.id];
+
+      if (!feature || !feature.geometry || !feature.geometry.coordinates) {
+        console.warn('Feature not found or missing geometry for id:', value.id);
+        return;
+      }
 
       const coordinates = feature.geometry.coordinates;
 

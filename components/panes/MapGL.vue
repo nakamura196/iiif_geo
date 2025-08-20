@@ -226,7 +226,12 @@ const switchMapStyle = (index: number) => {
   }
   
   currentStyleIndex.value = index;
-  const style = mapStyles.value[index].style;
+  const style = mapStyles.value[index]?.style;
+  
+  if (!style) {
+    console.error('Style not found for index:', index);
+    return;
+  }
   
   // Store current location marker position before style switch
   let currentLocationData: { lngLat: LngLatLike, popup: string } | null = null;
@@ -336,8 +341,8 @@ const setupClusteringWithData = (geojson: any) => {
   
   // Add cluster count layer only if the style supports text rendering
   // Skip for custom raster styles that don't have glyphs
-  const currentStyle = mapStyles.value[currentStyleIndex.value].style;
-  const isCustomRasterStyle = typeof currentStyle === 'object' && !(currentStyle as any).glyphs;
+  const currentStyle = mapStyles.value[currentStyleIndex.value]?.style;
+  const isCustomRasterStyle = typeof currentStyle === 'object' && !(currentStyle as any)?.glyphs;
   
   if (!isCustomRasterStyle) {
     try {
@@ -406,7 +411,13 @@ const setupClusteringWithData = (geojson: any) => {
       return;
     }
     
-    const clusterId = features[0].properties.cluster_id;
+    const feature = features[0];
+    if (!feature || !feature.properties) {
+      console.error('Feature or properties not found');
+      return;
+    }
+    
+    const clusterId = feature.properties.cluster_id;
     
     // Direct approach without callback
     const source = mapInstance.value!.getSource('points') as any;
@@ -416,7 +427,11 @@ const setupClusteringWithData = (geojson: any) => {
     }
     
     // Try different approach - just zoom in to the cluster location
-    const coordinates = (features[0].geometry as any).coordinates;
+    const coordinates = (feature.geometry as any)?.coordinates;
+    if (!coordinates) {
+      console.error('No coordinates found for cluster');
+      return;
+    }
     const currentZoom = mapInstance.value!.getZoom();
     
     
@@ -438,7 +453,17 @@ const setupClusteringWithData = (geojson: any) => {
     }
     
     const feature = e.features[0];
-    const id = feature.properties!.id;
+    if (!feature || !feature.properties) {
+      console.error('Feature or properties not found');
+      return;
+    }
+    
+    const id = feature.properties.id;
+    
+    if (!id) {
+      console.error('No ID found for feature');
+      return;
+    }
     
     selectedMarkerId.value = id;
     action.value = {
@@ -459,13 +484,19 @@ const setupClusteringWithData = (geojson: any) => {
     }
     
     // Show popup
-    const coordinates = (feature.geometry as any).coordinates.slice();
+    const coordinates = (feature.geometry as any)?.coordinates?.slice();
+    if (!coordinates) {
+      console.error('No coordinates found for feature');
+      return;
+    }
+    
+    const properties = feature.properties;
     const description = `
       <div>
-        <div>ID: ${feature.properties!.id}</div>
-        ${feature.properties!.label ? `<div style="margin-top: 4px;">${t("name")}: ${feature.properties!.label}</div>` : ""}
-        ${feature.properties!.tags && Array.isArray(feature.properties!.tags) && feature.properties!.tags.length ? `<div style="margin-top: 4px;">${t("tag")}: ${feature.properties!.tags.join(",")}</div>` : ""}
-        ${feature.properties!.url ? `<div style="margin-top: 8px;"><a target="_blank" href="${feature.properties!.url}">${t("detail")}</a></div>` : ""}
+        <div>ID: ${properties.id || ''}</div>
+        ${properties.label ? `<div style="margin-top: 4px;">${t("name")}: ${properties.label}</div>` : ""}
+        ${properties.tags && Array.isArray(properties.tags) && properties.tags.length ? `<div style="margin-top: 4px;">${t("tag")}: ${properties.tags.join(",")}</div>` : ""}
+        ${properties.url ? `<div style="margin-top: 8px;"><a target="_blank" href="${properties.url}">${t("detail")}</a></div>` : ""}
       </div>
     `;
     
@@ -523,7 +554,7 @@ const setupClustering = () => {
     },
     geometry: {
       type: 'Point',
-      coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]]
+      coordinates: [feature.geometry?.coordinates?.[0] || 0, feature.geometry?.coordinates?.[1] || 0]
     }
   }));
   
@@ -556,8 +587,8 @@ const display = () => {
     let maxLat = -Infinity;
     
     for (const feature of features) {
-      const coordinates = feature.geometry.coordinates;
-      if (coordinates[0] && coordinates[1]) {
+      const coordinates = feature.geometry?.coordinates;
+      if (coordinates?.[0] && coordinates?.[1]) {
         const lng = coordinates[0];
         const lat = coordinates[1];
         minLng = Math.min(minLng, lng);
@@ -585,7 +616,12 @@ const display = () => {
 const initializeMap = () => {
   if (!mapContainer.value) return;
 
-  const initialStyle = mapStyles.value[currentStyleIndex.value].style;
+  const initialStyle = mapStyles.value[currentStyleIndex.value]?.style;
+  
+  if (!initialStyle) {
+    console.error('Initial style not found');
+    return;
+  }
   
   mapInstance.value = new Map({
     container: mapContainer.value,
@@ -595,10 +631,10 @@ const initializeMap = () => {
   });
 
   // Add navigation control
-  if (mdAndUp.value) {
+  // @ts-expect-error - MapLibre GL type instantiation issue 
+  if (mdAndUp.value && mapInstance.value) {
     const navControl = new NavigationControl();
-    // @ts-ignore - Type instantiation issue with MapLibre GL
-    mapInstance.value?.addControl(navControl, 'top-right');
+    (mapInstance.value as any).addControl(navControl, 'top-right');
   }
 
   // Add current location button
@@ -695,13 +731,17 @@ const initializeMap = () => {
             if (!query.mapLat || !query.mapLng) {
               const lng = feature.geometry.coordinates[0];
               const lat = feature.geometry.coordinates[1];
-              center_.value = [lng, lat];
+              if (lng !== undefined && lat !== undefined) {
+                center_.value = [lng, lat];
+              }
             }
             if (!query.mapZoom && !query.mapLat && !query.mapLng) {
               zoom_.value = 15;
             }
-            mapInstance.value!.setCenter(center_.value as LngLatLike);
-            mapInstance.value!.setZoom(zoom_.value);
+            if (center_.value && mapInstance.value) {
+              mapInstance.value.setCenter(center_.value as LngLatLike);
+              mapInstance.value.setZoom(zoom_.value);
+            }
           }
         }
       }, 500);
@@ -738,27 +778,46 @@ watch(
   (value) => {
     if (value && value.id && featuresMap.value[value.id]) {
       const feature = featuresMap.value[value.id];
+      
+      if (!feature || !feature.geometry?.coordinates) {
+        console.error('Feature or geometry not found for id:', value.id);
+        return;
+      }
+      
       const coordinates = feature.geometry.coordinates;
+      
+      if (!coordinates || coordinates.length < 2) {
+        console.error('Invalid coordinates for feature:', value.id);
+        return;
+      }
       
       // Update selected marker ID
       selectedMarkerId.value = value.id;
       
       if (mapInstance.value) {
-        const lng = (coordinates[0] as unknown) as number;
-        const lat = (coordinates[1] as unknown) as number;
-        mapInstance.value.flyTo({
-          center: [lng, lat],
-          zoom: 15
-        });
+        const lng = coordinates[0];
+        const lat = coordinates[1];
         
-        // Update paint property to highlight selected point
-        if (mapInstance.value.getLayer('unclustered-point')) {
-          mapInstance.value.setPaintProperty('unclustered-point', 'circle-color', [
-            'case',
-            ['==', ['get', 'id'], selectedMarkerId.value],
-            '#FF0000',
-            '#3FB1CE'
-          ]);
+        if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
+          console.error('Invalid coordinate values:', lng, lat);
+          return;
+        }
+        
+        if (typeof lng === 'number' && typeof lat === 'number' && !isNaN(lng) && !isNaN(lat)) {
+          mapInstance.value.flyTo({
+            center: [lng, lat],
+            zoom: 15
+          });
+          
+          // Update paint property to highlight selected point
+          if (mapInstance.value.getLayer('unclustered-point')) {
+            mapInstance.value.setPaintProperty('unclustered-point', 'circle-color', [
+              'case',
+              ['==', ['get', 'id'], selectedMarkerId.value],
+              '#FF0000',
+              '#3FB1CE'
+            ]);
+          }
         }
       }
     }
