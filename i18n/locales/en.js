@@ -21,4 +21,7 @@ export default {
     "現在地を表示": "Show Current Location",
     "位置情報の取得に失敗しました": "Failed to get location information",
     "お使いのブラウザは位置情報をサポートしていません": "Your browser does not support geolocation",
+    "openInNewTab": "Open in New Tab",
+    "copyToClipboard": "Copy to Clipboard",
+    "jsonData": "JSON Data",
 }
