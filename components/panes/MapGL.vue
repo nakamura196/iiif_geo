@@ -320,7 +320,7 @@ const initializeMap = () => {
 
   // Add navigation control
   if (mdAndUp.value) {
-    mapInstance.value!.addControl(new NavigationControl(), 'top-right');
+    (mapInstance.value as any).addControl(new NavigationControl(), 'top-right');
   }
 
   // Add current location button
@@ -460,8 +460,10 @@ watch(
       const coordinates = feature.geometry.coordinates;
       
       if (mapInstance.value) {
+        const lng = coordinates[0] as number;
+        const lat = coordinates[1] as number;
         mapInstance.value.flyTo({
-          center: [coordinates[0], coordinates[1]] as [number, number],
+          center: [lng, lat],
           zoom: zoom_.value
         });
       }
