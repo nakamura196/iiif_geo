@@ -71,6 +71,7 @@ const router = useRouter();
 let markers: any[] = [];
 
 const map = ref<Map | null>(null);
+const currentLocationMarker = ref<L.Marker | null>(null);
 
 // URLパラメータを更新する関数
 const updateMapURLParams = () => {
@@ -128,11 +129,92 @@ const debouncedUpdateMapURLParams = () => {
   }, 500);
 };
 
+// 現在地にフォーカスする関数
+const focusCurrentLocation = () => {
+  if (!map.value) return;
+  
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const currentLatLng = [latitude, longitude] as [number, number];
+        
+        // 現在地にマップを移動
+        map.value!.setView(currentLatLng, 15);
+        
+        // 既存の現在地マーカーがあれば削除
+        if (currentLocationMarker.value) {
+          currentLocationMarker.value.remove();
+        }
+        
+        // 現在地マーカーを作成
+        currentLocationMarker.value = L.marker(currentLatLng, {
+          icon: L.icon({
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI4IiBmaWxsPSIjNDA4MEZGIiBmaWxsLW9wYWNpdHk9IjAuMyIgc3Ryb2tlPSIjNDA4MEZGIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI0IiBmaWxsPSIjNDA4MEZGIi8+PC9zdmc+',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          })
+        });
+        
+        currentLocationMarker.value.addTo(map.value as L.Map);
+        currentLocationMarker.value.bindPopup(t('現在地')).openPopup();
+        
+        // URL パラメータも更新
+        center_.value = currentLatLng;
+        zoom_.value = 15;
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        alert(t('位置情報の取得に失敗しました'));
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+  } else {
+    alert(t('お使いのブラウザは位置情報をサポートしていません'));
+  }
+};
+
 // Leaflet マップの準備ができた際の処理
 const onLeafletReady = (mapInstance: L.Map) => {
   leafletReady.value = true;
   map.value = mapInstance;
   initializeMarkerCluster(mapInstance);
+  
+  // 現在地ボタンを追加
+  const LocationControl = L.Control.extend({
+    options: {
+      position: 'topright'
+    },
+    onAdd: function() {
+      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+      const button = L.DomUtil.create('a', '', container);
+      button.innerHTML = '📍';
+      button.href = '#';
+      button.title = t('現在地を表示');
+      button.style.fontSize = '18px';
+      button.style.width = '30px';
+      button.style.height = '30px';
+      button.style.lineHeight = '30px';
+      button.style.textAlign = 'center';
+      button.style.textDecoration = 'none';
+      button.style.display = 'block';
+      button.style.backgroundColor = 'white';
+      button.style.cursor = 'pointer';
+      
+      L.DomEvent.on(button, 'click', function(e: Event) {
+        L.DomEvent.preventDefault(e);
+        focusCurrentLocation();
+      });
+      
+      return container;
+    }
+  });
+  
+  new LocationControl().addTo(mapInstance);
   
   // URLパラメータから初期状態を復元
   const query = route.query;
