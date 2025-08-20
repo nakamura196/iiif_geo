@@ -24,4 +24,5 @@ export default {
     "openInNewTab": "Open in New Tab",
     "copyToClipboard": "Copy to Clipboard",
     "jsonData": "JSON Data",
+    "座標": "Coordinates",
 }

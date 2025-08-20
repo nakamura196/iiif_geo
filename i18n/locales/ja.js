@@ -24,4 +24,5 @@ export default {
     "openInNewTab": "新しいタブで開く",
     "copyToClipboard": "クリップボードにコピー",
     "jsonData": "JSONデータ",
+    "座標": "座標",
 }

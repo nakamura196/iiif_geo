@@ -106,7 +106,7 @@ const updateMapURLParams = () => {
   
   
   // 既存のパラメータを保持
-  const existingParams = ['u', 'annotations', 'zoom', 'centerX', 'centerY', 'rotation', 'id'];
+  const existingParams = ['u', 'annotations', 'zoom', 'centerX', 'centerY', 'rotation', 'id', 'lat', 'lng'];
   for (const param of existingParams) {
     if (route.query[param]) {
       params.set(param, route.query[param] as string);
@@ -218,17 +218,53 @@ const onLeafletReady = (mapInstance: L.Map) => {
   
   // URLパラメータから初期状態を復元
   const query = route.query;
-  if (query.mapZoom) {
-    const mapZoom = parseInt(query.mapZoom as string);
-    if (!isNaN(mapZoom)) {
-      zoom_.value = mapZoom;
+  
+  // ズームレベルの設定（zoom または mapZoom パラメータ）
+  if (query.zoom || query.mapZoom) {
+    const zoomParam = query.zoom || query.mapZoom;
+    const zoomValue = parseInt(zoomParam as string);
+    if (!isNaN(zoomValue)) {
+      zoom_.value = zoomValue;
     }
   }
-  if (query.mapLat && query.mapLng) {
+  
+  // 座標の設定（lat/lng または mapLat/mapLng パラメータ）
+  // 優先順位: lat/lng > mapLat/mapLng
+  let hasCoordinates = false;
+  if (query.lat && query.lng) {
+    const lat = parseFloat(query.lat as string);
+    const lng = parseFloat(query.lng as string);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      center_.value = [lat, lng];
+      hasCoordinates = true;
+      
+      // lat/lngが指定された場合、適切なズームレベルを設定（他のズームパラメータがない場合）
+      if (!query.zoom && !query.mapZoom) {
+        zoom_.value = 15;
+      }
+      
+      // 指定座標にマーカーを配置
+      setTimeout(() => {
+        if (map.value) {
+          const focusMarker = L.marker([lat, lng], {
+            icon: L.icon({
+              iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMkM4LjEzIDIgNSA1LjEzIDUgOWMwIDUuMjUgNyAxMyA3IDEzczctNy43NSA3LTEzYzAtMy44Ny0zLjEzLTctNy03em0wIDkuNWMtMS4zOCAwLTIuNS0xLjEyLTIuNS0yLjVzMS4xMi0yLjUgMi41LTIuNSAyLjUgMS4xMiAyLjUgMi41LTEuMTIgMi41LTIuNSAyLjV6IiBmaWxsPSIjRkY0NDQ0Ii8+PC9zdmc+',
+              iconSize: [30, 30],
+              iconAnchor: [15, 30],
+              popupAnchor: [0, -30]
+            })
+          });
+          focusMarker.addTo(map.value as L.Map);
+          focusMarker.bindPopup(`${t('座標')}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`).openPopup();
+        }
+      }, 500);
+    }
+  } else if (query.mapLat && query.mapLng) {
     const mapLat = parseFloat(query.mapLat as string);
     const mapLng = parseFloat(query.mapLng as string);
     if (!isNaN(mapLat) && !isNaN(mapLng)) {
       center_.value = [mapLat, mapLng];
+      hasCoordinates = true;
     }
   }
   
@@ -247,8 +283,8 @@ const onLeafletReady = (mapInstance: L.Map) => {
     debouncedUpdateMapURLParams();
   });
   
-  // URLにIDが指定されている場合、その位置を中心に表示
-  if (query.id) {
+  // URLにIDが指定されている場合、その位置を中心に表示（座標パラメータがない場合のみ）
+  if (query.id && !hasCoordinates) {
     const id = query.id as string;
     // featuresMapが準備できるまで監視（デプロイ環境対応）
     let attempts = 0;
