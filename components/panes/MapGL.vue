@@ -329,7 +329,6 @@ const setupClusteringWithData = (geojson: any) => {
         ]
       }
     });
-    console.log('Cluster layer added successfully');
   } catch (e) {
     console.error('Failed to add cluster layer:', e);
     return;
@@ -399,19 +398,15 @@ const setupClusteringWithData = (geojson: any) => {
   
   // Add click handler for clusters
   mapInstance.value.on('click', 'clusters', (e) => {
-    console.log('Cluster clicked!');
     const features = mapInstance.value!.queryRenderedFeatures(e.point, {
       layers: ['clusters']
     });
     
-    console.log('Cluster features:', features);
     if (features.length === 0) {
-      console.log('No cluster features found');
       return;
     }
     
     const clusterId = features[0].properties.cluster_id;
-    console.log('Cluster ID:', clusterId);
     
     // Direct approach without callback
     const source = mapInstance.value!.getSource('points') as any;
@@ -424,7 +419,6 @@ const setupClusteringWithData = (geojson: any) => {
     const coordinates = (features[0].geometry as any).coordinates;
     const currentZoom = mapInstance.value!.getZoom();
     
-    console.log('Current zoom:', currentZoom, 'Coordinates:', coordinates);
     
     // Zoom in by 2 levels or to maxZoom
     mapInstance.value!.easeTo({
@@ -550,27 +544,39 @@ const setupClustering = () => {
 const display = () => {
   setupClustering();
   
-  // Calculate center if not specified in URL
+  // Calculate bounds to fit all markers if not specified in URL
   const features =
     canvases.value[pageIndex.value]?.annotations?.[0]?.items?.[0]?.body?.features ||
     [];
   
-  if (features.length > 0 && !route.query.mapLat && !route.query.mapLng) {
-    let xs: number[] = [];
-    let ys: number[] = [];
+  if (features.length > 0 && !route.query.mapLat && !route.query.mapLng && !route.query.mapZoom) {
+    let minLng = Infinity;
+    let maxLng = -Infinity;
+    let minLat = Infinity;
+    let maxLat = -Infinity;
     
     for (const feature of features) {
       const coordinates = feature.geometry.coordinates;
       if (coordinates[0] && coordinates[1]) {
-        xs.push(coordinates[1]); // latitude
-        ys.push(coordinates[0]); // longitude
+        const lng = coordinates[0];
+        const lat = coordinates[1];
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
       }
     }
     
-    if (xs.length > 0 && ys.length > 0) {
-      const centerX = xs.reduce((acc, val) => acc + val, 0) / xs.length;
-      const centerY = ys.reduce((acc, val) => acc + val, 0) / ys.length;
-      center_.value = [centerY, centerX]; // [lng, lat]
+    if (minLng !== Infinity && maxLng !== -Infinity) {
+      // Fit map to bounds with padding
+      mapInstance.value?.fitBounds(
+        [[minLng, minLat], [maxLng, maxLat]],
+        {
+          padding: { top: 50, bottom: 50, left: 50, right: 50 },
+          maxZoom: 15, // Prevent zooming in too much if markers are very close
+          duration: 1000
+        }
+      );
     }
   }
 };
@@ -666,12 +672,15 @@ const initializeMap = () => {
       }
     }
 
-    if (center_.value && zoom_.value) {
-      mapInstance.value!.setCenter(center_.value as LngLatLike);
-      mapInstance.value!.setZoom(zoom_.value);
+    // Only set center/zoom if we have URL parameters
+    if (hasCoordinates || query.mapZoom || query.zoom) {
+      if (center_.value && zoom_.value) {
+        mapInstance.value!.setCenter(center_.value as LngLatLike);
+        mapInstance.value!.setZoom(zoom_.value);
+      }
     }
 
-    // Display features
+    // Display features (will auto-fit if no URL params)
     if (canvases.value && canvases.value.length > 0) {
       display();
     }
