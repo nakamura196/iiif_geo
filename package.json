@@ -7,7 +7,9 @@
     "generate": "nuxt generate --dotenv .env.production",
     "generate:hi": "nuxt generate --dotenv .env.hi",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@nuxt/content": "^3.3.0",
