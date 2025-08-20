@@ -26,4 +26,5 @@ export default {
     "jsonData": "JSON Data",
     "座標": "Coordinates",
     "れきちず": "Historical Map",
+    "レイヤー": "Layers",
 }

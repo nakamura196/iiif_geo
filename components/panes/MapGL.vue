@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Map, NavigationControl, Marker, Popup, type LngLatLike, type MapSourceDataEvent } from "maplibre-gl";
+import { mdiLayers } from "@mdi/js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useDisplay } from "vuetify";
 
@@ -103,6 +104,7 @@ const mapStyles = ref([
 ]);
 
 const currentStyleIndex = ref(0);
+const showLayerMenu = ref(false);
 
 // MapLibre GL instance
 const mapInstance = ref<Map | null>(null);
@@ -761,24 +763,39 @@ onUnmounted(() => {
   <div class="map-container">
     <div ref="mapContainer" class="map"></div>
     
-    <!-- Map style switcher -->
-    <div class="map-style-switcher">
-      <v-btn-toggle
-        :model-value="currentStyleIndex"
-        @update:model-value="switchMapStyle"
-        mandatory
-        density="compact"
-        rounded="xl"
+    <!-- Layer selector button -->
+    <div class="layer-selector">
+      <v-menu
+        v-model="showLayerMenu"
+        :close-on-content-click="false"
+        location="top"
       >
-        <v-btn
-          v-for="(style, index) in mapStyles"
-          :key="style.id"
-          :value="index"
-          size="small"
-        >
-          {{ style.name }}
-        </v-btn>
-      </v-btn-toggle>
+        <template v-slot:activator="{ props }">
+          <v-btn
+            v-bind="props"
+            icon
+            size="small"
+            elevation="2"
+            color="white"
+            :title="t('レイヤー')"
+          >
+            <v-icon>{{ mdiLayers }}</v-icon>
+          </v-btn>
+        </template>
+        
+        <v-card min-width="200">
+          <v-list density="compact">
+            <v-list-item
+              v-for="(style, index) in mapStyles"
+              :key="style.id"
+              @click="() => { switchMapStyle(index); showLayerMenu = false; }"
+              :active="currentStyleIndex === index"
+            >
+              <v-list-item-title>{{ style.name }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-menu>
     </div>
   </div>
 </template>
@@ -795,16 +812,11 @@ onUnmounted(() => {
   height: 100%;
 }
 
-.map-style-switcher {
+.layer-selector {
   position: absolute;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 10px;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 24px;
-  padding: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 :deep(.maplibregl-ctrl-icon) {
