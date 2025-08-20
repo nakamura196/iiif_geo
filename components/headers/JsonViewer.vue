@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiCodeJson } from "@mdi/js";
+import { mdiCodeJson, mdiClose } from "@mdi/js";
 
 const { canvases } = useSettings();
 
@@ -53,13 +53,12 @@ const openInNewTab = () => {
 <template>
   <div>
     <v-btn
-      icon
+      variant="text"
       @click="openJsonViewer"
-      :title="$t('viewJson')"
-      size="small"
       class="ma-1"
     >
-      <v-icon>{{ mdiCodeJson }}</v-icon>
+      <v-icon class="mr-1">{{ mdiCodeJson }}</v-icon>
+      {{ $t('viewJson') }}
     </v-btn>
 
     <v-dialog v-model="dialog" max-width="800">
@@ -73,7 +72,7 @@ const openInNewTab = () => {
             variant="text"
             size="small"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon>{{ mdiClose }}</v-icon>
           </v-btn>
         </v-card-title>
         
