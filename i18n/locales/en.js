@@ -25,4 +25,5 @@ export default {
     "copyToClipboard": "Copy to Clipboard",
     "jsonData": "JSON Data",
     "座標": "Coordinates",
+    "れきちず": "Historical Map",
 }

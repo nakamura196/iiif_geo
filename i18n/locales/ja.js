@@ -25,4 +25,5 @@ export default {
     "copyToClipboard": "クリップボードにコピー",
     "jsonData": "JSONデータ",
     "座標": "座標",
+    "れきちず": "れきちず",
 }
