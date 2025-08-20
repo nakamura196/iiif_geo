@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Map, NavigationControl, Marker, Popup, type LngLatLike } from "maplibre-gl";
+import { Map, NavigationControl, Marker, Popup, type LngLatLike, type MapSourceDataEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useDisplay } from "vuetify";
 
@@ -96,26 +96,8 @@ const mapStyles = ref([
   {
     id: "rekichizu",
     name: t("れきちず"),
-    style: {
-      version: 8 as const,
-      sources: {
-        rekichizu: {
-          type: "raster" as const,
-          tiles: ["https://b.oafree.net/tiles/rekichizu/tokyo5000/{z}/{x}/{y}.png"],
-          tileSize: 256,
-          minzoom: 5,
-          maxzoom: 16,
-          attribution: 'れきちず &copy; <a href="https://rekichizu.jp/">れきちず</a>'
-        }
-      },
-      layers: [
-        {
-          id: "rekichizu",
-          type: "raster" as const,
-          source: "rekichizu"
-        }
-      ]
-    },
+    // Use the official rekichizu style URL
+    style: "https://mierune.github.io/rekichizu-style/styles/street/style.json",
     visible: false
   }
 ]);
@@ -136,8 +118,14 @@ const { settings } = usePanes();
 const route = useRoute();
 const router = useRouter();
 
+// Use an object to store markers indexed by feature ID
+const markersMap: { [key: string]: Marker } = {};
 let markers: Marker[] = [];
 const currentLocationMarker = ref<Marker | null>(null);
+const selectedMarkerId = ref<string | null>(null);
+
+// Store the GeoJSON data to persist across style switches
+const geojsonData = ref<any>(null);
 
 // URL parameters update function
 const updateMapURLParams = () => {
@@ -226,82 +214,347 @@ const focusCurrentLocation = () => {
 
 // Switch map style
 const switchMapStyle = (index: number) => {
-  if (!mapInstance.value || index === currentStyleIndex.value) return;
+  if (!mapInstance.value) {
+    console.error('No map instance available');
+    return;
+  }
+  
+  if (index === currentStyleIndex.value) {
+    return;
+  }
   
   currentStyleIndex.value = index;
   const style = mapStyles.value[index].style;
+  
+  // Store current location marker position before style switch
+  let currentLocationData: { lngLat: LngLatLike, popup: string } | null = null;
+  if (currentLocationMarker.value) {
+    currentLocationData = {
+      lngLat: currentLocationMarker.value.getLngLat(),
+      popup: t('現在地')
+    };
+  }
+  
+  // Set new style
   mapInstance.value.setStyle(style as any);
   
-  // Re-add markers after style change
-  mapInstance.value.once('styledata', () => {
-    display();
-  });
+  // Re-add everything after style is loaded  
+  const restoreAfterStyleChange = () => {
+    
+    // Re-add current location marker if it existed
+    if (currentLocationData) {
+      currentLocationMarker.value = new Marker({ color: '#4080FF' })
+        .setLngLat(currentLocationData.lngLat)
+        .setPopup(new Popup().setHTML(currentLocationData.popup))
+        .addTo(mapInstance.value as any);
+    }
+    
+    // Re-add clustering with stored data
+    if (geojsonData.value) {
+      setupClusteringWithData(geojsonData.value);
+    }
+  };
+  
+  // Use idle event which fires after style is fully loaded
+  mapInstance.value.once('idle', restoreAfterStyleChange);
 };
 
-// Display markers
-const display = () => {
-  // Remove existing markers
-  markers.forEach(marker => marker.remove());
-  markers = [];
-
-  let xs: number[] = [];
-  let ys: number[] = [];
-
-  const features =
-    canvases.value[pageIndex.value]?.annotations?.[0]?.items?.[0]?.body?.features ||
-    [];
-
-  if (features.length === 0) {
+// Setup clustering with data
+const setupClusteringWithData = (geojson: any) => {
+  if (!mapInstance.value || !geojson) {
+    console.error('No map instance or data in setupClusteringWithData');
     return;
   }
-
-  for (const feature of features) {
-    const coordinates = feature.geometry.coordinates;
-
-    if (!coordinates[0] || !coordinates[1]) {
-      continue;
+  
+  // Remove existing source and layers if they exist (for clean re-creation)
+  const layersToRemove = ['cluster-count', 'unclustered-point', 'clusters'];
+  for (const layer of layersToRemove) {
+    try {
+      if (mapInstance.value.getLayer(layer)) {
+        mapInstance.value.removeLayer(layer);
+      }
+    } catch (e) {
     }
-
-    const marker = new Marker()
-      .setLngLat([coordinates[0], coordinates[1]] as LngLatLike);
-
-    const metadata = feature.metadata || {};
+  }
+  
+  try {
+    if (mapInstance.value.getSource('points')) {
+      mapInstance.value.removeSource('points');
+    }
+  } catch (e) {
+  }
+  
+  // Add source for points
+  try {
+    mapInstance.value.addSource('points', {
+      type: 'geojson',
+      data: geojson as any,
+      cluster: true,
+      clusterMaxZoom: 14,
+      clusterRadius: 50
+    });
+  } catch (e) {
+    console.error('Failed to add source:', e);
+    return;
+  }
+  
+  // Always add layers (they were removed above)
+  // Add cluster layer
+  try {
+    mapInstance.value.addLayer({
+      id: 'clusters',
+      type: 'circle',
+      source: 'points',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': [
+          'step',
+          ['get', 'point_count'],
+          '#51bbd6',
+          10,
+          '#f1f075',
+          30,
+          '#f28cb1'
+        ],
+        'circle-radius': [
+          'step',
+          ['get', 'point_count'],
+          20,
+          10,
+          30,
+          30,
+          40
+        ]
+      }
+    });
+  } catch (e) {
+    console.error('Failed to add cluster layer:', e);
+    return;
+  }
+  
+  // Add cluster count layer only if the style supports text rendering
+  // Skip for custom raster styles that don't have glyphs
+  const currentStyle = mapStyles.value[currentStyleIndex.value].style;
+  const isCustomRasterStyle = typeof currentStyle === 'object' && !(currentStyle as any).glyphs;
+  
+  if (!isCustomRasterStyle) {
+    try {
+      mapInstance.value.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'points',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count_abbreviated}',
+          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 12
+        }
+      });
+    } catch (e) {
+      console.warn('Could not add cluster count layer (text not supported):', e);
+    }
+  } else {
+  }
+  
+  // Add unclustered point layer
+  try {
+    mapInstance.value.addLayer({
+      id: 'unclustered-point',
+      type: 'circle',
+      source: 'points',
+      filter: ['!', ['has', 'point_count']],
+      paint: {
+        'circle-color': [
+          'case',
+          ['==', ['get', 'id'], selectedMarkerId.value || ''],
+          '#FF0000',
+          '#3FB1CE'
+        ],
+        'circle-radius': 8,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#fff'
+      }
+    });
+  } catch (e) {
+    console.error('Failed to add unclustered point layer:', e);
+    // Don't return here, continue with event listeners
+  }
+  
+  // Setup event listeners - always set them up after adding layers
+  
+  // Remove existing listeners first (if any)
+  try {
+    mapInstance.value.off('click', 'clusters' as any);
+    mapInstance.value.off('click', 'unclustered-point' as any);
+    mapInstance.value.off('mouseenter' as any, 'clusters' as any);
+    mapInstance.value.off('mouseleave' as any, 'clusters' as any);
+    mapInstance.value.off('mouseenter' as any, 'unclustered-point' as any);
+    mapInstance.value.off('mouseleave' as any, 'unclustered-point' as any);
+  } catch (e) {
+    // Ignore errors - listeners might not exist
+  }
+  
+  // Add click handler for clusters
+  mapInstance.value.on('click', 'clusters', (e) => {
+    const features = mapInstance.value!.queryRenderedFeatures(e.point, {
+      layers: ['clusters']
+    });
     
-    const popupContent = `
+    if (features.length === 0) return;
+    
+    const clusterId = features[0].properties.cluster_id;
+    const source = mapInstance.value!.getSource('points') as any;
+    
+    source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
+      if (err) return;
+      
+      // Smoothly zoom to the cluster expansion level
+      mapInstance.value!.easeTo({
+        center: (features[0].geometry as any).coordinates,
+        zoom: zoom + 0.5, // Add a bit more zoom for better visibility
+        duration: 500
+      });
+    });
+  });
+  
+  // Handle click on unclustered points
+  mapInstance.value.on('click', 'unclustered-point', (e) => {
+    e.preventDefault();
+    
+    if (!e.features || e.features.length === 0) {
+      console.error('No features in click event');
+      return;
+    }
+    
+    const feature = e.features[0];
+    const id = feature.properties!.id;
+    
+    selectedMarkerId.value = id;
+    action.value = {
+      type: "map",
+      id: id
+    };
+    
+    // Update paint property to highlight selected point
+    try {
+      mapInstance.value!.setPaintProperty('unclustered-point', 'circle-color', [
+        'case',
+        ['==', ['get', 'id'], selectedMarkerId.value],
+        '#FF0000',
+        '#3FB1CE'
+      ]);
+    } catch (e) {
+      console.error('Failed to update paint property:', e);
+    }
+    
+    // Show popup
+    const coordinates = (feature.geometry as any).coordinates.slice();
+    const description = `
       <div>
-        <div>ID: ${metadata.id || feature.id}</div>
-        ${metadata.label ? `<div style="margin-top: 4px;">${t("name")}: ${metadata.label}</div>` : ""}
-        ${metadata.tags ? `<div style="margin-top: 4px;">${t("tag")}: ${metadata.tags.join(",")}</div>` : ""}
-        <div style="margin-top: 8px;">
-          ${metadata.url ? `<a target="_blank" href="${metadata.url}">${t("detail")}</a>` : ""}
-        </div>
+        <div>ID: ${feature.properties!.id}</div>
+        ${feature.properties!.label ? `<div style="margin-top: 4px;">${t("name")}: ${feature.properties!.label}</div>` : ""}
+        ${feature.properties!.tags && Array.isArray(feature.properties!.tags) && feature.properties!.tags.length ? `<div style="margin-top: 4px;">${t("tag")}: ${feature.properties!.tags.join(",")}</div>` : ""}
+        ${feature.properties!.url ? `<div style="margin-top: 8px;"><a target="_blank" href="${feature.properties!.url}">${t("detail")}</a></div>` : ""}
       </div>
     `;
     
-    marker.setPopup(new Popup().setHTML(popupContent));
     
-    marker.getElement()?.addEventListener('click', () => {
-      action.value = {
-        type: "map",
-        id: feature.id,
-      };
-    });
-
-    if (mapInstance.value) {
-      marker.addTo(mapInstance.value as any);
+    try {
+      new Popup()
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(mapInstance.value as any);
+    } catch (e) {
+      console.error('Failed to add popup:', e);
     }
+  });
+    
+    // Change cursor on hover
+    mapInstance.value.on('mouseenter', 'clusters', () => {
+      mapInstance.value!.getCanvas().style.cursor = 'pointer';
+    });
+    mapInstance.value.on('mouseleave', 'clusters', () => {
+      mapInstance.value!.getCanvas().style.cursor = '';
+    });
+    mapInstance.value.on('mouseenter', 'unclustered-point', () => {
+      mapInstance.value!.getCanvas().style.cursor = 'pointer';
+    });
+    mapInstance.value.on('mouseleave', 'unclustered-point', () => {
+      mapInstance.value!.getCanvas().style.cursor = '';
+    });
+  
+};
 
-    xs.push(coordinates[1]); // latitude
-    ys.push(coordinates[0]); // longitude
-
-    markers.push(marker);
+// Setup clustering (wrapper that prepares data)
+const setupClustering = () => {
+  if (!mapInstance.value) {
+    console.error('No map instance in setupClustering');
+    return;
   }
+  
+  const features =
+    canvases.value[pageIndex.value]?.annotations?.[0]?.items?.[0]?.body?.features ||
+    [];
+  
+  if (features.length === 0) {
+    console.warn('No features to display');
+    return;
+  }
+  
+  // Convert features to GeoJSON format for clustering
+  const geojsonFeatures = features.map((feature: any) => ({
+    type: 'Feature',
+    properties: {
+      id: feature.id,
+      label: feature.metadata?.label || '',
+      tags: feature.metadata?.tags || [],
+      url: feature.metadata?.url || ''
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]]
+    }
+  }));
+  
+  const geojson = {
+    type: 'FeatureCollection',
+    features: geojsonFeatures
+  };
+  
+  // Store the data for persistence across style switches
+  geojsonData.value = geojson;
+  
+  // Setup clustering with the data
+  setupClusteringWithData(geojson);
+  
+};
 
+// Display markers (simplified for clustering)
+const display = () => {
+  setupClustering();
+  
   // Calculate center if not specified in URL
-  if (!route.query.mapLat && !route.query.mapLng) {
-    const centerX = xs.reduce((acc, val) => acc + val, 0) / xs.length;
-    const centerY = ys.reduce((acc, val) => acc + val, 0) / ys.length;
-    center_.value = [centerY, centerX]; // [lng, lat]
+  const features =
+    canvases.value[pageIndex.value]?.annotations?.[0]?.items?.[0]?.body?.features ||
+    [];
+  
+  if (features.length > 0 && !route.query.mapLat && !route.query.mapLng) {
+    let xs: number[] = [];
+    let ys: number[] = [];
+    
+    for (const feature of features) {
+      const coordinates = feature.geometry.coordinates;
+      if (coordinates[0] && coordinates[1]) {
+        xs.push(coordinates[1]); // latitude
+        ys.push(coordinates[0]); // longitude
+      }
+    }
+    
+    if (xs.length > 0 && ys.length > 0) {
+      const centerX = xs.reduce((acc, val) => acc + val, 0) / xs.length;
+      const centerY = ys.reduce((acc, val) => acc + val, 0) / ys.length;
+      center_.value = [centerY, centerX]; // [lng, lat]
+    }
   }
 };
 
@@ -319,9 +572,10 @@ const initializeMap = () => {
   });
 
   // Add navigation control
-  if (mdAndUp.value && mapInstance.value) {
+  if (mdAndUp.value) {
     const navControl = new NavigationControl();
-    (mapInstance.value as any).addControl(navControl, 'top-right');
+    // @ts-ignore - Type instantiation issue with MapLibre GL
+    mapInstance.value?.addControl(navControl, 'top-right');
   }
 
   // Add current location button
@@ -456,23 +710,31 @@ watch(
 watch(
   () => action.value,
   (value) => {
-    if (value && featuresMap.value[value.id]) {
+    if (value && value.id && featuresMap.value[value.id]) {
       const feature = featuresMap.value[value.id];
       const coordinates = feature.geometry.coordinates;
+      
+      // Update selected marker ID
+      selectedMarkerId.value = value.id;
       
       if (mapInstance.value) {
         const lng = (coordinates[0] as unknown) as number;
         const lat = (coordinates[1] as unknown) as number;
         mapInstance.value.flyTo({
           center: [lng, lat],
-          zoom: zoom_.value
+          zoom: 15
         });
+        
+        // Update paint property to highlight selected point
+        if (mapInstance.value.getLayer('unclustered-point')) {
+          mapInstance.value.setPaintProperty('unclustered-point', 'circle-color', [
+            'case',
+            ['==', ['get', 'id'], selectedMarkerId.value],
+            '#FF0000',
+            '#3FB1CE'
+          ]);
+        }
       }
-      
-      // Highlight selected marker
-      markers.forEach((marker, index) => {
-        // You can add custom styling for selected markers here
-      });
     }
   }
 );
@@ -502,7 +764,8 @@ onUnmounted(() => {
     <!-- Map style switcher -->
     <div class="map-style-switcher">
       <v-btn-toggle
-        v-model="currentStyleIndex"
+        :model-value="currentStyleIndex"
+        @update:model-value="switchMapStyle"
         mandatory
         density="compact"
         rounded="xl"
@@ -512,7 +775,6 @@ onUnmounted(() => {
           :key="style.id"
           :value="index"
           size="small"
-          @click="switchMapStyle(index)"
         >
           {{ style.name }}
         </v-btn>
