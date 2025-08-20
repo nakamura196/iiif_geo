@@ -288,7 +288,7 @@ const display = () => {
     });
 
     if (mapInstance.value) {
-      marker.addTo(mapInstance.value);
+      marker.addTo(mapInstance.value as any);
     }
 
     xs.push(coordinates[1]); // latitude
@@ -320,7 +320,7 @@ const initializeMap = () => {
 
   // Add navigation control
   if (mdAndUp.value) {
-    mapInstance.value.addControl(new NavigationControl(), 'top-right');
+    mapInstance.value!.addControl(new NavigationControl(), 'top-right');
   }
 
   // Add current location button
@@ -382,7 +382,7 @@ const initializeMap = () => {
         const focusMarker = new Marker({ color: '#FF4444' })
           .setLngLat([lng, lat])
           .setPopup(new Popup().setHTML(`${t('座標')}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`))
-          .addTo(mapInstance.value!);
+          .addTo(mapInstance.value as any);
         focusMarker.togglePopup();
       }
     } else if (query.mapLat && query.mapLng) {
@@ -461,7 +461,7 @@ watch(
       
       if (mapInstance.value) {
         mapInstance.value.flyTo({
-          center: [coordinates[0], coordinates[1]] as LngLatLike,
+          center: [coordinates[0], coordinates[1]] as [number, number],
           zoom: zoom_.value
         });
       }
