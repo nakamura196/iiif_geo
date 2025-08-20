@@ -329,6 +329,7 @@ const setupClusteringWithData = (geojson: any) => {
         ]
       }
     });
+    console.log('Cluster layer added successfully');
   } catch (e) {
     console.error('Failed to add cluster layer:', e);
     return;
@@ -398,24 +399,38 @@ const setupClusteringWithData = (geojson: any) => {
   
   // Add click handler for clusters
   mapInstance.value.on('click', 'clusters', (e) => {
+    console.log('Cluster clicked!');
     const features = mapInstance.value!.queryRenderedFeatures(e.point, {
       layers: ['clusters']
     });
     
-    if (features.length === 0) return;
+    console.log('Cluster features:', features);
+    if (features.length === 0) {
+      console.log('No cluster features found');
+      return;
+    }
     
     const clusterId = features[0].properties.cluster_id;
-    const source = mapInstance.value!.getSource('points') as any;
+    console.log('Cluster ID:', clusterId);
     
-    source.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
-      if (err) return;
-      
-      // Smoothly zoom to the cluster expansion level
-      mapInstance.value!.easeTo({
-        center: (features[0].geometry as any).coordinates,
-        zoom: zoom + 0.5, // Add a bit more zoom for better visibility
-        duration: 500
-      });
+    // Direct approach without callback
+    const source = mapInstance.value!.getSource('points') as any;
+    if (!source) {
+      console.error('Source not found');
+      return;
+    }
+    
+    // Try different approach - just zoom in to the cluster location
+    const coordinates = (features[0].geometry as any).coordinates;
+    const currentZoom = mapInstance.value!.getZoom();
+    
+    console.log('Current zoom:', currentZoom, 'Coordinates:', coordinates);
+    
+    // Zoom in by 2 levels or to maxZoom
+    mapInstance.value!.easeTo({
+      center: coordinates,
+      zoom: Math.min(currentZoom + 2, 18),
+      duration: 500
     });
   });
   
