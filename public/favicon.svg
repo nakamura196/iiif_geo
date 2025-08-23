@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="#4A90E2" stroke="#2E5C8A" stroke-width="1"/>
+  
+  <!-- Map marker shape -->
+  <path d="M16 4 C11 4 7 8 7 13 C7 18 16 28 16 28 S25 18 25 13 C25 8 21 4 16 4 Z" 
+        fill="#FF6B6B" 
+        stroke="#C73E3E" 
+        stroke-width="0.5"/>
+  
+  <!-- Inner circle for marker -->
+  <circle cx="16" cy="13" r="3" fill="#FFFFFF"/>
+  
+  <!-- Small globe grid lines -->
+  <ellipse cx="16" cy="16" rx="14" ry="7" fill="none" stroke="#6BA3E5" stroke-width="0.5" opacity="0.4"/>
+  <ellipse cx="16" cy="16" rx="7" ry="14" fill="none" stroke="#6BA3E5" stroke-width="0.5" opacity="0.4"/>
+  <line x1="2" y1="16" x2="30" y2="16" stroke="#6BA3E5" stroke-width="0.5" opacity="0.4"/>
+</svg>

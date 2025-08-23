@@ -54,7 +54,13 @@ export function useDisplay() {
     if (!url) return;
 
     try {
-      const data = await fetch(url).then((res) => res.json());
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
 
       let manifestData;
 
@@ -97,8 +103,36 @@ export function useDisplay() {
         };
       }
 
+      const validItems = [];
+      
       for (let itemIndex = 0; itemIndex < manifestData.items.length; itemIndex++) {
         const item = manifestData.items[itemIndex];
+        
+        // Check if item has required image data for OSD viewer
+        // Some manifests have service field, others have direct image URL in body.id
+        const hasImageService = item.items?.[0]?.items?.[0]?.body?.service?.[0]?.id;
+        const hasDirectImageUrl = item.items?.[0]?.items?.[0]?.body?.id;
+        
+        if (!hasImageService && !hasDirectImageUrl) {
+          continue;
+        }
+        
+        if (!item.annotations || !item.annotations[0]) {
+          continue;
+        }
+        
+        if (!item.annotations[0].items || !item.annotations[0].items[0]) {
+          continue;
+        }
+        
+        if (!item.annotations[0].items[0].body) {
+          continue;
+        }
+        
+        if (!item.annotations[0].items[0].body.features) {
+          continue;
+        }
+        
         const features = item.annotations[0].items[0].body.features;
         for (let featureIndex = 0; featureIndex < features.length; featureIndex++) {
           const feature = features[featureIndex];
@@ -120,7 +154,11 @@ export function useDisplay() {
             feature.label = "";
           }
         }
+        
+        validItems.push(item);
       }
+      
+      manifestData.items = validItems;
 
       let titles = [];
 

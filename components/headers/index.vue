@@ -39,7 +39,7 @@ const { mobile, mdAndUp } = useDisplay();
 
   <v-navigation-drawer
     v-model="drawer"
-    :location="mobile ? 'bottom' : undefined"
+    :location="mobile ? 'bottom' : 'right'"
     temporary
   >
     <v-list>

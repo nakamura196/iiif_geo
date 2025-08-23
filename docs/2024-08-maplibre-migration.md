@@ -1,8 +1,8 @@
-# IIIF Georeference ViewerのMapLibre GL移行と機能改善
+# IIIF Georeference ViewerのMapLibre GL移行とNuxt 4アップグレード
 
 ## 概要
 
-IIIF Georeference ViewerにおけるマップコンポーネントをLeafletからMapLibre GLへ移行し、複数の機能改善を実施しました。本記事では、実装した主要な機能とその技術的詳細について説明します。
+IIIF Georeference Viewerにおいて、マップコンポーネントをLeafletからMapLibre GLへ移行し、フレームワークをNuxt 4へアップグレードしました。本記事では、実装した主要な機能とその技術的詳細について説明します。
 
 ## 主要な改善点
 
@@ -224,8 +224,45 @@ const updateMapURLParams = () => {
 - **UI**: Vuetify 3
 - **言語**: TypeScript
 
+### 8. Nuxt 4へのアップグレード
+
+最新のフレームワーク機能を活用するため、Nuxt 4へアップグレードしました。
+
+#### 主な変更点
+
+##### 依存関係の更新
+```json
+{
+  "devDependencies": {
+    "nuxt": "^4.0.3",
+    "vue-tsc": "^2.2.8"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0"  // Nuxt Content用に追加
+  }
+}
+```
+
+##### 設定の最適化
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  compatibilityDate: "2024-09-26",
+  i18n: {
+    bundle: {
+      optimizeTranslationDirective: false  // v10での非推奨機能を無効化
+    }
+  }
+});
+```
+
+#### 改善された点
+- **ビルドパフォーマンス**: Viteベースのビルドシステムにより高速化
+- **型安全性の向上**: TypeScript統合の改善
+- **開発者体験**: より優れたエラーメッセージとデバッグ機能
+
 ## まとめ
 
-LeafletからMapLibre GLへの移行により、パフォーマンスの向上と機能の拡充を実現しました。特に複数の地図スタイル切り替え機能により、歴史的地図と現代地図の比較が容易になり、IIIF画像の地理的コンテキストをより深く理解できるようになりました。
+LeafletからMapLibre GLへの移行とNuxt 4へのアップグレードにより、パフォーマンスの向上と機能の拡充を実現しました。特に複数の地図スタイル切り替え機能により、歴史的地図と現代地図の比較が容易になり、IIIF画像の地理的コンテキストをより深く理解できるようになりました。
 
 今後は、3D地形表示やより高度な可視化機能の追加を検討しています。

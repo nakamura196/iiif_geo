@@ -591,23 +591,35 @@ const display = () => {
       if (coordinates?.[0] && coordinates?.[1]) {
         const lng = coordinates[0];
         const lat = coordinates[1];
-        minLng = Math.min(minLng, lng);
-        maxLng = Math.max(maxLng, lng);
-        minLat = Math.min(minLat, lat);
-        maxLat = Math.max(maxLat, lat);
+        
+        // Validate coordinates are within valid ranges
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          minLng = Math.min(minLng, lng);
+          maxLng = Math.max(maxLng, lng);
+          minLat = Math.min(minLat, lat);
+          maxLat = Math.max(maxLat, lat);
+        } else {
+          console.warn(`Invalid coordinates found - lng: ${lng}, lat: ${lat}. Skipping this feature.`);
+        }
       }
     }
     
-    if (minLng !== Infinity && maxLng !== -Infinity) {
-      // Fit map to bounds with padding
-      mapInstance.value?.fitBounds(
-        [[minLng, minLat], [maxLng, maxLat]],
-        {
-          padding: { top: 50, bottom: 50, left: 50, right: 50 },
-          maxZoom: 15, // Prevent zooming in too much if markers are very close
-          duration: 1000
-        }
-      );
+    if (minLng !== Infinity && maxLng !== -Infinity && 
+        minLat !== Infinity && maxLat !== -Infinity) {
+      // Additional validation before fitting bounds
+      if (minLat >= -90 && maxLat <= 90 && minLng >= -180 && maxLng <= 180) {
+        // Fit map to bounds with padding
+        mapInstance.value?.fitBounds(
+          [[minLng, minLat], [maxLng, maxLat]],
+          {
+            padding: { top: 50, bottom: 50, left: 50, right: 50 },
+            maxZoom: 15, // Prevent zooming in too much if markers are very close
+            duration: 1000
+          }
+        );
+      } else {
+        console.error(`Invalid bounds detected - minLng: ${minLng}, minLat: ${minLat}, maxLng: ${maxLng}, maxLat: ${maxLat}`);
+      }
     }
   }
 };

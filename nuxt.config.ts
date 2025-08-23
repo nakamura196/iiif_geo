@@ -89,8 +89,13 @@ export default defineNuxtConfig({
       link: [
         {
           rel: "icon",
+          type: "image/svg+xml",
+          href: `${baseURL}/favicon.svg`,
+        },
+        {
+          rel: "alternate icon",
           type: "image/x-icon",
-          href: `${appURL}${headConfig.favicon}`,
+          href: `${baseURL}${headConfig.favicon}`,
         },
       ],
     },
