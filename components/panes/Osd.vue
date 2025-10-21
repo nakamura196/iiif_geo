@@ -10,6 +10,7 @@ import {
   mdiArrowLeft,
   mdiArrowRight,
   mdiAutoFix,
+  mdiRotate3d,
 } from "@mdi/js";
 import { calculateImageRotation, calculateImageRotationAdvanced } from "~/utils/calculateImageRotation";
 import { useDisplay } from "vuetify";
@@ -215,6 +216,8 @@ onMounted(async () => {
 const rotate = ref(0);
 const rotate2 = ref(0);
 const showAnnotations = ref(false);
+const showRotationDialog = ref(false);
+const isCalculatingRotation = ref(false);
 
 const route = useRoute();
 const router = useRouter();
@@ -480,29 +483,46 @@ const rotate180 = () => {
 };
 
 // 画像座標と地理座標から回転角度を計算
-const calculateRotation = () => {
+const calculateRotation = async () => {
   const features = Object.values(featuresMap.value);
   if (features.length < 2) {
     return;
   }
-  
-  // 3点以上ある場合は分布パターンを使用、それ以外は2点間の角度を使用
-  const result = features.length >= 3 
-    ? calculateImageRotationAdvanced(features as any[])
-    : calculateImageRotation(features as any[]);
-    
-  if (!result) {
-    console.warn('Failed to calculate rotation');
-    return;
+
+  // 計算中フラグを立てる
+  isCalculatingRotation.value = true;
+
+  try {
+    // 次のフレームで計算を実行（UIの更新を先に反映させる）
+    await nextTick();
+
+    // 計算を非同期で実行
+    const result = await new Promise<any>((resolve) => {
+      setTimeout(() => {
+        // 3点以上ある場合は分布パターンを使用、それ以外は2点間の角度を使用
+        const calculatedResult = features.length >= 3
+          ? calculateImageRotationAdvanced(features as any[])
+          : calculateImageRotation(features as any[]);
+        resolve(calculatedResult);
+      }, 50); // UIが更新されるまで少し待つ
+    });
+
+    if (!result) {
+      console.warn('Failed to calculate rotation');
+      return;
+    }
+
+    if (typeof result.rotation !== 'number' || isNaN(result.rotation)) {
+      console.warn('Invalid rotation result:', result.rotation);
+      return;
+    }
+
+    rotate.value = result.rotation;
+    rotate2.value = result.rotation;
+  } finally {
+    // 計算完了後にフラグを下げる
+    isCalculatingRotation.value = false;
   }
-  
-  if (typeof result.rotation !== 'number' || isNaN(result.rotation)) {
-    console.warn('Invalid rotation result:', result.rotation);
-    return;
-  }
-  
-  rotate.value = result.rotation;
-  rotate2.value = result.rotation;
 };
 </script>
 <template>
@@ -546,6 +566,8 @@ const calculateRotation = () => {
           @click="calculateRotation()"
           :title="/*自動回転*/ $t('autoRotate')"
           color="secondary"
+          :loading="isCalculatingRotation"
+          :disabled="isCalculatingRotation"
         >
           <v-icon>{{ mdiAutoFix }}</v-icon>
         </v-btn>
@@ -563,36 +585,60 @@ const calculateRotation = () => {
         <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
       </v-btn>
 
-      <!-- スライダーはデスクトップのみ -->
-      <v-slider
-        v-if="mdAndUp"
-        v-model="rotate2"
-        :max="180"
-        :step="1"
-        :min="-180"
-        :label="/*角度*/ $t('angle')"
-        hide-details
+      <!-- 回転角度調整ボタン -->
+      <v-btn
         class="ma-1"
-        @update:modelValue="update()"
+        color="primary"
+        size="small"
+        icon
+        @click="showRotationDialog = true"
+        :title="/*角度*/ $t('angle')"
       >
-        <template v-slot:append>
-          <v-text-field
-            v-model="rotate2"
-            type="number"
-            style="width: 100px"
-            density="compact"
-            hide-details
-            variant="outlined"
-            @update:modelValue="update()"
-          ></v-text-field>
-        </template>
-      </v-slider>
+        <v-icon>{{ mdiRotate3d }}</v-icon>
+      </v-btn>
     </div>
 
     <div
       id="osd"
       :style="`flex-grow: 1; flex-basis: 0; background-color: #000000;`"
     ></div>
+
+    <!-- 回転角度調整ダイアログ -->
+    <v-dialog v-model="showRotationDialog" max-width="500">
+      <v-card>
+        <v-card-title>{{ $t('angle') }}</v-card-title>
+        <v-card-text>
+          <v-slider
+            v-model="rotate2"
+            :max="180"
+            :step="1"
+            :min="-180"
+            hide-details
+            class="mb-4"
+            @update:modelValue="update()"
+          >
+            <template v-slot:prepend>
+              <span style="width: 60px; text-align: right; display: inline-block;">{{ rotate2.toFixed(1) }}°</span>
+            </template>
+          </v-slider>
+
+          <v-text-field
+            v-model.number="rotate2"
+            type="number"
+            :label="$t('angle')"
+            density="compact"
+            hide-details
+            variant="outlined"
+            suffix="°"
+            @update:modelValue="update()"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="showRotationDialog = false">{{ $t('close') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 <style scoped>

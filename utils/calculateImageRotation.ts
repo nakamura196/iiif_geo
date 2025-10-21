@@ -64,23 +64,49 @@ export function calculateImageRotation(features: Feature[]): RotationCalculation
     return null;
   }
   
-  // 最も離れた2点を見つける（より正確な角度計算のため）
+  // 最も離れた2点を見つける（高速化版）
+  // 1882個の場合でもO(n²)は重いので、サンプリングで高速化
   let maxDistance = 0;
   let feature1: ValidFeature = validFeatures[0]!;
   let feature2: ValidFeature = validFeatures[1]!;
-  
-  for (let i = 0; i < validFeatures.length; i++) {
-    for (let j = i + 1; j < validFeatures.length; j++) {
-      const f1 = validFeatures[i]!;
-      const f2 = validFeatures[j]!;
-      
-      const dx = f2.properties.resourceCoords[0] - f1.properties.resourceCoords[0];
-      const dy = f2.properties.resourceCoords[1] - f1.properties.resourceCoords[1];
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance > maxDistance) {
-        maxDistance = distance;
-        feature1 = f1;
-        feature2 = f2;
+
+  // ポイント数が多い場合はサンプリング
+  const shouldSample = validFeatures.length > 100;
+  const sampleSize = shouldSample ? Math.min(100, validFeatures.length) : validFeatures.length;
+
+  if (shouldSample) {
+    // ランダムサンプリングではなく、均等間隔でサンプリング
+    const step = Math.floor(validFeatures.length / sampleSize);
+    for (let i = 0; i < validFeatures.length; i += step) {
+      for (let j = i + step; j < validFeatures.length; j += step) {
+        const f1 = validFeatures[i]!;
+        const f2 = validFeatures[j]!;
+
+        const dx = f2.properties.resourceCoords[0] - f1.properties.resourceCoords[0];
+        const dy = f2.properties.resourceCoords[1] - f1.properties.resourceCoords[1];
+        const distance = dx * dx + dy * dy; // sqrtを省略して高速化
+        if (distance > maxDistance) {
+          maxDistance = distance;
+          feature1 = f1;
+          feature2 = f2;
+        }
+      }
+    }
+  } else {
+    // ポイント数が少ない場合は全探索
+    for (let i = 0; i < validFeatures.length; i++) {
+      for (let j = i + 1; j < validFeatures.length; j++) {
+        const f1 = validFeatures[i]!;
+        const f2 = validFeatures[j]!;
+
+        const dx = f2.properties.resourceCoords[0] - f1.properties.resourceCoords[0];
+        const dy = f2.properties.resourceCoords[1] - f1.properties.resourceCoords[1];
+        const distance = dx * dx + dy * dy; // sqrtを省略して高速化
+        if (distance > maxDistance) {
+          maxDistance = distance;
+          feature1 = f1;
+          feature2 = f2;
+        }
       }
     }
   }
