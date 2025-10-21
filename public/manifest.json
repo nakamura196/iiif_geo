@@ -78,7 +78,6 @@
                 },
                 "features": [
                   {
-                    "id": "feature_1_1",
                     "type": "Feature",
                     "properties": {
                       "resourceCoords": [6690, 7517]
@@ -86,15 +85,9 @@
                     "geometry": {
                       "type": "Point",
                       "coordinates": [139.7623182, 35.7151233]
-                    },
-                    "metadata": {
-                      "label": "安田講堂",
-                      "tags": ["本部"],
-                      "url": "https://www.u-tokyo.ac.jp/"
                     }
                   },
                   {
-                    "id": "feature_1_2",
                     "type": "Feature",
                     "properties": {
                       "resourceCoords": [8846, 9181]
@@ -102,15 +95,9 @@
                     "geometry": {
                       "type": "Point",
                       "coordinates": [139.7612649, 35.7129321]
-                    },
-                    "metadata": {
-                      "label": "赤門",
-                      "tags": ["本部", "重要文化財"],
-                      "url": "https://www.u-tokyo.ac.jp/ja/about/campus-guide/map01_02.html"
                     }
                   },
                   {
-                    "id": "feature_1_3",
                     "type": "Feature",
                     "properties": {
                       "resourceCoords": [11626, 8624]
@@ -118,14 +105,9 @@
                     "geometry": {
                       "type": "Point",
                       "coordinates": [139.7622949, 35.7109037]
-                    },
-                    "metadata": {
-                      "label": "工学部1号館",
-                      "tags": ["工学部"]
                     }
                   },
                   {
-                    "id": "feature_1_4",
                     "type": "Feature",
                     "properties": {
                       "resourceCoords": [12761, 9476]
@@ -133,14 +115,9 @@
                     "geometry": {
                       "type": "Point",
                       "coordinates": [139.7618816, 35.7097492]
-                    },
-                    "metadata": {
-                      "label": "工学部2号館",
-                      "tags": ["工学部"]
                     }
                   },
                   {
-                    "id": "feature_1_5",
                     "type": "Feature",
                     "properties": {
                       "resourceCoords": [7540, 8365]
@@ -148,10 +125,226 @@
                     "geometry": {
                       "type": "Point",
                       "coordinates": [139.7618343, 35.7143244]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [10681, 5983]
                     },
-                    "metadata": {
-                      "label": "図書館",
-                      "tags": ["本部"]
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.764372, 35.7123118]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [9304, 5659]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7645652, 35.7135689]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [3826, 10219]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7594158, 35.7166753]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [8044, 9859]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.76062, 35.7134203]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [10517, 7862]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7627108, 35.7121183]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [8892, 9831]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7607901, 35.7126873]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [14667, 9708]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7620234, 35.7081704]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [2354, 8506]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7608678, 35.7184833]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [10054, 8713]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7620034, 35.7122089]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [5594, 10678]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7593041, 35.7151585]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [13028, 6647]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7642327, 35.7102509]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [10685, 10444]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7605725, 35.7111428]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [4438, 9181]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7606565, 35.7165095]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [8840, 10491]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7602447, 35.7126024]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [4667, 10202]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.759576, 35.7159457]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [6762, 10060]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7600401, 35.7144106]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [8587, 8135]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.762299, 35.7134381]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [7967, 10465]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7600601, 35.7133129]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [6466, 8313]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7616346, 35.7150937]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [7569, 7471]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7625263, 35.7143713]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [10111, 10099]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7607835, 35.7116287]
+                    }
+                  },
+                  {
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [12606, 10162]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7611825, 35.7096128]
                     }
                   }
                 ]
