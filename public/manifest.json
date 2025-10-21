@@ -1,0 +1,165 @@
+{
+  "@context": [
+    "http://iiif.io/api/extension/georef/1/context.json",
+    "http://iiif.io/api/presentation/3/context.json"
+  ],
+  "id": "https://example.org/iiif/manifest.json",
+  "type": "Manifest",
+  "label": {
+    "ja": ["東京大学本郷キャンパス歴史的建造物マップ"],
+    "en": ["University of Tokyo Hongo Campus Historical Buildings Map"]
+  },
+  "metadata": [
+    {
+      "label": {
+        "ja": ["説明"],
+        "en": ["Description"]
+      },
+      "value": {
+        "ja": ["東京大学本郷キャンパスの歴史的建造物の位置を示すマップです。"],
+        "en": ["A map showing the locations of historical buildings on the University of Tokyo Hongo Campus."]
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "https://example.org/iiif/canvas/1",
+      "type": "Canvas",
+      "label": {
+        "ja": ["東京帝國大學本部構内及農學部建物鳥瞰圖"],
+        "en": ["Bird's Eye View of University of Tokyo Main Campus and Faculty of Agriculture Buildings"]
+      },
+      "height": 12911,
+      "width": 18415,
+      "items": [
+        {
+          "id": "https://example.org/iiif/page/1",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/iiif/annotation/1",
+              "type": "Annotation",
+              "motivation": "painting",
+              "body": {
+                "id": "https://iiif.dl.itc.u-tokyo.ac.jp/iiif/2/agriculture_re%2Fnou_tatemonochokanzu%2F0002.tif/full/full/0/default.jpg",
+                "type": "Image",
+                "format": "image/jpeg",
+                "height": 12911,
+                "width": 18415,
+                "service": [
+                  {
+                    "id": "https://iiif.dl.itc.u-tokyo.ac.jp/iiif/2/agriculture_re%2Fnou_tatemonochokanzu%2F0002.tif",
+                    "type": "ImageService2"
+                  }
+                ]
+              },
+              "target": "https://example.org/iiif/canvas/1"
+            }
+          ]
+        }
+      ],
+      "annotations": [
+        {
+          "id": "https://example.org/iiif/annotationpage/1",
+          "type": "AnnotationPage",
+          "items": [
+            {
+              "id": "https://example.org/iiif/georef-annotation/1",
+              "type": "Annotation",
+              "motivation": "georeferencing",
+              "target": "https://example.org/iiif/canvas/1",
+              "body": {
+                "type": "FeatureCollection",
+                "transformation": {
+                  "type": "polynomial",
+                  "options": {
+                    "order": 1
+                  }
+                },
+                "features": [
+                  {
+                    "id": "feature_1_1",
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [6690, 7517]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7623182, 35.7151233]
+                    },
+                    "metadata": {
+                      "label": "安田講堂",
+                      "tags": ["本部"],
+                      "url": "https://www.u-tokyo.ac.jp/"
+                    }
+                  },
+                  {
+                    "id": "feature_1_2",
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [8846, 9181]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7612649, 35.7129321]
+                    },
+                    "metadata": {
+                      "label": "赤門",
+                      "tags": ["本部", "重要文化財"],
+                      "url": "https://www.u-tokyo.ac.jp/ja/about/campus-guide/map01_02.html"
+                    }
+                  },
+                  {
+                    "id": "feature_1_3",
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [11626, 8624]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7622949, 35.7109037]
+                    },
+                    "metadata": {
+                      "label": "工学部1号館",
+                      "tags": ["工学部"]
+                    }
+                  },
+                  {
+                    "id": "feature_1_4",
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [12761, 9476]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7618816, 35.7097492]
+                    },
+                    "metadata": {
+                      "label": "工学部2号館",
+                      "tags": ["工学部"]
+                    }
+                  },
+                  {
+                    "id": "feature_1_5",
+                    "type": "Feature",
+                    "properties": {
+                      "resourceCoords": [7540, 8365]
+                    },
+                    "geometry": {
+                      "type": "Point",
+                      "coordinates": [139.7618343, 35.7143244]
+                    },
+                    "metadata": {
+                      "label": "図書館",
+                      "tags": ["本部"]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

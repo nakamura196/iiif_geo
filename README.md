@@ -10,13 +10,26 @@ IIIF Viewer with [IIIF Georeference Extension](https://iiif.io/api/extension/geo
 
 ## 📖 Data
 
+This viewer supports two types of IIIF data formats:
+
+### 1. IIIF Canvas with Georeference Extension
+
 Prepare a JSON file following the Full Canvas Example of the Georeference Extension.
 
 https://iiif.io/api/extension/georef/#41-full-canvas-example
 
-The JSON file used on the demo site is as follows.
+Example Canvas file:
+- https://nakamura196.github.io/iiif_geo/canvas.json
+- https://nakamura196.github.io/iiif_geo/canvas_extra.json
 
-https://nakamura196.github.io/iiif_geo/canvas.json
+### 2. IIIF Manifest with Georeference Extension
+
+You can also use a full IIIF Presentation API 3.0 Manifest that includes one or more Canvases with georeference annotations.
+
+Example Manifest file:
+- https://nakamura196.github.io/iiif_geo/manifest.json
+
+The viewer will automatically detect whether the provided URL is a Manifest or a Canvas and display the georeferenced content accordingly.
 
 ### Extra metadata fields
 
