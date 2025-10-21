@@ -30,6 +30,7 @@ const mapStyles = ref([
     name: "OpenStreetMap",
     style: {
       version: 8 as const,
+      glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
       sources: {
         osm: {
           type: "raster" as const,
@@ -53,6 +54,7 @@ const mapStyles = ref([
     name: t("国土地理院ウェブサイト"),
     style: {
       version: 8 as const,
+      glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
       sources: {
         gsi: {
           type: "raster" as const,
@@ -76,6 +78,7 @@ const mapStyles = ref([
     name: t("空中写真"),
     style: {
       version: 8 as const,
+      glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
       sources: {
         gsi: {
           type: "raster" as const,
@@ -339,28 +342,25 @@ const setupClusteringWithData = (geojson: any) => {
     return;
   }
   
-  // Add cluster count layer only if the style supports text rendering
-  // Skip for custom raster styles that don't have glyphs
-  const currentStyle = mapStyles.value[currentStyleIndex.value]?.style;
-  const isCustomRasterStyle = typeof currentStyle === 'object' && !(currentStyle as any)?.glyphs;
-  
-  if (!isCustomRasterStyle) {
-    try {
-      mapInstance.value.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: 'points',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 12
-        }
-      });
-    } catch (e) {
-      console.warn('Could not add cluster count layer (text not supported):', e);
-    }
-  } else {
+  // Add cluster count layer
+  try {
+    mapInstance.value.addLayer({
+      id: 'cluster-count',
+      type: 'symbol',
+      source: 'points',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-size': 14
+      },
+      paint: {
+        'text-color': '#000000',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 2
+      }
+    });
+  } catch (e) {
+    console.warn('Could not add cluster count layer:', e);
   }
   
   // Add unclustered point layer
@@ -817,10 +817,9 @@ watch(
         
         if (typeof lng === 'number' && typeof lat === 'number' && !isNaN(lng) && !isNaN(lat)) {
           mapInstance.value.flyTo({
-            center: [lng, lat],
-            zoom: 15
+            center: [lng, lat]
           });
-          
+
           // Update paint property to highlight selected point
           if (mapInstance.value.getLayer('unclustered-point')) {
             mapInstance.value.setPaintProperty('unclustered-point', 'circle-color', [
