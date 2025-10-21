@@ -326,15 +326,7 @@ const setupClusteringWithData = (geojson: any) => {
           30,
           '#f28cb1'
         ],
-        'circle-radius': [
-          'step',
-          ['get', 'point_count'],
-          20,
-          10,
-          30,
-          30,
-          40
-        ]
+        'circle-radius': 30
       }
     });
   } catch (e) {

@@ -365,3 +365,75 @@ export function calculateImageRotationFromDistribution(features: Feature[]): Rot
 export function calculateImageRotationAdvanced(features: Feature[]): RotationCalculationResult | null {
   return calculateImageRotationFromDistribution(features);
 }
+
+/**
+ * 指定した座標に最も近い3点を取得
+ * @param features - すべての特徴点
+ * @param targetCoords - 基準となる画像座標 [x, y]
+ * @returns 最も近い3点の配列
+ */
+export function findNearestThreePoints(features: Feature[], targetCoords: [number, number]): ValidFeature[] {
+  const validFeatures: ValidFeature[] = features.filter(isValidFeature);
+
+  if (validFeatures.length < 3) {
+    return validFeatures;
+  }
+
+  // 各点との距離を計算
+  const distances = validFeatures.map(feature => {
+    const dx = feature.properties.resourceCoords[0] - targetCoords[0];
+    const dy = feature.properties.resourceCoords[1] - targetCoords[1];
+    return {
+      feature,
+      distance: dx * dx + dy * dy // 二乗のまま（比較には十分）
+    };
+  });
+
+  // 距離でソート
+  distances.sort((a, b) => a.distance - b.distance);
+
+  // 最も近い3点を返す
+  return distances.slice(0, 3).map(d => d.feature);
+}
+
+/**
+ * 局所的な回転角度を計算（3点から）
+ * @param features - 3点の特徴点
+ * @returns 回転角度（度）
+ */
+export function calculateLocalRotation(features: Feature[]): RotationCalculationResult | null {
+  const validFeatures: ValidFeature[] = features.filter(isValidFeature);
+
+  if (validFeatures.length < 2) {
+    return null;
+  }
+
+  // 3点の場合は、最も離れた2点を使用
+  if (validFeatures.length === 3) {
+    let maxDistance = 0;
+    let feature1: ValidFeature = validFeatures[0]!;
+    let feature2: ValidFeature = validFeatures[1]!;
+
+    for (let i = 0; i < validFeatures.length; i++) {
+      for (let j = i + 1; j < validFeatures.length; j++) {
+        const f1 = validFeatures[i]!;
+        const f2 = validFeatures[j]!;
+
+        const dx = f2.properties.resourceCoords[0] - f1.properties.resourceCoords[0];
+        const dy = f2.properties.resourceCoords[1] - f1.properties.resourceCoords[1];
+        const distance = dx * dx + dy * dy;
+        if (distance > maxDistance) {
+          maxDistance = distance;
+          feature1 = f1;
+          feature2 = f2;
+        }
+      }
+    }
+
+    // 2点間の回転計算
+    return calculateImageRotation([feature1, feature2]);
+  }
+
+  // 2点の場合はそのまま使用
+  return calculateImageRotation(validFeatures);
+}

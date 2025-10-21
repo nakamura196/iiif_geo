@@ -11,8 +11,10 @@ import {
   mdiArrowRight,
   mdiAutoFix,
   mdiRotate3d,
+  mdiCrosshairsGps,
+  mdiShape,
 } from "@mdi/js";
-import { calculateImageRotation, calculateImageRotationAdvanced } from "~/utils/calculateImageRotation";
+import { calculateImageRotation, calculateImageRotationAdvanced, findNearestThreePoints, calculateLocalRotation } from "~/utils/calculateImageRotation";
 import { useDisplay } from "vuetify";
 
 const { $OpenSeadragon } = useNuxtApp();
@@ -27,7 +29,7 @@ watch(
   (value) => {
     if (value.type === "map" || value.type === "both") {
       const feature = featuresMap.value[value.id];
-      
+
       if (!feature || !feature.properties || !feature.properties.resourceCoords) {
         console.warn('Feature or resourceCoords not found for id:', value.id);
         return;
@@ -46,6 +48,16 @@ watch(
 
       removeSelected();
       setSelected(value.id);
+
+      // クラスタリングが有効な場合、クラスター表示を更新
+      if (enableClustering.value && showAnnotations.value) {
+        updateAnnotationDisplay();
+      }
+
+      // 自動回転がONの場合、局所的な回転を計算
+      if (autoRotateOnSelect.value) {
+        calculateLocalRotationOnSelect(value.id);
+      }
     }
     // actionが変更されたらURLを更新
     debouncedUpdateURLParams();
@@ -116,11 +128,19 @@ onMounted(async () => {
 
   viewer.addHandler("open", () => {
     updateFeatureMap();
-    
+
     // URLパラメータから初期状態を復元
+    isRestoringFromURL.value = true;
+
     const query = route.query;
     if (query.annotations === 'true') {
       showAnnotations.value = true;
+    }
+    if (query.clustering === 'true') {
+      enableClustering.value = true;
+    }
+    if (query.autoRotateOnSelect === 'true') {
+      autoRotateOnSelect.value = true;
     }
     if (query.zoom) {
       const zoom = parseFloat(query.zoom as string);
@@ -151,6 +171,7 @@ onMounted(async () => {
         }
       }, 500); // featuresMapが更新されるまで待つ
     }
+
     // 選択IDの復元と中心表示
     if (query.id) {
       const id = query.id as string;
@@ -159,10 +180,10 @@ onMounted(async () => {
       const maxAttempts = 100; // 10秒間待機
       const checkFeature = () => {
         attempts++;
-        
+
         if (Object.keys(featuresMap.value).length > 0 && featuresMap.value[id]) {
           const feature = featuresMap.value[id];
-          
+
           // 画像上でその位置を中心に表示
           if (feature.properties?.resourceCoords && Array.isArray(feature.properties.resourceCoords) && feature.properties.resourceCoords.length >= 2) {
             const x = feature.properties.resourceCoords[0];
@@ -172,7 +193,7 @@ onMounted(async () => {
               viewer.viewport.panTo(point);
             }
           }
-          
+
           // IDが指定されている場合はアノテーションを自動表示
           if (!showAnnotations.value) {
             showAnnotations.value = true;
@@ -186,20 +207,32 @@ onMounted(async () => {
             removeSelected();
             setSelected(id);
           }
-          
+
           // actionに設定して地図と同期
           action.value = {
             type: "both", // 地図も更新するため
             id,
           };
+
+          // ID復元完了後、フラグを解除
+          setTimeout(() => {
+            isRestoringFromURL.value = false;
+          }, 200);
         } else if (attempts < maxAttempts) {
           // まだ準備できていない場合は再試行
           setTimeout(checkFeature, 100);
         } else {
+          // タイムアウト時もフラグを解除
+          isRestoringFromURL.value = false;
         }
       };
       // 初回実行を少し遅延（デプロイ環境ではさらに遅延）
       setTimeout(checkFeature, 500);
+    } else {
+      // IDがない場合は即座にフラグを解除
+      setTimeout(() => {
+        isRestoringFromURL.value = false;
+      }, 200);
     }
   });
 
@@ -218,6 +251,8 @@ const rotate2 = ref(0);
 const showAnnotations = ref(false);
 const showRotationDialog = ref(false);
 const isCalculatingRotation = ref(false);
+const autoRotateOnSelect = ref(false);
+const enableClustering = ref(false);
 
 const route = useRoute();
 const router = useRouter();
@@ -226,28 +261,52 @@ watch(
   () => rotate.value,
   (value) => {
     viewer.viewport.setRotation(-1 * value);
-    debouncedUpdateURLParams();
+    if (!isRestoringFromURL.value) {
+      debouncedUpdateURLParams();
+    }
+    // クラスタリング表示時は数字の回転を更新
+    if (enableClustering.value && showAnnotations.value) {
+      // 全てのクラスターカウントの回転を更新
+      const clusterCounts = document.querySelectorAll('.cluster-count');
+      clusterCounts.forEach((element: any) => {
+        element.style.transform = `rotate(${value}deg)`;
+      });
+    }
   }
 );
 
 // URLパラメータを更新する関数
 const updateURLParams = () => {
   const params = new URLSearchParams(window.location.search);
-  
+
   // アノテーション表示状態
   if (showAnnotations.value) {
     params.set('annotations', 'true');
   } else {
     params.delete('annotations');
   }
-  
+
+  // クラスタリング状態
+  if (enableClustering.value) {
+    params.set('clustering', 'true');
+  } else {
+    params.delete('clustering');
+  }
+
+  // 自動回転（局所回転）状態
+  if (autoRotateOnSelect.value) {
+    params.set('autoRotateOnSelect', 'true');
+  } else {
+    params.delete('autoRotateOnSelect');
+  }
+
   // ズームレベル
   if (viewer && viewer.viewport) {
     const zoom = viewer.viewport.getZoom();
     if (typeof zoom === 'number') {
       params.set('zoom', zoom.toFixed(2));
     }
-    
+
     // ビューポートの中央座標
     const center = viewer.viewport.getCenter();
     if (center && typeof center.x === 'number' && typeof center.y === 'number') {
@@ -255,15 +314,15 @@ const updateURLParams = () => {
       params.set('centerY', center.y.toFixed(4));
     }
   }
-  
+
   // 回転角度
   params.set('rotation', rotate.value.toString());
-  
+
   // 選択されているIDを追加
   if (action.value && action.value.id) {
     params.set('id', action.value.id);
   }
-  
+
   // 既存のパラメータを保持
   if (route.query.u) {
     params.set('u', route.query.u as string);
@@ -275,7 +334,7 @@ const updateURLParams = () => {
       params.set(param, route.query[param] as string);
     }
   }
-  
+
   // URLを更新（History APIを使用してリロードを防ぐ）
   const newUrl = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, '', newUrl);
@@ -284,6 +343,7 @@ const updateURLParams = () => {
 // ズーム変更を監視（デバウンス付き）
 let zoomHandler: any = null;
 let zoomTimeout: any = null;
+let annotationUpdateTimeout: any = null;
 
 const debouncedUpdateURLParams = () => {
   if (zoomTimeout) {
@@ -294,6 +354,16 @@ const debouncedUpdateURLParams = () => {
   }, 500); // 500ms のデバウンス
 };
 
+// アノテーション表示更新のデバウンス
+const debouncedUpdateAnnotationDisplay = () => {
+  if (annotationUpdateTimeout) {
+    clearTimeout(annotationUpdateTimeout);
+  }
+  annotationUpdateTimeout = setTimeout(() => {
+    updateAnnotationDisplay();
+  }, 150); // 150ms のデバウンス（URLパラメータよりも短く）
+};
+
 // パン（移動）イベントも監視
 let panHandler: any = null;
 
@@ -302,9 +372,17 @@ onMounted(() => {
     if (viewer) {
       zoomHandler = viewer.addHandler('zoom', () => {
         debouncedUpdateURLParams();
+        // アノテーション表示時、ズーム変更時にアノテーション表示を更新
+        if (showAnnotations.value) {
+          debouncedUpdateAnnotationDisplay();
+        }
       });
       panHandler = viewer.addHandler('pan', () => {
         debouncedUpdateURLParams();
+        // アノテーション表示時、パン時にもアノテーション表示を更新
+        if (showAnnotations.value) {
+          debouncedUpdateAnnotationDisplay();
+        }
       });
     }
   }, 1000);
@@ -322,117 +400,292 @@ onUnmounted(() => {
   if (zoomTimeout) {
     clearTimeout(zoomTimeout);
   }
+  if (annotationUpdateTimeout) {
+    clearTimeout(annotationUpdateTimeout);
+  }
 });
+
+// アノテーション表示の更新
+const updateAnnotationDisplay = () => {
+  viewer.clearOverlays();
+
+  if (!showAnnotations.value) {
+    return;
+  }
+
+  const allFeatures = Object.values(featuresMap.value);
+
+  const worldItem = viewer.world.getItemAt(0);
+  if (!worldItem) {
+    console.error('No world item found');
+    return;
+  }
+  const contentSize = worldItem.getContentSize();
+  if (!contentSize) {
+    console.error('No content size found');
+    return;
+  }
+  const fullWidth = contentSize.x;
+  const fullHeight = contentSize.y;
+
+  // クラスタリングが有効な場合
+  if (enableClustering.value) {
+    // 現在のビューポート範囲を取得
+    const bounds = viewer.viewport.getBounds();
+    const topLeft = viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y);
+    const bottomRight = viewer.viewport.viewportToImageCoordinates(
+      bounds.x + bounds.width,
+      bounds.y + bounds.height
+    );
+
+    // マージンを追加（画面外の少し外側も含める）
+    const margin = Math.max(fullWidth, fullHeight) * 0.2;
+    const minX = Math.max(0, topLeft.x - margin);
+    const minY = Math.max(0, topLeft.y - margin);
+    const maxX = Math.min(fullWidth, bottomRight.x + margin);
+    const maxY = Math.min(fullHeight, bottomRight.y + margin);
+
+    // 表示範囲内のアノテーションのみをフィルタリング
+    const visibleFeatures = allFeatures.filter((feature: any) => {
+      if (!feature.properties?.resourceCoords || feature.properties.resourceCoords.length < 2) {
+        return false;
+      }
+      const x = feature.properties.resourceCoords[0];
+      const y = feature.properties.resourceCoords[1];
+      return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    });
+
+    // 現在のズームレベルを取得
+    const currentZoom = viewer.viewport.getZoom();
+    // ズームレベルに応じてクラスタ半径を調整（ズームするほど半径を小さく）
+    const baseRadius = fullWidth * 0.05;
+    const clusterRadius = baseRadius / currentZoom;
+    const clusters = clusterFeatures(visibleFeatures, clusterRadius);
+
+    for (const cluster of clusters) {
+      const x = Number(cluster.center[0]) / fullWidth;
+      const y = Number(cluster.center[1]) / fullWidth;
+
+      // クラスターマーカーの作成
+      const overlay_ = document.createElement("div");
+      overlay_.id = cluster.id;
+
+      if (cluster.features.length > 1) {
+        // 複数の特徴を含むクラスター
+        const count = cluster.features.length;
+        // マーカー数に応じて色を設定
+        let bgColor = '#51bbd6'; // デフォルト: 水色
+        let textColor = '#fff'; // デフォルト: 白
+
+        if (count >= 100) {
+          bgColor = '#f28cb1'; // ピンク
+          textColor = '#fff'; // 白
+        } else if (count >= 10) {
+          bgColor = '#f1f075'; // 黄色
+          textColor = '#000'; // 黒
+        }
+
+        overlay_.className = "cluster-icon";
+        overlay_.style.backgroundColor = bgColor;
+
+        // 画像の回転角度の逆方向に数字を回転させる
+        const currentRotation = rotate.value || 0;
+        overlay_.innerHTML = `<span class="cluster-count" style="transform: rotate(${currentRotation}deg); display: inline-block; color: ${textColor};">${count}</span>`;
+      } else {
+        // 単一の特徴（クラスター解除後）
+        const feature = cluster.features[0];
+        const isSelected = action.value && action.value.id && feature.id === action.value.id;
+        overlay_.className = isSelected ? "pin-icon pin-selected" : "pin-icon";
+      }
+
+      const overlay = {
+        element: overlay_,
+        x,
+        y,
+        placement: "CENTER",
+        checkResize: false,
+      };
+
+      viewer.addOverlay(overlay);
+
+      // クリックハンドラー
+      new $OpenSeadragon.MouseTracker({
+        element: overlay_,
+        clickHandler: function (e: any) {
+          if (cluster.features.length > 1) {
+            // クラスターの場合はスムーズにズームイン
+            const point = viewer.viewport.imageToViewportCoordinates(
+              cluster.center[0],
+              cluster.center[1]
+            );
+            const currentZoom = viewer.viewport.getZoom();
+
+            // スムーズなアニメーションでズームイン
+            viewer.viewport.zoomTo(currentZoom * 2, point, false);
+            viewer.viewport.applyConstraints();
+          } else {
+            // 単一の特徴の場合は選択
+            const feature = cluster.features[0];
+            const id = feature.id;
+
+            removeSelected();
+            setSelected(cluster.id);
+
+            action.value = {
+              type: "osd",
+              id,
+            };
+          }
+        },
+      });
+    }
+  } else {
+    // クラスタリングが無効な場合は通常表示
+    // 表示範囲内のアノテーションのみをフィルタリング
+    const bounds = viewer.viewport.getBounds();
+    const topLeft = viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y);
+    const bottomRight = viewer.viewport.viewportToImageCoordinates(
+      bounds.x + bounds.width,
+      bounds.y + bounds.height
+    );
+
+    // マージンを追加
+    const margin = Math.max(fullWidth, fullHeight) * 0.2;
+    const minX = Math.max(0, topLeft.x - margin);
+    const minY = Math.max(0, topLeft.y - margin);
+    const maxX = Math.min(fullWidth, bottomRight.x + margin);
+    const maxY = Math.min(fullHeight, bottomRight.y + margin);
+
+    const visibleFeatures = allFeatures.filter((feature: any) => {
+      if (!feature.properties?.resourceCoords || feature.properties.resourceCoords.length < 2) {
+        return true; // xywh形式の場合は常に表示
+      }
+      const x = feature.properties.resourceCoords[0];
+      const y = feature.properties.resourceCoords[1];
+      return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    });
+
+    for (const feature of visibleFeatures) {
+      const id = feature.id;
+
+      if (!feature) {
+        console.warn('Feature not found for id:', id);
+        continue;
+      }
+
+      let overlay: any = null;
+
+      if (feature.xywh) {
+        // deprecated
+        const xywh = feature.xywh.split(",");
+        const x = Number(xywh[0]) / fullWidth;
+        const y = Number(xywh[1]) / fullWidth;
+        const width = Number(xywh[2]) / fullWidth;
+        const height = Number(xywh[3]) / fullWidth;
+
+        overlay = {
+          id,
+          x,
+          y,
+          width,
+          height,
+          className: "osdc-highlight osdc-base",
+        };
+      } else if (feature.metadata?.xywh) {
+        const xywh = feature.metadata.xywh.split(",");
+        const x = Number(xywh[0]) / fullWidth;
+        const y = Number(xywh[1]) / fullWidth;
+        const width = Number(xywh[2]) / fullWidth;
+        const height = Number(xywh[3]) / fullWidth;
+
+        overlay = {
+          id,
+          x,
+          y,
+          width,
+          height,
+          className: "osdc-highlight osdc-base",
+        };
+      } else if (feature.properties && feature.properties.resourceCoords && Array.isArray(feature.properties.resourceCoords) && feature.properties.resourceCoords.length >= 2) {
+        const resourceCoords = feature.properties.resourceCoords;
+        const x = Number(resourceCoords[0]) / fullWidth;
+        const y = Number(resourceCoords[1]) / fullWidth;
+
+        const overlay_ = document.createElement("div");
+        overlay_.id = id;
+        overlay_.className = "pin-icon";
+
+        overlay = {
+          id,
+          x,
+          y,
+          placement: "RIGHT",
+          checkResize: false,
+          className: "pin-icon",
+        };
+      } else {
+        console.warn('Feature missing required coordinate data:', id);
+        continue;
+      }
+
+      if (overlay) {
+        viewer.addOverlay(overlay);
+      } else {
+        console.warn('No overlay created for feature:', id);
+        continue;
+      }
+
+      new $OpenSeadragon.MouseTracker({
+        element: overlay.id,
+        clickHandler: function (e: any) {
+          if (e && e.originalTarget) {
+            const id = e.originalTarget.id;
+
+            removeSelected();
+
+            setSelected(id);
+
+            action.value = {
+              type: "osd",
+              id,
+            };
+          }
+        },
+      });
+    }
+  }
+};
+
+// URLパラメータから復元中かどうかのフラグ
+const isRestoringFromURL = ref(false);
 
 watch(
   () => showAnnotations.value,
-  (value) => {
-    updateURLParams();
-    if (value) {
-      const features = featuresMap.value;
+  () => {
+    if (!isRestoringFromURL.value) {
+      updateURLParams();
+    }
+    updateAnnotationDisplay();
+  }
+);
 
-      const worldItem = viewer.world.getItemAt(0);
-      if (!worldItem) {
-        console.error('No world item found');
-        return;
-      }
-      const contentSize = worldItem.getContentSize();
-      if (!contentSize) {
-        console.error('No content size found');
-        return;
-      }
-      const fullWidth = contentSize.x;
+// クラスタリング状態の変更を監視
+watch(
+  () => enableClustering.value,
+  () => {
+    updateAnnotationDisplay();
+    if (!isRestoringFromURL.value) {
+      updateURLParams();
+    }
+  }
+);
 
-      for (const id in features) {
-        const feature = features[id];
-        
-        if (!feature) {
-          console.warn('Feature not found for id:', id);
-          continue;
-        }
-
-        let overlay: any = null;
-
-        if (feature.xywh) {
-          // deprecated
-          const xywh = feature.xywh.split(",");
-          const x = Number(xywh[0]) / fullWidth;
-          const y = Number(xywh[1]) / fullWidth;
-          const width = Number(xywh[2]) / fullWidth;
-          const height = Number(xywh[3]) / fullWidth;
-
-          overlay = {
-            id,
-            x,
-            y,
-            width,
-            height,
-            className: "osdc-highlight osdc-base",
-          };
-        } else if (feature.metadata?.xywh) {
-          const xywh = feature.metadata.xywh.split(",");
-          const x = Number(xywh[0]) / fullWidth;
-          const y = Number(xywh[1]) / fullWidth;
-          const width = Number(xywh[2]) / fullWidth;
-          const height = Number(xywh[3]) / fullWidth;
-
-          overlay = {
-            id,
-            x,
-            y,
-            width,
-            height,
-            className: "osdc-highlight osdc-base",
-          };
-        } else if (feature.properties && feature.properties.resourceCoords && Array.isArray(feature.properties.resourceCoords) && feature.properties.resourceCoords.length >= 2) {
-          const resourceCoords = feature.properties.resourceCoords;
-          const x = Number(resourceCoords[0]) / fullWidth;
-          const y = Number(resourceCoords[1]) / fullWidth;
-
-          const overlay_ = document.createElement("div");
-          overlay_.id = id;
-          overlay_.className = "pin-icon";
-
-          overlay = {
-            id,
-            x,
-            y,
-            placement: "RIGHT",
-            checkResize: false,
-            className: "pin-icon",
-          };
-        } else {
-          console.warn('Feature missing required coordinate data:', id);
-          continue;
-        }
-
-        if (overlay) {
-          viewer.addOverlay(overlay);
-        } else {
-          console.warn('No overlay created for feature:', id);
-          continue;
-        }
-
-        new $OpenSeadragon.MouseTracker({
-          element: overlay.id,
-          clickHandler: function (e: any) {
-            if (e && e.originalTarget) {
-              const id = e.originalTarget.id;
-
-              removeSelected();
-
-              setSelected(id);
-
-              action.value = {
-                type: "osd",
-                id,
-              };
-            }
-          },
-        });
-      }
-    } else {
-      viewer.clearOverlays();
+// 自動回転（局所回転）状態の変更を監視
+watch(
+  () => autoRotateOnSelect.value,
+  () => {
+    if (!isRestoringFromURL.value) {
+      updateURLParams();
     }
   }
 );
@@ -524,6 +777,125 @@ const calculateRotation = async () => {
     isCalculatingRotation.value = false;
   }
 };
+
+// 選択したポイントの近接3点から局所的な回転を計算
+const calculateLocalRotationOnSelect = async (selectedId: string) => {
+  if (!autoRotateOnSelect.value) {
+    return;
+  }
+
+  const allFeatures = Object.values(featuresMap.value);
+  if (allFeatures.length < 2) {
+    return;
+  }
+
+  const selectedFeature = featuresMap.value[selectedId];
+  if (!selectedFeature || !selectedFeature.properties?.resourceCoords) {
+    return;
+  }
+
+  const resourceCoords = selectedFeature.properties.resourceCoords;
+  if (typeof resourceCoords[0] !== 'number' || typeof resourceCoords[1] !== 'number') {
+    return;
+  }
+
+  try {
+    // 選択したポイントの画像座標を取得
+    const targetCoords: [number, number] = [
+      resourceCoords[0],
+      resourceCoords[1]
+    ];
+
+    // 最も近い3点を取得
+    const nearestPoints = findNearestThreePoints(allFeatures as any[], targetCoords);
+
+    if (nearestPoints.length < 2) {
+      return;
+    }
+
+    // 局所的な回転角度を計算
+    const result = calculateLocalRotation(nearestPoints);
+
+    if (!result) {
+      return;
+    }
+
+    if (typeof result.rotation !== 'number' || isNaN(result.rotation)) {
+      return;
+    }
+
+    // 回転を適用
+    rotate.value = result.rotation;
+    rotate2.value = result.rotation;
+  } catch (error) {
+    console.error('Failed to calculate local rotation:', error);
+  }
+};
+
+// クラスタリング用の距離計算（画像座標での距離）
+const calculateImageDistance = (coord1: number[], coord2: number[]) => {
+  const dx = (coord1[0] ?? 0) - (coord2[0] ?? 0);
+  const dy = (coord1[1] ?? 0) - (coord2[1] ?? 0);
+  return Math.sqrt(dx * dx + dy * dy);
+};
+
+// グリッドベースの高速クラスタリング（O(n)）
+const clusterFeatures = (features: any[], clusterRadius: number) => {
+  if (features.length === 0) {
+    return [];
+  }
+
+  // グリッドのセルサイズをクラスタ半径に設定
+  const cellSize = clusterRadius;
+  const grid: Map<string, any[]> = new Map();
+
+  // 各特徴をグリッドセルに割り当て
+  for (const feature of features) {
+    if (!feature.properties?.resourceCoords || feature.properties.resourceCoords.length < 2) {
+      continue;
+    }
+
+    const x = feature.properties.resourceCoords[0];
+    const y = feature.properties.resourceCoords[1];
+
+    // グリッドセルのインデックスを計算
+    const cellX = Math.floor(x / cellSize);
+    const cellY = Math.floor(y / cellSize);
+    const cellKey = `${cellX},${cellY}`;
+
+    // このセルに特徴を追加
+    if (!grid.has(cellKey)) {
+      grid.set(cellKey, []);
+    }
+    grid.get(cellKey)!.push(feature);
+  }
+
+  // 各グリッドセルからクラスターを作成
+  const clusters: any[] = [];
+  for (const [cellKey, cellFeatures] of grid.entries()) {
+    if (cellFeatures.length === 0) {
+      continue;
+    }
+
+    // クラスターの中心を計算
+    const sumX = cellFeatures.reduce((sum, f) => sum + (f.properties.resourceCoords[0] ?? 0), 0);
+    const sumY = cellFeatures.reduce((sum, f) => sum + (f.properties.resourceCoords[1] ?? 0), 0);
+    const center = [sumX / cellFeatures.length, sumY / cellFeatures.length];
+
+    // クラスターIDは最初の特徴のIDを使用
+    const clusterId = cellFeatures.length > 1
+      ? `cluster-${cellKey}`
+      : cellFeatures[0].id;
+
+    clusters.push({
+      id: clusterId,
+      features: cellFeatures,
+      center: center,
+    });
+  }
+
+  return clusters;
+};
 </script>
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
@@ -595,6 +967,44 @@ const calculateRotation = async () => {
         :title="/*角度*/ $t('angle')"
       >
         <v-icon>{{ mdiRotate3d }}</v-icon>
+      </v-btn>
+
+      <!-- 自動回転トグルボタン（局所回転） -->
+      <v-btn
+        class="ma-1"
+        :color="autoRotateOnSelect ? 'success' : 'default'"
+        size="small"
+        icon
+        @click="autoRotateOnSelect = !autoRotateOnSelect"
+        :title="autoRotateOnSelect ? '選択時の局所回転: ON' : '選択時の局所回転: OFF'"
+      >
+        <v-icon>{{ mdiCrosshairsGps }}</v-icon>
+        <v-badge
+          v-if="autoRotateOnSelect"
+          dot
+          color="success"
+          offset-x="-8"
+          offset-y="-8"
+        ></v-badge>
+      </v-btn>
+
+      <!-- クラスタリングトグルボタン -->
+      <v-btn
+        class="ma-1"
+        :color="enableClustering ? 'success' : 'default'"
+        size="small"
+        icon
+        @click="enableClustering = !enableClustering"
+        :title="enableClustering ? 'クラスタリング: ON' : 'クラスタリング: OFF'"
+      >
+        <v-icon>{{ mdiShape }}</v-icon>
+        <v-badge
+          v-if="enableClustering"
+          dot
+          color="success"
+          offset-x="-8"
+          offset-y="-8"
+        ></v-badge>
       </v-btn>
     </div>
 
@@ -680,5 +1090,33 @@ const calculateRotation = async () => {
 
   /* ピンの先端部分を作成 */
   position: relative;
+}
+
+:deep(.cluster-icon) {
+  width: 40px !important;
+  height: 40px !important;
+  background-color: #51bbd6;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: absolute !important;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  left: 50% !important;
+  top: 50% !important;
+}
+
+:deep(.cluster-count) {
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
+  line-height: 1;
+  user-select: none;
+  display: block;
 }
 </style>
