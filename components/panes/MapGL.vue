@@ -326,7 +326,7 @@ const setupClusteringWithData = (geojson: any) => {
           30,
           '#f28cb1'
         ],
-        'circle-radius': 30
+        'circle-radius': 20
       }
     });
   } catch (e) {
@@ -370,7 +370,7 @@ const setupClusteringWithData = (geojson: any) => {
           '#3FB1CE'
         ],
         'circle-radius': 8,
-        'circle-stroke-width': 2,
+        'circle-stroke-width': 1,
         'circle-stroke-color': '#fff'
       }
     });

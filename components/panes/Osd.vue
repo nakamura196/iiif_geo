@@ -430,22 +430,40 @@ const updateAnnotationDisplay = () => {
 
   // クラスタリングが有効な場合
   if (enableClustering.value) {
-    // 現在のビューポート範囲を取得
+    // 表示範囲内のアノテーションのみをフィルタリング（回転を考慮して4隅をチェック）
     const bounds = viewer.viewport.getBounds();
-    const topLeft = viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y);
-    const bottomRight = viewer.viewport.viewportToImageCoordinates(
-      bounds.x + bounds.width,
-      bounds.y + bounds.height
-    );
+    const corners = [
+      viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y), // 左上
+      viewer.viewport.viewportToImageCoordinates(bounds.x + bounds.width, bounds.y), // 右上
+      viewer.viewport.viewportToImageCoordinates(bounds.x + bounds.width, bounds.y + bounds.height), // 右下
+      viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y + bounds.height), // 左下
+    ];
 
-    // マージンを追加（画面外の少し外側も含める）
-    const margin = Math.max(fullWidth, fullHeight) * 0.2;
-    const minX = Math.max(0, topLeft.x - margin);
-    const minY = Math.max(0, topLeft.y - margin);
-    const maxX = Math.min(fullWidth, bottomRight.x + margin);
-    const maxY = Math.min(fullHeight, bottomRight.y + margin);
+    // 4隅から最小・最大座標を取得（回転していても正確な範囲を取得）
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
 
-    // 表示範囲内のアノテーションのみをフィルタリング
+    for (const corner of corners) {
+      minX = Math.min(minX, corner.x);
+      minY = Math.min(minY, corner.y);
+      maxX = Math.max(maxX, corner.x);
+      maxY = Math.max(maxY, corner.y);
+    }
+
+    // マージンを追加（表示範囲のサイズに基づいて動的に設定）
+    const viewportWidth = maxX - minX;
+    const viewportHeight = maxY - minY;
+    const marginX = viewportWidth * 0.5; // 表示幅の50%（クラスタリングのため広めに）
+    const marginY = viewportHeight * 0.5; // 表示高さの50%
+
+    // マージンを適用
+    minX = minX - marginX;
+    minY = minY - marginY;
+    maxX = maxX + marginX;
+    maxY = maxY + marginY;
+
     const visibleFeatures = allFeatures.filter((feature: any) => {
       if (!feature.properties?.resourceCoords || feature.properties.resourceCoords.length < 2) {
         return false;
@@ -455,12 +473,43 @@ const updateAnnotationDisplay = () => {
       return x >= minX && x <= maxX && y >= minY && y <= maxY;
     });
 
+    console.log('Clustering - Visible features:', visibleFeatures.length, '/', allFeatures.length);
+
     // 現在のズームレベルを取得
     const currentZoom = viewer.viewport.getZoom();
-    // ズームレベルに応じてクラスタ半径を調整（ズームするほど半径を小さく）
+
+    // アノテーション数とズームレベルに応じてクラスタ半径を動的に調整
+    // データセット全体のサイズに基づいて閾値を自動計算（汎用的）
+    const totalCount = allFeatures.length;
     const baseRadius = fullWidth * 0.05;
-    const clusterRadius = baseRadius / currentZoom;
+    let clusterRadius: number;
+
+    // データセット全体に対する可視アノテーションの割合で判定
+    const visibleRatio = visibleFeatures.length / totalCount;
+
+    if (visibleRatio > 0.25 || visibleFeatures.length > 1000) {
+      // 全体の25%以上 または 1000件以上: 非常に積極的にクラスタリング
+      // 2万件データセットなら5000件以上、1882件なら470件以上
+      clusterRadius = baseRadius / Math.pow(currentZoom, 0.3);
+    } else if (visibleRatio > 0.10 || visibleFeatures.length > 500) {
+      // 全体の10-25% または 500-1000件: 積極的にクラスタリング
+      // 2万件なら2000-5000件、1882件なら188-470件
+      clusterRadius = baseRadius / Math.pow(currentZoom, 0.5);
+    } else if (visibleRatio > 0.05 || visibleFeatures.length > 200) {
+      // 全体の5-10% または 200-500件: やや積極的にクラスタリング
+      // 2万件なら1000-2000件、1882件なら94-188件
+      clusterRadius = baseRadius / Math.pow(currentZoom, 0.7);
+    } else if (visibleRatio > 0.025 || visibleFeatures.length > 100) {
+      // 全体の2.5-5% または 100-200件: 標準的なクラスタリング
+      // 2万件なら500-1000件、1882件なら47-94件
+      clusterRadius = baseRadius / currentZoom;
+    } else {
+      // それ以下: クラスタリングを緩く（個別マーカーを早めに表示）
+      clusterRadius = baseRadius / Math.pow(currentZoom, 1.5);
+    }
+
     const clusters = clusterFeatures(visibleFeatures, clusterRadius, currentZoom);
+    console.log('Clusters created:', clusters.length, 'from', visibleFeatures.length, 'features (ratio:', (visibleRatio * 100).toFixed(1) + '%)');
 
     for (const cluster of clusters) {
       const x = Number(cluster.center[0]) / fullWidth;
@@ -473,24 +522,22 @@ const updateAnnotationDisplay = () => {
       if (cluster.features.length > 1) {
         // 複数の特徴を含むクラスター
         const count = cluster.features.length;
-        // マーカー数に応じて色を設定
-        let bgColor = '#51bbd6'; // デフォルト: 水色
-        let textColor = '#fff'; // デフォルト: 白
+        // マーカー数に応じて色を設定（MapLibre GLと統一）
+        let bgColor = '#51bbd6'; // デフォルト: 水色（10未満）
 
-        if (count >= 100) {
-          bgColor = '#f28cb1'; // ピンク
-          textColor = '#fff'; // 白
+        if (count >= 30) {
+          bgColor = '#f28cb1'; // ピンク（30以上）
         } else if (count >= 10) {
-          bgColor = '#f1f075'; // 黄色
-          textColor = '#000'; // 黒
+          bgColor = '#f1f075'; // 黄色（10-29）
         }
 
         overlay_.className = "cluster-icon";
         overlay_.style.backgroundColor = bgColor;
 
         // 画像の回転角度の逆方向に数字を回転させる
+        // MapLibre GLと統一: 全て黒文字+白縁
         const currentRotation = rotate.value || 0;
-        overlay_.innerHTML = `<span class="cluster-count" style="transform: rotate(${currentRotation}deg); display: inline-block; color: ${textColor};">${count}</span>`;
+        overlay_.innerHTML = `<span class="cluster-count" style="transform: rotate(${currentRotation}deg); display: inline-block;">${count}</span>`;
       } else {
         // 単一の特徴（クラスター解除後）
         const feature = cluster.features[0];
@@ -541,20 +588,39 @@ const updateAnnotationDisplay = () => {
     }
   } else {
     // クラスタリングが無効な場合は通常表示
-    // 表示範囲内のアノテーションのみをフィルタリング
+    // 表示範囲内のアノテーションのみをフィルタリング（回転を考慮して4隅をチェック）
     const bounds = viewer.viewport.getBounds();
-    const topLeft = viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y);
-    const bottomRight = viewer.viewport.viewportToImageCoordinates(
-      bounds.x + bounds.width,
-      bounds.y + bounds.height
-    );
+    const corners = [
+      viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y), // 左上
+      viewer.viewport.viewportToImageCoordinates(bounds.x + bounds.width, bounds.y), // 右上
+      viewer.viewport.viewportToImageCoordinates(bounds.x + bounds.width, bounds.y + bounds.height), // 右下
+      viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y + bounds.height), // 左下
+    ];
 
-    // マージンを追加
-    const margin = Math.max(fullWidth, fullHeight) * 0.2;
-    const minX = Math.max(0, topLeft.x - margin);
-    const minY = Math.max(0, topLeft.y - margin);
-    const maxX = Math.min(fullWidth, bottomRight.x + margin);
-    const maxY = Math.min(fullHeight, bottomRight.y + margin);
+    // 4隅から最小・最大座標を取得（回転していても正確な範囲を取得）
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const corner of corners) {
+      minX = Math.min(minX, corner.x);
+      minY = Math.min(minY, corner.y);
+      maxX = Math.max(maxX, corner.x);
+      maxY = Math.max(maxY, corner.y);
+    }
+
+    // マージンを追加（表示範囲のサイズに基づいて動的に設定）
+    const viewportWidth = maxX - minX;
+    const viewportHeight = maxY - minY;
+    const marginX = viewportWidth * 0.3; // 表示幅の30%
+    const marginY = viewportHeight * 0.3; // 表示高さの30%
+
+    // マージンを適用(負の座標も許可)
+    minX = minX - marginX;
+    minY = minY - marginY;
+    maxX = maxX + marginX;
+    maxY = maxY + marginY;
 
     const visibleFeatures = allFeatures.filter((feature: any) => {
       if (!feature.properties?.resourceCoords || feature.properties.resourceCoords.length < 2) {
@@ -848,15 +914,18 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
   // ズームレベルに応じてグリッドの粗さを調整
   // 引き（ズームアウト）の場合はより粗いグリッドで高速化
   let gridMultiplier: number;
-  if (zoomLevel < 0.5) {
-    // 非常に引きの場合: 3倍粗く（セル数1/9）
-    gridMultiplier = 3;
+  if (zoomLevel < 0.3) {
+    // 非常に引きの場合: 5倍粗く（セル数1/25）
+    gridMultiplier = 5;
+  } else if (zoomLevel < 0.5) {
+    // とても引きの場合: 4倍粗く（セル数1/16）
+    gridMultiplier = 4;
   } else if (zoomLevel < 1) {
-    // 引きの場合: 2倍粗く（セル数1/4）
-    gridMultiplier = 2;
+    // 引きの場合: 3倍粗く（セル数1/9）
+    gridMultiplier = 3;
   } else if (zoomLevel < 2) {
-    // 中程度: 1.5倍粗く（セル数約1/2）
-    gridMultiplier = 1.5;
+    // 中程度: 2倍粗く（セル数1/4）
+    gridMultiplier = 2;
   } else {
     // ズームイン時: 標準（細かいクラスタリング）
     gridMultiplier = 1;
@@ -1080,7 +1149,7 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 :deep(.pin-selected) {
   /* outline: solid #ffeb3b !important; */
   /* border: 2px solid #ffeb3b !important; */ /* アイコンの境界線 */
-  background-color: #f44336 !important;
+  background-color: #FF0000 !important; /* 選択時の色（MapLibre GLと統一） */
 }
 
 :deep(.osdc-hover) {
@@ -1091,11 +1160,10 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
   outline: solid #9c27b0;
 }
 :deep(.pin-icon) {
-  width: 12px; /* アイコンの幅 */
-  height: 12px; /* アイコンの高さ */
-  background-color: #2196f3; /* アイコンの背景色 */
-  /* border: 2px solid #fff; */ /* アイコンの境界線 */
-  /* outline: solid #fff;*/ /* 2px */
+  width: 16px; /* アイコンの幅（MapLibre GLと統一: radius 8 = 直径16px） */
+  height: 16px; /* アイコンの高さ */
+  background-color: #3FB1CE; /* アイコンの背景色（MapLibre GLと統一） */
+  border: 1px solid #fff; /* アイコンの境界線（MapLibre GLと統一） */
   border-radius: 50%; /* 円形にする */
   box-shadow: 0 0 2px #333; /* 影をつける */
 
@@ -1112,7 +1180,6 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
   width: 40px !important;
   height: 40px !important;
   background-color: #51bbd6;
-  border: 3px solid #fff;
   border-radius: 50%;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
   display: flex !important;
@@ -1126,7 +1193,7 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 }
 
 :deep(.cluster-count) {
-  color: #fff;
+  color: #000; /* MapLibre GLと統一: 黒文字 */
   font-weight: bold;
   font-size: 14px;
   text-align: center;
@@ -1134,5 +1201,11 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
   line-height: 1;
   user-select: none;
   display: block;
+  /* MapLibre GLと統一: 文字の周りに白い縁 */
+  text-shadow:
+    -1px -1px 0 #fff,
+     1px -1px 0 #fff,
+    -1px  1px 0 #fff,
+     1px  1px 0 #fff;
 }
 </style>
