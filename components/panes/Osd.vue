@@ -142,6 +142,13 @@ onMounted(async () => {
     if (query.autoRotateOnSelect === 'true') {
       autoRotateOnSelect.value = true;
     }
+
+    // アノテーション/クラスタリングの初期表示を確実に実行
+    if (showAnnotations.value) {
+      nextTick(() => {
+        updateAnnotationDisplay();
+      });
+    }
     if (query.zoom) {
       const zoom = parseFloat(query.zoom as string);
       if (!isNaN(zoom)) {
@@ -506,6 +513,7 @@ const updateAnnotationDisplay = () => {
       if (cluster.features.length > 1) {
         // 複数の特徴を含むクラスター
         const count = cluster.features.length;
+
         // マーカー数に応じて色を設定（MapLibre GLと統一）
         let bgColor = '#51bbd6'; // デフォルト: 水色（10未満）
 
