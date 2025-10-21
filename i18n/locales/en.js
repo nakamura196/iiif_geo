@@ -27,4 +27,5 @@ export default {
     "座標": "Coordinates",
     "れきちず": "Historical Map",
     "レイヤー": "Layers",
+    "件": "items",
 }
