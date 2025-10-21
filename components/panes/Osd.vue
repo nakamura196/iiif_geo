@@ -460,7 +460,7 @@ const updateAnnotationDisplay = () => {
     // ズームレベルに応じてクラスタ半径を調整（ズームするほど半径を小さく）
     const baseRadius = fullWidth * 0.05;
     const clusterRadius = baseRadius / currentZoom;
-    const clusters = clusterFeatures(visibleFeatures, clusterRadius);
+    const clusters = clusterFeatures(visibleFeatures, clusterRadius, currentZoom);
 
     for (const cluster of clusters) {
       const x = Number(cluster.center[0]) / fullWidth;
@@ -840,13 +840,29 @@ const calculateImageDistance = (coord1: number[], coord2: number[]) => {
 };
 
 // グリッドベースの高速クラスタリング（O(n)）
-const clusterFeatures = (features: any[], clusterRadius: number) => {
+const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: number = 1) => {
   if (features.length === 0) {
     return [];
   }
 
-  // グリッドのセルサイズをクラスタ半径に設定
-  const cellSize = clusterRadius;
+  // ズームレベルに応じてグリッドの粗さを調整
+  // 引き（ズームアウト）の場合はより粗いグリッドで高速化
+  let gridMultiplier: number;
+  if (zoomLevel < 0.5) {
+    // 非常に引きの場合: 3倍粗く（セル数1/9）
+    gridMultiplier = 3;
+  } else if (zoomLevel < 1) {
+    // 引きの場合: 2倍粗く（セル数1/4）
+    gridMultiplier = 2;
+  } else if (zoomLevel < 2) {
+    // 中程度: 1.5倍粗く（セル数約1/2）
+    gridMultiplier = 1.5;
+  } else {
+    // ズームイン時: 標準（細かいクラスタリング）
+    gridMultiplier = 1;
+  }
+
+  const cellSize = clusterRadius * gridMultiplier;
   const grid: Map<string, any[]> = new Map();
 
   // 各特徴をグリッドセルに割り当て
