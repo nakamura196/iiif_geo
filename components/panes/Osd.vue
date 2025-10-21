@@ -248,11 +248,11 @@ onMounted(async () => {
 
 const rotate = ref(0);
 const rotate2 = ref(0);
-const showAnnotations = ref(false);
+const showAnnotations = ref(true);
 const showRotationDialog = ref(false);
 const isCalculatingRotation = ref(false);
 const autoRotateOnSelect = ref(false);
-const enableClustering = ref(false);
+const enableClustering = ref(true);
 
 const route = useRoute();
 const router = useRouter();
@@ -430,50 +430,35 @@ const updateAnnotationDisplay = () => {
 
   // クラスタリングが有効な場合
   if (enableClustering.value) {
-    // 表示範囲内のアノテーションのみをフィルタリング（回転を考慮して4隅をチェック）
+    // 回転時のビューポート座標変換が複雑なため、簡易的なアプローチを使用
+    // ビューポートの中心とサイズから画像座標の範囲を推定
     const bounds = viewer.viewport.getBounds();
-    const corners = [
-      viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y), // 左上
-      viewer.viewport.viewportToImageCoordinates(bounds.x + bounds.width, bounds.y), // 右上
-      viewer.viewport.viewportToImageCoordinates(bounds.x + bounds.width, bounds.y + bounds.height), // 右下
-      viewer.viewport.viewportToImageCoordinates(bounds.x, bounds.y + bounds.height), // 左下
-    ];
+    const center = viewer.viewport.getCenter();
+    const centerImg = viewer.viewport.viewportToImageCoordinates(center);
 
-    // 4隅から最小・最大座標を取得（回転していても正確な範囲を取得）
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+    // ズームレベルから可視範囲を推定
+    const zoom = viewer.viewport.getZoom();
+    // ズームが大きいほど可視範囲は小さい
+    const visibleWidth = fullWidth / zoom;
+    const visibleHeight = fullHeight / zoom;
 
-    for (const corner of corners) {
-      minX = Math.min(minX, corner.x);
-      minY = Math.min(minY, corner.y);
-      maxX = Math.max(maxX, corner.x);
-      maxY = Math.max(maxY, corner.y);
-    }
-
-    // マージンを追加（表示範囲のサイズに基づいて動的に設定）
-    const viewportWidth = maxX - minX;
-    const viewportHeight = maxY - minY;
-    const marginX = viewportWidth * 0.5; // 表示幅の50%（クラスタリングのため広めに）
-    const marginY = viewportHeight * 0.5; // 表示高さの50%
-
-    // マージンを適用
-    minX = minX - marginX;
-    minY = minY - marginY;
-    maxX = maxX + marginX;
-    maxY = maxY + marginY;
+    // マージンを追加（回転を考慮して適度に）
+    const margin = 0.5; // 50%のマージン
+    const minX = centerImg.x - visibleWidth * (0.5 + margin);
+    const maxX = centerImg.x + visibleWidth * (0.5 + margin);
+    const minY = centerImg.y - visibleHeight * (0.5 + margin);
+    const maxY = centerImg.y + visibleHeight * (0.5 + margin);
 
     const visibleFeatures = allFeatures.filter((feature: any) => {
       if (!feature.properties?.resourceCoords || feature.properties.resourceCoords.length < 2) {
         return false;
       }
+
       const x = feature.properties.resourceCoords[0];
       const y = feature.properties.resourceCoords[1];
       return x >= minX && x <= maxX && y >= minY && y <= maxY;
     });
 
-    console.log('Clustering - Visible features:', visibleFeatures.length, '/', allFeatures.length);
 
     // 現在のズームレベルを取得
     const currentZoom = viewer.viewport.getZoom();
@@ -509,7 +494,6 @@ const updateAnnotationDisplay = () => {
     }
 
     const clusters = clusterFeatures(visibleFeatures, clusterRadius, currentZoom);
-    console.log('Clusters created:', clusters.length, 'from', visibleFeatures.length, 'features (ratio:', (visibleRatio * 100).toFixed(1) + '%)');
 
     for (const cluster of clusters) {
       const x = Number(cluster.center[0]) / fullWidth;
@@ -613,14 +597,24 @@ const updateAnnotationDisplay = () => {
     // マージンを追加（表示範囲のサイズに基づいて動的に設定）
     const viewportWidth = maxX - minX;
     const viewportHeight = maxY - minY;
-    const marginX = viewportWidth * 0.3; // 表示幅の30%
-    const marginY = viewportHeight * 0.3; // 表示高さの30%
 
-    // マージンを適用(負の座標も許可)
+    // マージンは画像サイズに対する相対値で制限（画面幅に依存しないように）
+    const maxMarginX = fullWidth * 0.4; // 画像幅の40%まで
+    const maxMarginY = fullHeight * 0.4; // 画像高さの40%まで
+    const marginX = Math.min(viewportWidth * 0.3, maxMarginX);
+    const marginY = Math.min(viewportHeight * 0.3, maxMarginY);
+
+    // マージンを適用
     minX = minX - marginX;
     minY = minY - marginY;
     maxX = maxX + marginX;
     maxY = maxY + marginY;
+
+    // 画像範囲内にクリップ（回転時の座標変換の問題を回避）
+    minX = Math.max(-fullWidth * 0.5, minX);
+    maxX = Math.min(fullWidth * 1.5, maxX);
+    minY = Math.max(-fullHeight * 0.5, minY);
+    maxY = Math.min(fullHeight * 1.5, maxY);
 
     const visibleFeatures = allFeatures.filter((feature: any) => {
       if (!feature.properties?.resourceCoords || feature.properties.resourceCoords.length < 2) {
