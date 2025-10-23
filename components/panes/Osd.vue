@@ -11,6 +11,8 @@ import {
   mdiArrowRight,
   mdiAutoFix,
   mdiRotate3d,
+  mdiRotateRight,
+  mdiRotateLeft,
   mdiCrosshairsGps,
   mdiShape,
 } from "@mdi/js";
@@ -257,6 +259,7 @@ const rotate = ref(0);
 const rotate2 = ref(0);
 const showAnnotations = ref(true);
 const showRotationDialog = ref(false);
+const showAnnotationDialog = ref(false);
 const isCalculatingRotation = ref(false);
 const autoRotateOnSelect = ref(false);
 const enableClustering = ref(true);
@@ -900,6 +903,13 @@ const calculateLocalRotationOnSelect = async (selectedId: string) => {
   }
 };
 
+// 回転をリセット
+const resetRotation = () => {
+  rotate.value = 0;
+  rotate2.value = 0;
+  update();
+};
+
 // クラスタリング用の距離計算（画像座標での距離）
 const calculateImageDistance = (coord1: number[], coord2: number[]) => {
   const dx = (coord1[0] ?? 0) - (coord2[0] ?? 0);
@@ -1009,6 +1019,7 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
         <v-btn class="ma-1" size="small" icon id="full-page">
           <v-icon>{{ mdiFullscreen }}</v-icon>
         </v-btn>
+        <!-- リセットボタンは回転ダイアログ内に統合
         <v-btn
           class="ma-1"
           size="small"
@@ -1018,6 +1029,8 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
         >
           <v-icon>{{ mdiRestore }}</v-icon>
         </v-btn>
+        -->
+        <!-- 自動回転ボタンは回転ダイアログ内に統合
         <v-btn
           class="ma-1"
           size="small"
@@ -1030,33 +1043,33 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
         >
           <v-icon>{{ mdiAutoFix }}</v-icon>
         </v-btn>
+        -->
       </template>
-      
-      <!-- 注釈ボタンはモバイルでも表示 -->
+
+      <!-- アノテーション設定ボタン（モバイルでも表示） -->
       <v-btn
         class="ma-1"
-        color="primary"
         size="small"
         icon
-        @click="showAnnotations = !showAnnotations"
-        :title="/*注釈の表示/非表示*/ $t('annotation')"
+        @click="showAnnotationDialog = true"
+        :title="$t('annotation')"
       >
-        <v-icon>{{ showAnnotations ? mdiMessage : mdiMessageOff }}</v-icon>
+        <v-icon>{{ mdiMessage }}</v-icon>
       </v-btn>
 
       <!-- 回転角度調整ボタン -->
       <v-btn
         class="ma-1"
-        color="primary"
         size="small"
         icon
         @click="showRotationDialog = true"
         :title="/*角度*/ $t('angle')"
       >
-        <v-icon>{{ mdiRotate3d }}</v-icon>
+        <v-icon>{{ mdiRotateRight }}</v-icon>
       </v-btn>
 
       <!-- 自動回転トグルボタン（局所回転） -->
+      <!-- うまく動かなかったのでコメントアウト
       <v-btn
         class="ma-1"
         :color="autoRotateOnSelect ? 'success' : 'default'"
@@ -1074,8 +1087,10 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
           offset-y="-8"
         ></v-badge>
       </v-btn>
+      -->
 
-      <!-- クラスタリングトグルボタン -->
+      <!-- クラスタリングトグルボタンはアノテーション設定ダイアログ内に統合 -->
+      <!--
       <v-btn
         class="ma-1"
         :color="enableClustering ? 'success' : 'default'"
@@ -1093,6 +1108,7 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
           offset-y="-8"
         ></v-badge>
       </v-btn>
+      -->
     </div>
 
     <div
@@ -1131,8 +1147,61 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
           ></v-text-field>
         </v-card-text>
         <v-card-actions>
+          <v-btn
+            color="warning"
+            variant="outlined"
+            @click="resetRotation"
+            :title="$t('reset')"
+          >
+            <v-icon start>{{ mdiRotateLeft }}</v-icon>
+            {{ $t('reset') }}
+          </v-btn>
+          <v-btn
+            color="secondary"
+            variant="outlined"
+            @click="calculateRotation()"
+            :title="$t('autoRotate')"
+            :loading="isCalculatingRotation"
+            :disabled="isCalculatingRotation"
+          >
+            <v-icon start>{{ mdiAutoFix }}</v-icon>
+            {{ $t('autoRotate') }}
+          </v-btn>
           <v-spacer></v-spacer>
           <v-btn text @click="showRotationDialog = false">{{ $t('close') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- アノテーション設定ダイアログ -->
+    <v-dialog v-model="showAnnotationDialog" max-width="500">
+      <v-card>
+        <v-card-title>{{ $t('annotation') }}</v-card-title>
+        <v-card-text>
+          <!-- アノテーション表示/非表示 -->
+          <v-switch
+            v-model="showAnnotations"
+            color="primary"
+            :label="showAnnotations ? $t('annotation') + ': ON' : $t('annotation') + ': OFF'"
+            hide-details
+            class="mb-4"
+          ></v-switch>
+
+          <!-- クラスタリング設定 -->
+          <v-switch
+            v-model="enableClustering"
+            color="success"
+            :label="enableClustering ? 'クラスタリング: ON' : 'クラスタリング: OFF'"
+            hide-details
+            :disabled="!showAnnotations"
+          ></v-switch>
+          <p v-if="!showAnnotations" class="text-caption text-grey mt-2">
+            アノテーションを表示するとクラスタリング設定が有効になります
+          </p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="showAnnotationDialog = false">{{ $t('close') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
