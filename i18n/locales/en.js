@@ -2,6 +2,7 @@ export default {
     "add": "Add",
     "help": "Help",
     "search": "Search",
+    "list": "List",
     "name": "Name",
     "tag": "Tag",
     "angle": "Angle",
@@ -28,4 +29,7 @@ export default {
     "れきちず": "Historical Map",
     "レイヤー": "Layers",
     "件": "items",
+    "地名検索": "Place Search (OpenStreetMap)",
+    "placeSearch": "Place Search",
+    "結果が見つかりません": "No results found",
 }

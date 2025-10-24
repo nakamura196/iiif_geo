@@ -2,6 +2,7 @@ export default {
     "add": "登録",
     "help": "ヘルプ",
     "search": "検索",
+    "list": "一覧",
     "name": "名前",
     "tag": "タグ",
     "angle": "角度",
@@ -28,4 +29,7 @@ export default {
     "れきちず": "れきちず",
     "レイヤー": "レイヤー",
     "件": "件",
+    "地名検索": "地名検索 (OpenStreetMap)",
+    "placeSearch": "地名検索",
+    "結果が見つかりません": "結果が見つかりません",
 }

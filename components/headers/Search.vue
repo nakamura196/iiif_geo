@@ -56,6 +56,6 @@ onMounted(() => {
     @click="dialog = !dialog"
   >
     <v-icon class="mr-1">{{ mdiMagnify }}</v-icon
-    >{{ $t("search") }}</v-btn
+    >{{ $t("list") }}</v-btn
   >
 </template>

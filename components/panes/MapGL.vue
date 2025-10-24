@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Map, NavigationControl, Marker, Popup, type LngLatLike, type MapSourceDataEvent } from "maplibre-gl";
-import { mdiLayers } from "@mdi/js";
+import { mdiLayers, mdiMagnify, mdiMapMarker } from "@mdi/js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useDisplay } from "vuetify";
 
@@ -108,6 +108,9 @@ const mapStyles = ref([
 
 const currentStyleIndex = ref(0);
 const showLayerMenu = ref(false);
+const searchQuery = ref('');
+const geocodingResults = ref<any[]>([]);
+const isSearching = ref(false);
 
 // MapLibre GL instance
 const mapInstance = ref<Map | null>(null);
@@ -834,6 +837,85 @@ onMounted(() => {
   });
 });
 
+// Nominatim geocoding search
+let geocodingTimeout: any = null;
+const performSearch = async () => {
+  if (!searchQuery.value.trim()) {
+    geocodingResults.value = [];
+    isSearching.value = false;
+    return;
+  }
+
+  // Clear previous timeout
+  if (geocodingTimeout) {
+    clearTimeout(geocodingTimeout);
+  }
+
+  isSearching.value = true;
+
+  // Debounce geocoding search (500ms)
+  geocodingTimeout = setTimeout(async () => {
+    try {
+      // Nominatim API (OpenStreetMap)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?` +
+        `format=json&q=${encodeURIComponent(searchQuery.value)}&limit=10&accept-language=ja`,
+        {
+          headers: {
+            'User-Agent': 'IIIF-Geo-Viewer/1.0'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Geocoding failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      geocodingResults.value = data;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      geocodingResults.value = [];
+    } finally {
+      isSearching.value = false;
+    }
+  }, 500);
+};
+
+// Handle geocoding result click
+const selectGeocodingResult = (result: any) => {
+  if (!mapInstance.value) {
+    return;
+  }
+
+  const lat = parseFloat(result.lat);
+  const lng = parseFloat(result.lon);
+
+  // Fly to the location
+  mapInstance.value.flyTo({
+    center: [lng, lat],
+    zoom: 15,
+    duration: 1000
+  });
+
+  // Add a temporary marker for the geocoded location
+  new Marker({ color: '#FF4444' })
+    .setLngLat([lng, lat])
+    .setPopup(new Popup().setHTML(`
+      <div>
+        <strong>${result.display_name}</strong>
+        ${result.type ? `<div style="margin-top: 4px; font-size: 0.9em; color: #666;">${result.type}</div>` : ''}
+      </div>
+    `))
+    .addTo(mapInstance.value as any)
+    .togglePopup();
+};
+
+// Watch search query
+watch(() => searchQuery.value, () => {
+  performSearch();
+});
+
 // Cleanup
 onUnmounted(() => {
   if (mapUpdateTimeout) {
@@ -848,7 +930,56 @@ onUnmounted(() => {
 <template>
   <div class="map-container">
     <div ref="mapContainer" class="map"></div>
-    
+
+    <!-- Search form (top-left) -->
+    <div class="search-container">
+      <v-card elevation="2">
+        <v-text-field
+          v-model="searchQuery"
+          :placeholder="t('placeSearch')"
+          density="compact"
+          variant="solo"
+          flat
+          hide-details
+          clearable
+          @click:clear="geocodingResults = []"
+        >
+          <template v-slot:prepend-inner>
+            <v-icon size="small">{{ mdiMagnify }}</v-icon>
+          </template>
+        </v-text-field>
+
+        <!-- Search results below form -->
+        <div v-if="searchQuery.trim()" class="search-results-container">
+          <v-progress-linear v-if="isSearching" indeterminate></v-progress-linear>
+
+          <v-list v-if="geocodingResults.length > 0" density="compact" class="search-results-list">
+            <v-list-item
+              v-for="(result, index) in geocodingResults"
+              :key="`geo-${index}`"
+              @click="selectGeocodingResult(result)"
+              class="search-result-item"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small" color="primary">{{ mdiMapMarker }}</v-icon>
+              </template>
+              <v-list-item-title class="text-wrap">
+                {{ result.display_name }}
+              </v-list-item-title>
+              <v-list-item-subtitle v-if="result.type">
+                {{ result.type }}
+              </v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+
+          <!-- No results -->
+          <div v-if="!isSearching && geocodingResults.length === 0" class="pa-3 text-center text-grey">
+            {{ t('結果が見つかりません') }}
+          </div>
+        </div>
+      </v-card>
+    </div>
+
     <!-- Layer selector button -->
     <div class="layer-selector">
       <v-menu
@@ -868,7 +999,7 @@ onUnmounted(() => {
             <v-icon>{{ mdiLayers }}</v-icon>
           </v-btn>
         </template>
-        
+
         <v-card min-width="200">
           <v-list density="compact">
             <v-list-item
@@ -896,6 +1027,33 @@ onUnmounted(() => {
 .map {
   width: 100%;
   height: 100%;
+}
+
+.search-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  min-width: 320px;
+  max-width: 450px;
+}
+
+.search-results-container {
+  background-color: white;
+}
+
+.search-results-list {
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: white;
+}
+
+.search-result-item {
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background-color: #f5f5f5;
 }
 
 .layer-selector {

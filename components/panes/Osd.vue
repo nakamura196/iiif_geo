@@ -135,15 +135,6 @@ onMounted(async () => {
     isRestoringFromURL.value = true;
 
     const query = route.query;
-    if (query.annotations === 'true') {
-      showAnnotations.value = true;
-    }
-    if (query.clustering === 'true') {
-      enableClustering.value = true;
-    }
-    if (query.autoRotateOnSelect === 'true') {
-      autoRotateOnSelect.value = true;
-    }
 
     // アノテーション/クラスタリングの初期表示を確実に実行
     if (showAnnotations.value) {
@@ -203,8 +194,11 @@ onMounted(async () => {
             }
           }
 
-          // IDが指定されている場合はアノテーションを自動表示
-          if (!showAnnotations.value) {
+          // IDが指定されている場合の処理
+          // annotations=falseが明示的に指定されている場合は自動表示しない
+          const annotationsParam = route.query.annotations;
+          if (!showAnnotations.value && annotationsParam !== 'false') {
+            // annotationsパラメータが明示的にfalseでない場合のみ自動表示
             showAnnotations.value = true;
             // アノテーション表示後に選択状態を設定
             setTimeout(() => {
@@ -212,7 +206,7 @@ onMounted(async () => {
               setSelected(id);
             }, 100);
           } else {
-            // アノテーションが表示されている場合は選択状態にする
+            // アノテーションが表示されている場合、または明示的にfalseの場合は選択状態にするのみ
             removeSelected();
             setSelected(id);
           }
@@ -255,18 +249,21 @@ onMounted(async () => {
   );
 });
 
+const route = useRoute();
+const router = useRouter();
+
 const rotate = ref(0);
 const rotate2 = ref(0);
-const showAnnotations = ref(true);
+// URLパラメータから初期値を設定（デフォルトはtrue）
+const showAnnotations = ref(route.query.annotations !== 'false');
 const showRotationDialog = ref(false);
 const showAnnotationDialog = ref(false);
 const isCalculatingRotation = ref(false);
-const autoRotateOnSelect = ref(false);
-const enableClustering = ref(true);
+// URLパラメータから初期値を設定（デフォルトはfalse）
+const autoRotateOnSelect = ref(route.query.autoRotateOnSelect === 'true');
+// URLパラメータから初期値を設定（デフォルトはtrue）
+const enableClustering = ref(route.query.clustering !== 'false');
 const spiderfiedCluster = ref<string | null>(null); // 現在展開されているクラスターのID
-
-const route = useRoute();
-const router = useRouter();
 
 watch(
   () => rotate.value,
@@ -291,25 +288,13 @@ const updateURLParams = () => {
   const params = new URLSearchParams(window.location.search);
 
   // アノテーション表示状態
-  if (showAnnotations.value) {
-    params.set('annotations', 'true');
-  } else {
-    params.delete('annotations');
-  }
+  params.set('annotations', showAnnotations.value ? 'true' : 'false');
 
   // クラスタリング状態
-  if (enableClustering.value) {
-    params.set('clustering', 'true');
-  } else {
-    params.delete('clustering');
-  }
+  params.set('clustering', enableClustering.value ? 'true' : 'false');
 
   // 自動回転（局所回転）状態
-  if (autoRotateOnSelect.value) {
-    params.set('autoRotateOnSelect', 'true');
-  } else {
-    params.delete('autoRotateOnSelect');
-  }
+  params.set('autoRotateOnSelect', autoRotateOnSelect.value ? 'true' : 'false');
 
   // ズームレベル
   if (viewer && viewer.viewport) {
