@@ -263,6 +263,7 @@ const showAnnotationDialog = ref(false);
 const isCalculatingRotation = ref(false);
 const autoRotateOnSelect = ref(false);
 const enableClustering = ref(true);
+const spiderfiedCluster = ref<string | null>(null); // 現在展開されているクラスターのID
 
 const route = useRoute();
 const router = useRouter();
@@ -370,6 +371,8 @@ const debouncedUpdateAnnotationDisplay = () => {
     clearTimeout(annotationUpdateTimeout);
   }
   annotationUpdateTimeout = setTimeout(() => {
+    // ズームやパン時はspiderfy状態をリセット
+    spiderfiedCluster.value = null;
     updateAnnotationDisplay();
   }, 150); // 150ms のデバウンス（URLパラメータよりも短く）
 };
@@ -506,6 +509,105 @@ const updateAnnotationDisplay = () => {
     const clusters = clusterFeatures(visibleFeatures, clusterRadius, currentZoom);
 
     for (const cluster of clusters) {
+      // spiderfy展開されているクラスターの場合、個別マーカーを放射状に配置
+      if (spiderfiedCluster.value === cluster.id && cluster.features.length > 1) {
+        const centerX = cluster.center[0];
+        const centerY = cluster.center[1];
+        const count = cluster.features.length;
+
+        // 放射状配置の半径（ズームレベルに応じて調整）
+        const spiderfyRadius = (fullWidth * 0.02) / currentZoom;
+
+        // 中心点のマーカーを追加
+        const centerOverlay = document.createElement("div");
+        centerOverlay.className = "spiderfy-center";
+        viewer.addOverlay({
+          element: centerOverlay,
+          x: Number(centerX) / fullWidth,
+          y: Number(centerY) / fullWidth,
+          placement: "CENTER",
+          checkResize: false,
+        });
+
+        cluster.features.forEach((feature: any, index: number) => {
+          // 円周上に均等に配置
+          const angle = (index / count) * 2 * Math.PI;
+          const offsetX = Math.cos(angle) * spiderfyRadius;
+          const offsetY = Math.sin(angle) * spiderfyRadius;
+
+          const featureX = centerX + offsetX;
+          const featureY = centerY + offsetY;
+          const x = Number(featureX) / fullWidth;
+          const y = Number(featureY) / fullWidth;
+
+          // 接続線を追加（SVG line要素）
+          const lineOverlay = document.createElement("div");
+          lineOverlay.className = "spiderfy-line";
+          lineOverlay.style.position = "absolute";
+          lineOverlay.style.width = "0";
+          lineOverlay.style.height = "0";
+
+          // SVGで線を描画
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.style.position = "absolute";
+          svg.style.overflow = "visible";
+          svg.style.pointerEvents = "none";
+
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", "0");
+          line.setAttribute("y1", "0");
+          line.setAttribute("x2", String(offsetX));
+          line.setAttribute("y2", String(offsetY));
+          line.setAttribute("stroke", "#666");
+          line.setAttribute("stroke-width", "1");
+          line.setAttribute("opacity", "0.6");
+
+          svg.appendChild(line);
+          lineOverlay.appendChild(svg);
+
+          viewer.addOverlay({
+            element: lineOverlay,
+            x: Number(centerX) / fullWidth,
+            y: Number(centerY) / fullWidth,
+            placement: "CENTER",
+            checkResize: false,
+          });
+
+          const overlay_ = document.createElement("div");
+          overlay_.id = feature.id;
+          const isSelected = action.value && action.value.id && feature.id === action.value.id;
+          overlay_.className = isSelected ? "pin-icon pin-selected spiderfy-marker" : "pin-icon spiderfy-marker";
+
+          const overlay = {
+            element: overlay_,
+            x,
+            y,
+            placement: "CENTER",
+            checkResize: false,
+          };
+
+          viewer.addOverlay(overlay);
+
+          // 個別マーカーのクリックハンドラー
+          new $OpenSeadragon.MouseTracker({
+            element: overlay_,
+            clickHandler: function (e: any) {
+              const id = feature.id;
+
+              removeSelected();
+              setSelected(id);
+
+              action.value = {
+                type: "osd",
+                id,
+              };
+            },
+          });
+        });
+
+        continue; // このクラスターの処理を終了
+      }
+
       const x = Number(cluster.center[0]) / fullWidth;
       const y = Number(cluster.center[1]) / fullWidth;
 
@@ -555,16 +657,32 @@ const updateAnnotationDisplay = () => {
         element: overlay_,
         clickHandler: function (e: any) {
           if (cluster.features.length > 1) {
-            // クラスターの場合はスムーズにズームイン
-            const point = viewer.viewport.imageToViewportCoordinates(
-              cluster.center[0],
-              cluster.center[1]
-            );
-            const currentZoom = viewer.viewport.getZoom();
+            // クラスターの座標の分散を計算して、同一座標かどうか判定
+            const coords = cluster.features.map((f: any) => f.properties.resourceCoords);
+            const xValues = coords.map((c: number[]) => c[0]);
+            const yValues = coords.map((c: number[]) => c[1]);
+            const xVariance = Math.max(...xValues) - Math.min(...xValues);
+            const yVariance = Math.max(...yValues) - Math.min(...yValues);
 
-            // スムーズなアニメーションでズームイン
-            viewer.viewport.zoomTo(currentZoom * 2, point, false);
-            viewer.viewport.applyConstraints();
+            // 十分ズームインしているか、またはほぼ同一座標の場合はspiderfy表示
+            const threshold = fullWidth * 0.001; // 画像幅の0.1%以下なら同一座標とみなす
+            const shouldSpiderfy = (xVariance < threshold && yVariance < threshold) || currentZoom > 100;
+
+            if (shouldSpiderfy) {
+              // spiderfy表示に切り替え
+              spiderfiedCluster.value = cluster.id;
+              updateAnnotationDisplay();
+            } else {
+              // クラスターの場合はスムーズにズームイン
+              const point = viewer.viewport.imageToViewportCoordinates(
+                cluster.center[0],
+                cluster.center[1]
+              );
+
+              // スムーズなアニメーションでズームイン
+              viewer.viewport.zoomTo(currentZoom * 2, point, false);
+              viewer.viewport.applyConstraints();
+            }
           } else {
             // 単一の特徴の場合は選択
             const feature = cluster.features[0];
@@ -1278,5 +1396,32 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
      1px -1px 0 #fff,
     -1px  1px 0 #fff,
      1px  1px 0 #fff;
+}
+
+/* Spiderfy関連のスタイル */
+:deep(.spiderfy-center) {
+  width: 8px;
+  height: 8px;
+  background-color: #888;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 2px #000;
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+:deep(.spiderfy-line) {
+  pointer-events: none;
+  z-index: 0;
+}
+
+:deep(.spiderfy-marker) {
+  z-index: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+:deep(.spiderfy-marker:hover) {
+  transform: scale(1.3);
 }
 </style>
