@@ -264,6 +264,7 @@ const autoRotateOnSelect = ref(route.query.autoRotateOnSelect === 'true');
 // URLパラメータから初期値を設定（デフォルトはtrue）
 const enableClustering = ref(route.query.clustering !== 'false');
 const spiderfiedCluster = ref<string | null>(null); // 現在展開されているクラスターのID
+const maxZoomExpandedCluster = ref<string | null>(null); // 最大ズーム時に展開されているクラスターのID
 
 watch(
   () => rotate.value,
@@ -350,14 +351,41 @@ const debouncedUpdateURLParams = () => {
   }, 500); // 500ms のデバウンス
 };
 
+// 展開状態を閉じるかどうかの判定用の前回のズーム・位置情報
+let lastZoomForExpansion = 0;
+let lastCenterForExpansion = { x: 0, y: 0 };
+
 // アノテーション表示更新のデバウンス
 const debouncedUpdateAnnotationDisplay = () => {
   if (annotationUpdateTimeout) {
     clearTimeout(annotationUpdateTimeout);
   }
   annotationUpdateTimeout = setTimeout(() => {
-    // ズームやパン時はspiderfy状態をリセット
-    spiderfiedCluster.value = null;
+    // spiderfyまたは最大ズーム展開中の場合、大きな変更があった場合のみリセット
+    if (spiderfiedCluster.value || maxZoomExpandedCluster.value) {
+      const currentZoom = viewer.viewport.getZoom();
+      const currentCenter = viewer.viewport.getCenter();
+
+      // ズームの変化率
+      const zoomChange = Math.abs(currentZoom - lastZoomForExpansion) / lastZoomForExpansion;
+
+      // 中心位置の変化（画像座標での距離）
+      const centerChange = Math.sqrt(
+        Math.pow(currentCenter.x - lastCenterForExpansion.x, 2) +
+        Math.pow(currentCenter.y - lastCenterForExpansion.y, 2)
+      );
+
+      // 大きな変更があった場合（ズーム20%以上変化、または中心が大きく移動）のみリセット
+      if (zoomChange > 0.2 || centerChange > 0.1) {
+        spiderfiedCluster.value = null;
+        maxZoomExpandedCluster.value = null;
+      }
+
+      // 現在の状態を記録
+      lastZoomForExpansion = currentZoom;
+      lastCenterForExpansion = { x: currentCenter.x, y: currentCenter.y };
+    }
+
     updateAnnotationDisplay();
   }, 150); // 150ms のデバウンス（URLパラメータよりも短く）
 };
@@ -593,6 +621,49 @@ const updateAnnotationDisplay = () => {
         continue; // このクラスターの処理を終了
       }
 
+      // 最大ズーム展開されているクラスターの場合、個別マーカーを表示
+      if (maxZoomExpandedCluster.value === cluster.id && cluster.features.length > 1) {
+        cluster.features.forEach((feature: any) => {
+          const featureX = feature.properties.resourceCoords[0];
+          const featureY = feature.properties.resourceCoords[1];
+          const x = Number(featureX) / fullWidth;
+          const y = Number(featureY) / fullWidth;
+
+          const overlay_ = document.createElement("div");
+          overlay_.id = feature.id;
+          const isSelected = action.value && action.value.id && feature.id === action.value.id;
+          overlay_.className = isSelected ? "pin-icon pin-selected" : "pin-icon";
+
+          const overlay = {
+            element: overlay_,
+            x,
+            y,
+            placement: "CENTER",
+            checkResize: false,
+          };
+
+          viewer.addOverlay(overlay);
+
+          // 個別マーカーのクリックハンドラー
+          new $OpenSeadragon.MouseTracker({
+            element: overlay_,
+            clickHandler: function (e: any) {
+              const id = feature.id;
+
+              removeSelected();
+              setSelected(id);
+
+              action.value = {
+                type: "osd",
+                id,
+              };
+            },
+          });
+        });
+
+        continue; // このクラスターの処理を終了
+      }
+
       const x = Number(cluster.center[0]) / fullWidth;
       const y = Number(cluster.center[1]) / fullWidth;
 
@@ -649,22 +720,34 @@ const updateAnnotationDisplay = () => {
             const xVariance = Math.max(...xValues) - Math.min(...xValues);
             const yVariance = Math.max(...yValues) - Math.min(...yValues);
 
-            // 十分ズームインしているか、またはほぼ同一座標の場合はspiderfy表示
-            const threshold = fullWidth * 0.001; // 画像幅の0.1%以下なら同一座標とみなす
-            const shouldSpiderfy = (xVariance < threshold && yVariance < threshold) || currentZoom > 100;
+            // 同一座標かどうかの判定（画像幅の0.1%以下なら同一座標とみなす）
+            const threshold = fullWidth * 0.001;
+            const isSameLocation = (xVariance < threshold && yVariance < threshold);
 
-            if (shouldSpiderfy) {
-              // spiderfy表示に切り替え
+            // 最大ズームレベルをチェック
+            const maxZoom = viewer.viewport.getMaxZoom();
+            const isAtMaxZoom = currentZoom >= maxZoom * 0.99;
+
+            if (isSameLocation) {
+              // 同一座標の場合はspiderfy表示
               spiderfiedCluster.value = cluster.id;
+              // 展開時のズーム・位置を記録
+              lastZoomForExpansion = currentZoom;
+              lastCenterForExpansion = { x: viewer.viewport.getCenter().x, y: viewer.viewport.getCenter().y };
+              updateAnnotationDisplay();
+            } else if (isAtMaxZoom) {
+              // 最大ズームに達している場合は、一時的にクラスターを展開
+              maxZoomExpandedCluster.value = cluster.id;
+              // 展開時のズーム・位置を記録
+              lastZoomForExpansion = currentZoom;
+              lastCenterForExpansion = { x: viewer.viewport.getCenter().x, y: viewer.viewport.getCenter().y };
               updateAnnotationDisplay();
             } else {
-              // クラスターの場合はスムーズにズームイン
+              // 通常のズームイン
               const point = viewer.viewport.imageToViewportCoordinates(
                 cluster.center[0],
                 cluster.center[1]
               );
-
-              // スムーズなアニメーションでズームイン
               viewer.viewport.zoomTo(currentZoom * 2, point, false);
               viewer.viewport.applyConstraints();
             }
