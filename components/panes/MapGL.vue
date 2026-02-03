@@ -486,12 +486,23 @@ const setupClusteringWithData = (geojson: any) => {
     }
     
     const properties = feature.properties;
+
+    // linksの表示を生成 (LPF形式) またはレガシーurl
+    let linksHtml = '';
+    if (properties.links && Array.isArray(properties.links) && properties.links.length > 0) {
+      linksHtml = properties.links.map((link: any) =>
+        `<a target="_blank" href="${link.identifier}">${link.type}</a>`
+      ).join(' | ');
+    } else if (properties.url) {
+      linksHtml = `<a target="_blank" href="${properties.url}">${t("detail")}</a>`;
+    }
+
     const description = `
       <div>
         <div>ID: ${properties.id || ''}</div>
         ${properties.label ? `<div style="margin-top: 4px;">${t("name")}: ${properties.label}</div>` : ""}
         ${properties.tags && Array.isArray(properties.tags) && properties.tags.length ? `<div style="margin-top: 4px;">${t("tag")}: ${properties.tags.join(",")}</div>` : ""}
-        ${properties.url ? `<div style="margin-top: 8px;"><a target="_blank" href="${properties.url}">${t("detail")}</a></div>` : ""}
+        ${linksHtml ? `<div style="margin-top: 8px;">${linksHtml}</div>` : ""}
       </div>
     `;
     
@@ -539,19 +550,37 @@ const setupClustering = () => {
   }
   
   // Convert features to GeoJSON format for clustering
-  const geojsonFeatures = features.map((feature: any) => ({
-    type: 'Feature',
-    properties: {
-      id: feature.id,
-      label: feature.metadata?.label || '',
-      tags: feature.metadata?.tags || [],
-      url: feature.metadata?.url || ''
-    },
-    geometry: {
-      type: 'Point',
-      coordinates: [feature.geometry?.coordinates?.[0] || 0, feature.geometry?.coordinates?.[1] || 0]
-    }
-  }));
+  // 新フォーマット (LPF/properties) と旧フォーマット (metadata) の両方をサポート
+  const geojsonFeatures = features.map((feature: any) => {
+    const metadata = feature.metadata || {};
+    const props = feature.properties || {};
+
+    // ID: @id (LPF) > id (GeoJSON) > metadata.id (レガシー)
+    const displayId = feature["@id"] || feature.id || metadata.id;
+    // title: properties.title (推奨) > metadata.label (レガシー)
+    const displayTitle = props.title || metadata.label || '';
+    // tags: properties.tags (推奨) > metadata.tags (レガシー)
+    const displayTags = props.tags || metadata.tags || [];
+    // links: feature.links (LPF)
+    const displayLinks = feature.links || [];
+    // url: metadata.url (レガシー)
+    const legacyUrl = metadata.url || '';
+
+    return {
+      type: 'Feature',
+      properties: {
+        id: displayId,
+        label: displayTitle,
+        tags: displayTags,
+        links: displayLinks,
+        url: legacyUrl
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [feature.geometry?.coordinates?.[0] || 0, feature.geometry?.coordinates?.[1] || 0]
+      }
+    };
+  });
   
   const geojson = {
     type: 'FeatureCollection',

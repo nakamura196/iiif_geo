@@ -61,11 +61,13 @@
             "features": [
               {
                 "type": "Feature",
+                "@id": "https://example.org/places/gcp-1",
                 "properties": {
                   "resourceCoords": [
                     6690,
                     7517
-                  ]
+                  ],
+                  "title": "GCP 1"
                 },
                 "geometry": {
                   "type": "Point",
@@ -77,11 +79,13 @@
               },
               {
                 "type": "Feature",
+                "@id": "https://example.org/places/gcp-2",
                 "properties": {
                   "resourceCoords": [
                     8846,
                     9181
-                  ]
+                  ],
+                  "title": "GCP 2"
                 },
                 "geometry": {
                   "type": "Point",
@@ -93,11 +97,13 @@
               },
               {
                 "type": "Feature",
+                "@id": "https://example.org/places/gcp-3",
                 "properties": {
                   "resourceCoords": [
                     11626,
                     8624
-                  ]
+                  ],
+                  "title": "GCP 3"
                 },
                 "geometry": {
                   "type": "Point",

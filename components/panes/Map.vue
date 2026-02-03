@@ -389,34 +389,36 @@ const display = () => {
     const popup = L.popup();
     marker.bindPopup(popup);
 
+    // 新フォーマット (LPF/properties) と旧フォーマット (metadata) の両方をサポート
     const metadata = feature.metadata || {};
+    const props = feature.properties || {};
+
+    // ID: @id (LPF) > id (GeoJSON) > metadata.id (レガシー)
+    const displayId = feature["@id"] || feature.id || metadata.id;
+    // title: properties.title (推奨) > metadata.label (レガシー)
+    const displayTitle = props.title || metadata.label;
+    // tags: properties.tags (推奨) > metadata.tags (レガシー)
+    const displayTags = props.tags || metadata.tags;
+    // links: feature.links (LPF) > metadata.url (レガシー)
+    const displayLinks = feature.links || [];
+    const legacyUrl = metadata.url;
+
+    // linksの表示を生成
+    let linksHtml = '';
+    if (displayLinks.length > 0) {
+      linksHtml = displayLinks.map((link: any) =>
+        `<a target="_blank" href="${link.identifier}">${link.type}</a>`
+      ).join(' | ');
+    } else if (legacyUrl) {
+      linksHtml = `<a target="_blank" href="${legacyUrl}">${t("detail")}</a>`;
+    }
 
     popup.setContent(
       `<div>
-            <div>ID: ${metadata.id || feature.id}</div>
-            ${
-              metadata.label
-                ? `<div style="margin-top: 4px;">${t("name")}: ${
-                    metadata.label
-                  }</div>`
-                : ""
-            }
-            ${
-              metadata.tags
-                ? `<div style="margin-top: 4px;">${t(
-                    "tag"
-                  )}: ${metadata.tags.join(",")}</div>`
-                : ""
-            }
-            <div style="margin-top: 8px;">
-                ${
-                  metadata.url
-                    ? `<a target="_blank" href="${
-                        metadata.url
-                      }">${t("detail")}</a>`
-                    : ""
-                }
-            </div>
+            <div>ID: ${displayId}</div>
+            ${displayTitle ? `<div style="margin-top: 4px;">${t("name")}: ${displayTitle}</div>` : ""}
+            ${displayTags ? `<div style="margin-top: 4px;">${t("tag")}: ${displayTags.join(",")}</div>` : ""}
+            ${linksHtml ? `<div style="margin-top: 8px;">${linksHtml}</div>` : ""}
         </div>`
     );
 

@@ -8,7 +8,7 @@ import colors from "vuetify/lib/util/colors";
 
 import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
 
-const primary = colors.blue.base;
+const primary = colors.purple.base;
 const error = colors.red.base;
 const main = "#80CBC4";
 

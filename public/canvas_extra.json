@@ -61,34 +61,45 @@
             "features": [
               {
                 "type": "Feature",
+                "@id": "https://example.org/places/denki-jikkenshitsu",
                 "properties": {
                   "resourceCoords": [
                     6690,
                     7517
-                  ]
+                  ],
+                  "title": "電気実験室",
+                  "tags": [
+                    "工学部"
+                  ],
+                  "xywh": "5936,6344,976,1384"
                 },
+                "links": [
+                  {
+                    "type": "primaryTopicOf",
+                    "identifier": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8"
+                  }
+                ],
                 "geometry": {
                   "type": "Point",
                   "coordinates": [
                     139.7623182,
                     35.7151233
                   ]
-                },
-                "metadata": {
-                  "label": "電気実験室",
-                  "tags": [
-                    "工学部"
-                  ],
-                  "url": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8",
-                  "xywh": "5936,6344,976,1384"
                 }
               },
               {
                 "type": "Feature",
+                "@id": "https://example.org/places/hobunkei-2gokan",
                 "properties": {
                   "resourceCoords": [
                     8846,
                     9181
+                  ],
+                  "title": "法文経教室　第二号館",
+                  "tags": [
+                    "法学部",
+                    "文学部",
+                    "経済学部"
                   ]
                 },
                 "geometry": {
@@ -97,22 +108,19 @@
                     139.7612649,
                     35.7129321
                   ]
-                },
-                "metadata": {
-                  "label": "法文経教室　第二号館",
-                  "tags": [
-                    "法学部",
-                    "文学部",
-                    "経済学部"
-                  ]
                 }
               },
               {
                 "type": "Feature",
+                "@id": "https://example.org/places/igakubu-2gokan",
                 "properties": {
                   "resourceCoords": [
                     11626,
                     8624
+                  ],
+                  "title": "医学部　第二号館",
+                  "tags": [
+                    "医学部"
                   ]
                 },
                 "geometry": {
@@ -120,12 +128,6 @@
                   "coordinates": [
                     139.7622949,
                     35.7109037
-                  ]
-                },
-                "metadata": {
-                  "label": "医学部　第二号館",
-                  "tags": [
-                    "医学部"
                   ]
                 }
               },

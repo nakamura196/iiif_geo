@@ -33,43 +33,86 @@ The viewer will automatically detect whether the provided URL is a Manifest or a
 
 ### Extra metadata fields
 
-Extra metadata fields can be added to the Feature data.
+Extra metadata fields can be added to the Feature data. This viewer supports [Linked Places Format (LPF)](https://github.com/LinkedPasts/linked-places-format) compatible structure.
+
+#### Recommended Format (Linked Places Format)
+
+```json
+{
+    "type": "Feature",
+    "@id": "https://example.org/places/denki-jikkenshitsu",
+    "properties": {
+        "resourceCoords": [6690, 7517],
+        "title": "電気実験室",
+        "tags": ["工学部"],
+        "xywh": "5936,6344,976,1384"
+    },
+    "links": [
+        {
+            "type": "primaryTopicOf",
+            "identifier": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8"
+        },
+        {
+            "type": "closeMatch",
+            "identifier": "http://www.wikidata.org/entity/Q123"
+        }
+    ],
+    "geometry": {
+        "type": "Point",
+        "coordinates": [139.7623182, 35.7151233]
+    }
+}
+```
+
+| Field | Location | Description | Required |
+| ---- | ---- | ---- | ---- |
+| @id | Feature level | URI identifier (LPF/JSON-LD compatible) | False |
+| title | properties | Title/label of the place | False |
+| tags | properties | Tags for categorization | False |
+| xywh | properties | XYWH region on the image | False |
+| links | Feature level | Related links (LPF format) | False |
+
+##### Link Types (Linked Places Format)
+
+| Type | Description |
+| ---- | ---- |
+| closeMatch | Similar resource in another dataset |
+| exactMatch | Identical resource in another dataset |
+| primaryTopicOf | Web page about this place |
+| subjectOf | Document mentioning this place |
+| seeAlso | Related resource |
+
+#### Legacy Format (still supported)
+
+For backwards compatibility, the `metadata` object format is still supported:
 
 ```json
 {
     "type": "Feature",
     "properties": {
-        "resourceCoords": [
-            6690,
-            7517
-        ]
+        "resourceCoords": [6690, 7517]
     },
     "geometry": {
         "type": "Point",
-        "coordinates": [
-            139.7623182,
-            35.7151233
-        ]
+        "coordinates": [139.7623182, 35.7151233]
     },
     "metadata": {
         "id": "http://example.org/dJdXXQEA8dWSptgt8",
         "label": "電気実験室",
         "tags": ["工学部"],
         "url": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8",
-        "xywh": "5936,6344,976,1384",
+        "xywh": "5936,6344,976,1384"
     }
 }
 ```
 
-The `metadata` field is used to display the label, tags, and URL of the place.
-
-| Field | Description | Required | Format |
-| ---- | ---- | ---- | ---- |
-| id | URI of the place | False | String |
-| label | Label of the place | False | String |
-| tags | Tags of the place | False | Array |
-| url | URL of the place | False | String |
-| xywh | XYWH region of the place | False | String |
+| Field | Description | Required |
+| ---- | ---- | ---- |
+| id | URI of the place | False |
+| label | Label of the place | False |
+| tags | Tags of the place | False |
+| url | URL of the place | False |
+| xywh | XYWH region of the place | False |
 
 These fields are used for the popup of the marker and the search function.
 
