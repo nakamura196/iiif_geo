@@ -61,6 +61,7 @@
             "features": [
               {
                 "type": "Feature",
+                "id": "denki-jikkenshitsu",
                 "@id": "https://example.org/places/denki-jikkenshitsu",
                 "properties": {
                   "resourceCoords": [
@@ -79,6 +80,12 @@
                     "identifier": "https://maps.app.goo.gl/dJdXXQEA8dWSptgt8"
                   }
                 ],
+                "depictions": [
+                  {
+                    "@id": "https://iiif.dl.itc.u-tokyo.ac.jp/iiif/2/agriculture_re%2Fnou_tatemonochokanzu%2F0002.tif/5936,6344,976,1384/200,/0/default.jpg",
+                    "title": "電気実験室"
+                  }
+                ],
                 "geometry": {
                   "type": "Point",
                   "coordinates": [
@@ -89,6 +96,7 @@
               },
               {
                 "type": "Feature",
+                "id": "hobunkei-2gokan",
                 "@id": "https://example.org/places/hobunkei-2gokan",
                 "properties": {
                   "resourceCoords": [
@@ -102,6 +110,12 @@
                     "経済学部"
                   ]
                 },
+                "depictions": [
+                  {
+                    "@id": "https://iiif.dl.itc.u-tokyo.ac.jp/iiif/2/agriculture_re%2Fnou_tatemonochokanzu%2F0002.tif/8346,8681,1000,1000/200,/0/default.jpg",
+                    "title": "法文経教室　第二号館"
+                  }
+                ],
                 "geometry": {
                   "type": "Point",
                   "coordinates": [
@@ -112,6 +126,7 @@
               },
               {
                 "type": "Feature",
+                "id": "igakubu-2gokan",
                 "@id": "https://example.org/places/igakubu-2gokan",
                 "properties": {
                   "resourceCoords": [
@@ -123,6 +138,18 @@
                     "医学部"
                   ]
                 },
+                "links": [
+                  {
+                    "type": "exactMatch",
+                    "identifier": "https://www.wikidata.org/wiki/Q11475878"
+                  }
+                ],
+                "depictions": [
+                  {
+                    "@id": "https://iiif.dl.itc.u-tokyo.ac.jp/iiif/2/agriculture_re%2Fnou_tatemonochokanzu%2F0002.tif/11126,8124,1000,1000/200,/0/default.jpg",
+                    "title": "医学部　第二号館"
+                  }
+                ],
                 "geometry": {
                   "type": "Point",
                   "coordinates": [
@@ -133,11 +160,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-4",
                 "properties": {
                   "resourceCoords": [
                     12761,
                     9476
-                  ]
+                  ],
+                  "title": "建物4"
                 },
                 "geometry": {
                   "type": "Point",
@@ -149,11 +178,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-5",
                 "properties": {
                   "resourceCoords": [
                     7540,
                     8365
-                  ]
+                  ],
+                  "title": "建物5"
                 },
                 "geometry": {
                   "type": "Point",
@@ -165,11 +196,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-6",
                 "properties": {
                   "resourceCoords": [
                     10681,
                     5983
-                  ]
+                  ],
+                  "title": "建物6"
                 },
                 "geometry": {
                   "type": "Point",
@@ -181,11 +214,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-7",
                 "properties": {
                   "resourceCoords": [
                     9304,
                     5659
-                  ]
+                  ],
+                  "title": "建物7"
                 },
                 "geometry": {
                   "type": "Point",
@@ -197,11 +232,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-8",
                 "properties": {
                   "resourceCoords": [
                     3826,
                     10219
-                  ]
+                  ],
+                  "title": "建物8"
                 },
                 "geometry": {
                   "type": "Point",
@@ -213,11 +250,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-9",
                 "properties": {
                   "resourceCoords": [
                     8044,
                     9859
-                  ]
+                  ],
+                  "title": "建物9"
                 },
                 "geometry": {
                   "type": "Point",
@@ -229,11 +268,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-10",
                 "properties": {
                   "resourceCoords": [
                     10517,
                     7862
-                  ]
+                  ],
+                  "title": "建物10"
                 },
                 "geometry": {
                   "type": "Point",
@@ -245,11 +286,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-11",
                 "properties": {
                   "resourceCoords": [
                     8892,
                     9831
-                  ]
+                  ],
+                  "title": "建物11"
                 },
                 "geometry": {
                   "type": "Point",
@@ -261,11 +304,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-12",
                 "properties": {
                   "resourceCoords": [
                     14667,
                     9708
-                  ]
+                  ],
+                  "title": "建物12"
                 },
                 "geometry": {
                   "type": "Point",
@@ -277,11 +322,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-13",
                 "properties": {
                   "resourceCoords": [
                     2354,
                     8506
-                  ]
+                  ],
+                  "title": "建物13"
                 },
                 "geometry": {
                   "type": "Point",
@@ -293,11 +340,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-14",
                 "properties": {
                   "resourceCoords": [
                     10054,
                     8713
-                  ]
+                  ],
+                  "title": "建物14"
                 },
                 "geometry": {
                   "type": "Point",
@@ -309,11 +358,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-15",
                 "properties": {
                   "resourceCoords": [
                     5594,
                     10678
-                  ]
+                  ],
+                  "title": "建物15"
                 },
                 "geometry": {
                   "type": "Point",
@@ -325,11 +376,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-16",
                 "properties": {
                   "resourceCoords": [
                     13028,
                     6647
-                  ]
+                  ],
+                  "title": "建物16"
                 },
                 "geometry": {
                   "type": "Point",
@@ -341,11 +394,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-17",
                 "properties": {
                   "resourceCoords": [
                     10685,
                     10444
-                  ]
+                  ],
+                  "title": "建物17"
                 },
                 "geometry": {
                   "type": "Point",
@@ -357,11 +412,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-18",
                 "properties": {
                   "resourceCoords": [
                     4438,
                     9181
-                  ]
+                  ],
+                  "title": "建物18"
                 },
                 "geometry": {
                   "type": "Point",
@@ -373,11 +430,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-19",
                 "properties": {
                   "resourceCoords": [
                     8840,
                     10491
-                  ]
+                  ],
+                  "title": "建物19"
                 },
                 "geometry": {
                   "type": "Point",
@@ -389,11 +448,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-20",
                 "properties": {
                   "resourceCoords": [
                     4667,
                     10202
-                  ]
+                  ],
+                  "title": "建物20"
                 },
                 "geometry": {
                   "type": "Point",
@@ -405,11 +466,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-21",
                 "properties": {
                   "resourceCoords": [
                     6762,
                     10060
-                  ]
+                  ],
+                  "title": "建物21"
                 },
                 "geometry": {
                   "type": "Point",
@@ -421,11 +484,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-22",
                 "properties": {
                   "resourceCoords": [
                     8587,
                     8135
-                  ]
+                  ],
+                  "title": "建物22"
                 },
                 "geometry": {
                   "type": "Point",
@@ -437,11 +502,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-23",
                 "properties": {
                   "resourceCoords": [
                     7967,
                     10465
-                  ]
+                  ],
+                  "title": "建物23"
                 },
                 "geometry": {
                   "type": "Point",
@@ -453,11 +520,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-24",
                 "properties": {
                   "resourceCoords": [
                     6466,
                     8313
-                  ]
+                  ],
+                  "title": "建物24"
                 },
                 "geometry": {
                   "type": "Point",
@@ -469,11 +538,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-25",
                 "properties": {
                   "resourceCoords": [
                     7569,
                     7471
-                  ]
+                  ],
+                  "title": "建物25"
                 },
                 "geometry": {
                   "type": "Point",
@@ -485,11 +556,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-26",
                 "properties": {
                   "resourceCoords": [
                     10111,
                     10099
-                  ]
+                  ],
+                  "title": "建物26"
                 },
                 "geometry": {
                   "type": "Point",
@@ -501,11 +574,13 @@
               },
               {
                 "type": "Feature",
+                "id": "feature-27",
                 "properties": {
                   "resourceCoords": [
                     12606,
                     10162
-                  ]
+                  ],
+                  "title": "建物27"
                 },
                 "geometry": {
                   "type": "Point",

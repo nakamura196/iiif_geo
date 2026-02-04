@@ -61,6 +61,7 @@
             "features": [
               {
                 "type": "Feature",
+                "id": "gcp-1",
                 "@id": "https://example.org/places/gcp-1",
                 "properties": {
                   "resourceCoords": [
@@ -79,6 +80,7 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-2",
                 "@id": "https://example.org/places/gcp-2",
                 "properties": {
                   "resourceCoords": [
@@ -97,6 +99,7 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-3",
                 "@id": "https://example.org/places/gcp-3",
                 "properties": {
                   "resourceCoords": [
@@ -115,11 +118,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-4",
                 "properties": {
                   "resourceCoords": [
                     12761,
                     9476
-                  ]
+                  ],
+                  "title": "GCP 4"
                 },
                 "geometry": {
                   "type": "Point",
@@ -131,11 +136,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-5",
                 "properties": {
                   "resourceCoords": [
                     7540,
                     8365
-                  ]
+                  ],
+                  "title": "GCP 5"
                 },
                 "geometry": {
                   "type": "Point",
@@ -147,11 +154,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-6",
                 "properties": {
                   "resourceCoords": [
                     10681,
                     5983
-                  ]
+                  ],
+                  "title": "GCP 6"
                 },
                 "geometry": {
                   "type": "Point",
@@ -163,11 +172,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-7",
                 "properties": {
                   "resourceCoords": [
                     9304,
                     5659
-                  ]
+                  ],
+                  "title": "GCP 7"
                 },
                 "geometry": {
                   "type": "Point",
@@ -179,11 +190,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-8",
                 "properties": {
                   "resourceCoords": [
                     3826,
                     10219
-                  ]
+                  ],
+                  "title": "GCP 8"
                 },
                 "geometry": {
                   "type": "Point",
@@ -195,11 +208,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-9",
                 "properties": {
                   "resourceCoords": [
                     8044,
                     9859
-                  ]
+                  ],
+                  "title": "GCP 9"
                 },
                 "geometry": {
                   "type": "Point",
@@ -211,11 +226,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-10",
                 "properties": {
                   "resourceCoords": [
                     10517,
                     7862
-                  ]
+                  ],
+                  "title": "GCP 10"
                 },
                 "geometry": {
                   "type": "Point",
@@ -227,11 +244,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-11",
                 "properties": {
                   "resourceCoords": [
                     8892,
                     9831
-                  ]
+                  ],
+                  "title": "GCP 11"
                 },
                 "geometry": {
                   "type": "Point",
@@ -243,11 +262,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-12",
                 "properties": {
                   "resourceCoords": [
                     14667,
                     9708
-                  ]
+                  ],
+                  "title": "GCP 12"
                 },
                 "geometry": {
                   "type": "Point",
@@ -259,11 +280,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-13",
                 "properties": {
                   "resourceCoords": [
                     2354,
                     8506
-                  ]
+                  ],
+                  "title": "GCP 13"
                 },
                 "geometry": {
                   "type": "Point",
@@ -275,11 +298,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-14",
                 "properties": {
                   "resourceCoords": [
                     10054,
                     8713
-                  ]
+                  ],
+                  "title": "GCP 14"
                 },
                 "geometry": {
                   "type": "Point",
@@ -291,11 +316,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-15",
                 "properties": {
                   "resourceCoords": [
                     5594,
                     10678
-                  ]
+                  ],
+                  "title": "GCP 15"
                 },
                 "geometry": {
                   "type": "Point",
@@ -307,11 +334,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-16",
                 "properties": {
                   "resourceCoords": [
                     13028,
                     6647
-                  ]
+                  ],
+                  "title": "GCP 16"
                 },
                 "geometry": {
                   "type": "Point",
@@ -323,11 +352,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-17",
                 "properties": {
                   "resourceCoords": [
                     10685,
                     10444
-                  ]
+                  ],
+                  "title": "GCP 17"
                 },
                 "geometry": {
                   "type": "Point",
@@ -339,11 +370,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-18",
                 "properties": {
                   "resourceCoords": [
                     4438,
                     9181
-                  ]
+                  ],
+                  "title": "GCP 18"
                 },
                 "geometry": {
                   "type": "Point",
@@ -355,11 +388,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-19",
                 "properties": {
                   "resourceCoords": [
                     8840,
                     10491
-                  ]
+                  ],
+                  "title": "GCP 19"
                 },
                 "geometry": {
                   "type": "Point",
@@ -371,11 +406,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-20",
                 "properties": {
                   "resourceCoords": [
                     4667,
                     10202
-                  ]
+                  ],
+                  "title": "GCP 20"
                 },
                 "geometry": {
                   "type": "Point",
@@ -387,11 +424,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-21",
                 "properties": {
                   "resourceCoords": [
                     6762,
                     10060
-                  ]
+                  ],
+                  "title": "GCP 21"
                 },
                 "geometry": {
                   "type": "Point",
@@ -403,11 +442,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-22",
                 "properties": {
                   "resourceCoords": [
                     8587,
                     8135
-                  ]
+                  ],
+                  "title": "GCP 22"
                 },
                 "geometry": {
                   "type": "Point",
@@ -419,11 +460,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-23",
                 "properties": {
                   "resourceCoords": [
                     7967,
                     10465
-                  ]
+                  ],
+                  "title": "GCP 23"
                 },
                 "geometry": {
                   "type": "Point",
@@ -435,11 +478,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-24",
                 "properties": {
                   "resourceCoords": [
                     6466,
                     8313
-                  ]
+                  ],
+                  "title": "GCP 24"
                 },
                 "geometry": {
                   "type": "Point",
@@ -451,11 +496,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-25",
                 "properties": {
                   "resourceCoords": [
                     7569,
                     7471
-                  ]
+                  ],
+                  "title": "GCP 25"
                 },
                 "geometry": {
                   "type": "Point",
@@ -467,11 +514,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-26",
                 "properties": {
                   "resourceCoords": [
                     10111,
                     10099
-                  ]
+                  ],
+                  "title": "GCP 26"
                 },
                 "geometry": {
                   "type": "Point",
@@ -483,11 +532,13 @@
               },
               {
                 "type": "Feature",
+                "id": "gcp-27",
                 "properties": {
                   "resourceCoords": [
                     12606,
                     10162
-                  ]
+                  ],
+                  "title": "GCP 27"
                 },
                 "geometry": {
                   "type": "Point",
