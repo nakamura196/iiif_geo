@@ -137,8 +137,8 @@ export function useDisplay() {
         for (let featureIndex = 0; featureIndex < features.length; featureIndex++) {
           const feature = features[featureIndex];
 
-          // IDの優先順位: @id (推奨) > id > properties.id > metadata.id > 自動生成
-          const predefinedId = feature["@id"] || feature.id || feature.properties?.id || feature.metadata?.id;
+          // IDの優先順位: id (GeoJSON標準) > @id (LPF) > properties.id > metadata.id > 自動生成
+          const predefinedId = feature.id || feature["@id"] || feature.properties?.id || feature.metadata?.id;
 
           if (!feature.id) {
             if (predefinedId) {

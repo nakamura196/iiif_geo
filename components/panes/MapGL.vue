@@ -487,14 +487,53 @@ const setupClusteringWithData = (geojson: any) => {
     
     const properties = feature.properties;
 
+    // リンクタイプの翻訳
+    const translateLinkType = (type: string) => {
+      const key = `linkType.${type}`;
+      const translated = t(key);
+      return translated === key ? type : translated;
+    };
+
     // linksの表示を生成 (LPF形式) またはレガシーurl
+    // MapLibreのGeoJSONソースでは配列がJSON文字列化されるためパースが必要
     let linksHtml = '';
-    if (properties.links && Array.isArray(properties.links) && properties.links.length > 0) {
-      linksHtml = properties.links.map((link: any) =>
-        `<a target="_blank" href="${link.identifier}">${link.type}</a>`
+    let parsedLinks: any[] = [];
+    if (properties.links) {
+      try {
+        parsedLinks = typeof properties.links === 'string'
+          ? JSON.parse(properties.links)
+          : properties.links;
+      } catch (e) {
+        parsedLinks = [];
+      }
+    }
+    if (parsedLinks.length > 0) {
+      linksHtml = parsedLinks.map((link: any) =>
+        `<a target="_blank" href="${link.identifier}">${translateLinkType(link.type)}</a>`
       ).join(' | ');
     } else if (properties.url) {
       linksHtml = `<a target="_blank" href="${properties.url}">${t("detail")}</a>`;
+    }
+
+    // depictionsの表示を生成（サムネイル画像として表示）
+    let depictionsHtml = '';
+    let parsedDepictions: any[] = [];
+    if (properties.depictions) {
+      try {
+        parsedDepictions = typeof properties.depictions === 'string'
+          ? JSON.parse(properties.depictions)
+          : properties.depictions;
+      } catch (e) {
+        parsedDepictions = [];
+      }
+    }
+    if (parsedDepictions.length > 0) {
+      depictionsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">` +
+        parsedDepictions.map((dep: any) =>
+          `<a target="_blank" href="${dep["@id"]}" title="${dep.title || ''}">
+            <img src="${dep["@id"]}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+          </a>`
+        ).join('') + `</div>`;
     }
 
     const description = `
@@ -503,6 +542,7 @@ const setupClusteringWithData = (geojson: any) => {
         ${properties.label ? `<div style="margin-top: 4px;">${t("name")}: ${properties.label}</div>` : ""}
         ${properties.tags && Array.isArray(properties.tags) && properties.tags.length ? `<div style="margin-top: 4px;">${t("tag")}: ${properties.tags.join(",")}</div>` : ""}
         ${linksHtml ? `<div style="margin-top: 8px;">${linksHtml}</div>` : ""}
+        ${depictionsHtml ? `<div style="margin-top: 4px;">${depictionsHtml}</div>` : ""}
       </div>
     `;
     
@@ -555,14 +595,16 @@ const setupClustering = () => {
     const metadata = feature.metadata || {};
     const props = feature.properties || {};
 
-    // ID: @id (LPF) > id (GeoJSON) > metadata.id (レガシー)
-    const displayId = feature["@id"] || feature.id || metadata.id;
+    // ID: id (GeoJSON標準) > @id (LPF) > metadata.id (レガシー)
+    const displayId = feature.id || feature["@id"] || metadata.id;
     // title: properties.title (推奨) > metadata.label (レガシー)
     const displayTitle = props.title || metadata.label || '';
     // tags: properties.tags (推奨) > metadata.tags (レガシー)
     const displayTags = props.tags || metadata.tags || [];
     // links: feature.links (LPF)
     const displayLinks = feature.links || [];
+    // depictions: feature.depictions (LPF)
+    const displayDepictions = feature.depictions || [];
     // url: metadata.url (レガシー)
     const legacyUrl = metadata.url || '';
 
@@ -572,7 +614,9 @@ const setupClustering = () => {
         id: displayId,
         label: displayTitle,
         tags: displayTags,
-        links: displayLinks,
+        // MapLibreのGeoJSONソースでは配列/オブジェクトはJSON文字列化される
+        links: displayLinks.length > 0 ? JSON.stringify(displayLinks) : '',
+        depictions: displayDepictions.length > 0 ? JSON.stringify(displayDepictions) : '',
         url: legacyUrl
       },
       geometry: {

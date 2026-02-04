@@ -868,9 +868,12 @@ const updateAnnotationDisplay = () => {
         const x = Number(resourceCoords[0]) / fullWidth;
         const y = Number(resourceCoords[1]) / fullWidth;
 
+        // 選択状態をチェック
+        const isSelected = action.value && action.value.id && feature.id === action.value.id;
+
         const overlay_ = document.createElement("div");
         overlay_.id = id;
-        overlay_.className = "pin-icon";
+        overlay_.className = isSelected ? "pin-icon pin-selected" : "pin-icon";
 
         overlay = {
           id,
@@ -878,7 +881,7 @@ const updateAnnotationDisplay = () => {
           y,
           placement: "RIGHT",
           checkResize: false,
-          className: "pin-icon",
+          className: isSelected ? "pin-icon pin-selected" : "pin-icon",
         };
       } else {
         console.warn('Feature missing required coordinate data:', id);

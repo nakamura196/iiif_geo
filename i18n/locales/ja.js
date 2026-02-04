@@ -32,4 +32,11 @@ export default {
     "地名検索": "地名検索 (OpenStreetMap)",
     "placeSearch": "地名検索",
     "結果が見つかりません": "結果が見つかりません",
+    "filterByTag": "タグで絞り込み",
+    "linkType.primaryTopicOf": "詳細ページ",
+    "linkType.exactMatch": "同一",
+    "linkType.closeMatch": "類似",
+    "linkType.seeAlso": "関連情報",
+    "linkType.subjectOf": "言及文献",
+    "image": "画像",
 }

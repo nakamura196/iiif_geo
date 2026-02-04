@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiMagnify, mdiImageFilterCenterFocus } from "@mdi/js";
+import { mdiMagnify, mdiImageFilterCenterFocus, mdiFilterVariant } from "@mdi/js";
 import { useI18n } from "vue-i18n";
 
 interface Item {
@@ -7,6 +7,8 @@ interface Item {
   id: string;
   name: string;
   tag: string;
+  tags: string[];
+  thumbnail: string;
 }
 
 interface PropType {
@@ -22,6 +24,7 @@ const itemsPerPage = ref(100);
 const { t } = useI18n();
 
 const headers = [
+  { title: "", key: "thumbnail", width: "50px" },
   { title: "ID", key: "id" },
   {
     title: t("name"),
@@ -38,27 +41,69 @@ const headers = [
 ];
 
 const search = ref("");
+const selectedTags = ref<string[]>([]);
 
 const { action, canvases, pageIndex } = useSettings();
 
-const items = computed(() => {
+// 全アイテムを取得
+const allItems = computed(() => {
   const items: Item[] = [];
   const features =
-    canvases.value[pageIndex.value]?.annotations[0].items[0].body.features ||
+    canvases.value[pageIndex.value]?.annotations?.[0]?.items?.[0]?.body?.features ||
     [];
 
   for (const feature of features) {
+    // 新フォーマット (LPF/properties) と旧フォーマット (metadata) の両方をサポート
     const metadata = feature.metadata || {};
+    const props = feature.properties || {};
+    const tagsArray = props.tags || metadata.tags || [];
+    // depictions: feature.depictions (LPF)
+    const depictions = feature.depictions || [];
+    const thumbnail = depictions.length > 0 ? depictions[0]["@id"] : "";
 
     items.push({
       uuid: feature.id,
-      id: metadata.id || feature.id,
-      name: metadata.label,
-      tag: metadata.tags?.join(",") || "",
+      // ID: id (GeoJSON標準) > @id (LPF) > metadata.id > feature.id
+      id: feature.id || feature["@id"] || metadata.id,
+      // title: properties.title (推奨) > metadata.label (レガシー)
+      name: props.title || metadata.label,
+      // tags: properties.tags (推奨) > metadata.tags (レガシー)
+      tag: tagsArray.join(",") || "",
+      tags: tagsArray,
+      thumbnail,
     });
   }
 
   return items;
+});
+
+// ユニークなタグ一覧を取得（件数付き、多い順）
+const availableTags = computed(() => {
+  const tagCount: { [key: string]: number } = {};
+  for (const item of allItems.value) {
+    for (const tag of item.tags) {
+      if (tag) {
+        tagCount[tag] = (tagCount[tag] || 0) + 1;
+      }
+    }
+  }
+  // 件数が多い順にソート
+  return Object.entries(tagCount)
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag, count]) => ({
+      title: `${tag} (${count})`,
+      value: tag,
+    }));
+});
+
+// タグでフィルタリングされたアイテム
+const items = computed(() => {
+  if (selectedTags.value.length === 0) {
+    return allItems.value;
+  }
+  return allItems.value.filter(item =>
+    selectedTags.value.some(tag => item.tags.includes(tag))
+  );
 });
 
 function kanaToHira(str: string) {
@@ -116,9 +161,34 @@ watch(() => action.value?.id, (newId) => {
       hide-details
       variant="outlined"
       density="compact"
-      class="mt-2 mb-4"
+      class="mt-2 mb-2"
       clearable
     ></v-text-field>
+
+    <v-select
+      v-if="availableTags.length > 0"
+      v-model="selectedTags"
+      :items="availableTags"
+      item-title="title"
+      item-value="value"
+      :label="$t('filterByTag')"
+      :prepend-inner-icon="mdiFilterVariant"
+      multiple
+      chips
+      closable-chips
+      clearable
+      variant="outlined"
+      density="compact"
+      class="mb-2"
+      hide-details
+    ></v-select>
+
+    <div class="text-caption text-grey mb-2">
+      {{ items.length }} {{ $t('件') }}
+      <span v-if="selectedTags.length > 0 || search">
+        / {{ allItems.length }} {{ $t('件') }}
+      </span>
+    </div>
 
     <v-data-table
       :custom-filter="filterOnlyCapsText"
@@ -132,6 +202,16 @@ watch(() => action.value?.id, (newId) => {
     >
       <template v-slot:item="{ item, index }">
         <tr :class="{ 'selected-row': item.uuid === action.id }">
+          <td>
+            <v-img
+              v-if="item.thumbnail"
+              :src="item.thumbnail"
+              width="40"
+              height="40"
+              cover
+              class="rounded"
+            ></v-img>
+          </td>
           <td>{{ item.id }}</td>
           <td>{{ item.name }}</td>
           <td>{{ item.tag }}</td>

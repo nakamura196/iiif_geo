@@ -393,8 +393,8 @@ const display = () => {
     const metadata = feature.metadata || {};
     const props = feature.properties || {};
 
-    // ID: @id (LPF) > id (GeoJSON) > metadata.id (レガシー)
-    const displayId = feature["@id"] || feature.id || metadata.id;
+    // ID: id (GeoJSON標準) > @id (LPF) > metadata.id (レガシー)
+    const displayId = feature.id || feature["@id"] || metadata.id;
     // title: properties.title (推奨) > metadata.label (レガシー)
     const displayTitle = props.title || metadata.label;
     // tags: properties.tags (推奨) > metadata.tags (レガシー)
@@ -402,15 +402,36 @@ const display = () => {
     // links: feature.links (LPF) > metadata.url (レガシー)
     const displayLinks = feature.links || [];
     const legacyUrl = metadata.url;
+    // depictions: feature.depictions (LPF)
+    const displayDepictions = feature.depictions || [];
+
+    // リンクタイプの翻訳
+    const translateLinkType = (type: string) => {
+      const key = `linkType.${type}`;
+      const translated = t(key);
+      // 翻訳キーがそのまま返ってきた場合は元のタイプ名を使用
+      return translated === key ? type : translated;
+    };
 
     // linksの表示を生成
     let linksHtml = '';
     if (displayLinks.length > 0) {
       linksHtml = displayLinks.map((link: any) =>
-        `<a target="_blank" href="${link.identifier}">${link.type}</a>`
+        `<a target="_blank" href="${link.identifier}">${translateLinkType(link.type)}</a>`
       ).join(' | ');
     } else if (legacyUrl) {
       linksHtml = `<a target="_blank" href="${legacyUrl}">${t("detail")}</a>`;
+    }
+
+    // depictionsの表示を生成（サムネイル画像として表示）
+    let depictionsHtml = '';
+    if (displayDepictions.length > 0) {
+      depictionsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">` +
+        displayDepictions.map((dep: any) =>
+          `<a target="_blank" href="${dep["@id"]}" title="${dep.title || ''}">
+            <img src="${dep["@id"]}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+          </a>`
+        ).join('') + `</div>`;
     }
 
     popup.setContent(
@@ -419,6 +440,7 @@ const display = () => {
             ${displayTitle ? `<div style="margin-top: 4px;">${t("name")}: ${displayTitle}</div>` : ""}
             ${displayTags ? `<div style="margin-top: 4px;">${t("tag")}: ${displayTags.join(",")}</div>` : ""}
             ${linksHtml ? `<div style="margin-top: 8px;">${linksHtml}</div>` : ""}
+            ${depictionsHtml ? `<div style="margin-top: 4px;">${depictionsHtml}</div>` : ""}
         </div>`
     );
 
