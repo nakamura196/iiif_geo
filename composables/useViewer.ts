@@ -1,4 +1,4 @@
-// composables/useDisplay.ts
+// composables/useViewer.ts
 import { ref } from "vue";
 export interface PanesConfig {
   id?: string;
@@ -8,7 +8,7 @@ export interface PanesConfig {
   componentKey?: string;
 }
 
-export function useDisplay() {
+export function useViewer() {
   const ready = ref(false);
   const snackbar = ref(false);
   const { title, manifest, canvases } = useSettings();

@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: ["@nuxt/content", "@nuxtjs/i18n"],
+  modules: ["@nuxt/content", "@nuxtjs/i18n", "vuetify-nuxt-module"],
 
   typescript: {
     typeCheck: true,
@@ -101,11 +101,7 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ["@/assets/styles/vuetify.css", "@/assets/styles/main.css"],
-
-  build: {
-    transpile: ["vuetify"],
-  },
+  css: ["@/assets/styles/main.css"],
 
   components: {
     global: true,

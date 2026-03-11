@@ -19,7 +19,7 @@ import {
 import { calculateImageRotation, calculateImageRotationAdvanced, findNearestThreePoints, calculateLocalRotation } from "~/utils/calculateImageRotation";
 import { useDisplay } from "vuetify";
 
-const { $OpenSeadragon } = useNuxtApp();
+const { $OpenSeadragon } = useNuxtApp() as any;
 const { mobile, mdAndUp } = useDisplay();
 
 const { featuresMap, action, canvases, pageIndex } = useSettings();

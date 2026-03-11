@@ -40,6 +40,7 @@ const { mobile, mdAndUp } = useDisplay();
   </v-app-bar>
 
   <v-navigation-drawer
+    v-if="drawer"
     v-model="drawer"
     :location="mobile ? 'bottom' : 'right'"
     temporary

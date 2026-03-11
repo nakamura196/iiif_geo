@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useDisplay } from "~/composables/useDisplay";
-const { ready, snackbar, display } = useDisplay();
+import { useViewer } from "~/composables/useViewer";
+const { ready, snackbar, display } = useViewer();
 const route = useRoute();
 
 watch(
