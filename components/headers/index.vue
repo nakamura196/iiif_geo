@@ -27,7 +27,9 @@ const { mobile, mdAndUp } = useDisplay();
     <!-- Always show Search and License in header, regardless of screen size -->
     <template v-if="canvases.length > 0">
       <HeadersSearch></HeadersSearch>
-      <HeadersLicense></HeadersLicense>
+      <div @click="drawer = false">
+        <HeadersLicense></HeadersLicense>
+      </div>
     </template>
 
     <!-- Always show hamburger menu for other items -->
