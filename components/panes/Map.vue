@@ -9,6 +9,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 // @ts-ignore
 import { MarkerClusterGroup } from "leaflet.markercluster";
 import { LMap, LTileLayer, LControlLayers } from "@vue-leaflet/vue-leaflet";
+import { mdiCrosshairsGps } from "@mdi/js";
 import { useResponsive } from "~/composables/useResponsive";
 
 interface PropType {
@@ -166,7 +167,7 @@ const focusCurrentLocation = () => {
       },
       (error) => {
         console.error('Error getting location:', error);
-        alert(t('位置情報の取得に失敗しました'));
+        useToast().show(t('位置情報の取得に失敗しました'), 'error');
       },
       {
         enableHighAccuracy: true,
@@ -175,7 +176,7 @@ const focusCurrentLocation = () => {
       }
     );
   } else {
-    alert(t('お使いのブラウザは位置情報をサポートしていません'));
+    useToast().show(t('お使いのブラウザは位置情報をサポートしていません'), 'error');
   }
 };
 
@@ -193,17 +194,18 @@ const onLeafletReady = (mapInstance: L.Map) => {
     onAdd: function() {
       const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
       const button = L.DomUtil.create('a', '', container);
-      button.innerHTML = '📍';
+      button.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" style="fill:currentColor;"><path d="${mdiCrosshairsGps}"/></svg>`;
       button.href = '#';
       button.title = t('現在地を表示');
-      button.style.fontSize = '18px';
+      button.setAttribute('aria-label', t('現在地を表示'));
       button.style.width = '30px';
       button.style.height = '30px';
-      button.style.lineHeight = '30px';
-      button.style.textAlign = 'center';
+      button.style.display = 'flex';
+      button.style.alignItems = 'center';
+      button.style.justifyContent = 'center';
       button.style.textDecoration = 'none';
-      button.style.display = 'block';
-      button.style.backgroundColor = 'white';
+      button.style.color = 'var(--color-foreground)';
+      button.style.backgroundColor = 'var(--color-surface)';
       button.style.cursor = 'pointer';
       
       L.DomEvent.on(button, 'click', function(e: Event) {

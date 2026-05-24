@@ -314,7 +314,7 @@ const addImageOverlay = async () => {
     });
   } catch (error) {
     console.error('Failed to load IIIF image:', error);
-    alert(t('imageLoadError'));
+    useToast().show(t('imageLoadError'), 'error');
   }
 };
 
@@ -576,14 +576,14 @@ onUnmounted(() => {
   position: absolute;
   bottom: 20px;
   left: 10px;
-  z-index: 1000;
+  z-index: var(--z-map-control);
 }
 
 .image-controls-button {
   position: absolute;
   bottom: 70px;
   left: 10px;
-  z-index: 1000;
+  z-index: var(--z-map-control);
 }
 
 :deep(.maplibregl-ctrl-icon) {

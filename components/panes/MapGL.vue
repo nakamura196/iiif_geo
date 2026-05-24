@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Map, NavigationControl, Marker, Popup, type LngLatLike, type MapSourceDataEvent } from "maplibre-gl";
-import { mdiLayers, mdiMagnify, mdiMapMarker } from "@mdi/js";
+import {
+  mdiLayers,
+  mdiMagnify,
+  mdiMapMarker,
+  mdiCrosshairsGps,
+  mdiClose,
+} from "@mdi/js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useResponsive } from "~/composables/useResponsive";
 
@@ -207,7 +213,7 @@ const focusCurrentLocation = () => {
       },
       (error) => {
         console.error('Error getting location:', error);
-        alert(t('位置情報の取得に失敗しました'));
+        useToast().show(t('位置情報の取得に失敗しました'), 'error');
       },
       {
         enableHighAccuracy: true,
@@ -216,7 +222,7 @@ const focusCurrentLocation = () => {
       }
     );
   } else {
-    alert(t('お使いのブラウザは位置情報をサポートしていません'));
+    useToast().show(t('お使いのブラウザは位置情報をサポートしていません'), 'error');
   }
 };
 
@@ -720,10 +726,10 @@ const initializeMap = () => {
   // Add current location button
   const currentLocationBtn = document.createElement('button');
   currentLocationBtn.className = 'maplibregl-ctrl-icon';
-  currentLocationBtn.innerHTML = '📍';
+  currentLocationBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" style="display:block;margin:auto;fill:currentColor;"><path d="${mdiCrosshairsGps}"/></svg>`;
   currentLocationBtn.title = t('現在地を表示');
+  currentLocationBtn.setAttribute('aria-label', t('現在地を表示'));
   currentLocationBtn.onclick = focusCurrentLocation;
-  currentLocationBtn.style.fontSize = '18px';
   
   const currentLocationControl = document.createElement('div');
   currentLocationControl.className = 'maplibregl-ctrl maplibregl-ctrl-group';
@@ -1014,12 +1020,14 @@ onUnmounted(() => {
             :placeholder="t('placeSearch')"
             class="ds-input focus:ds-input-focus border-0 shadow-none flex-1"
           />
-          <button
+          <DsIconButton
             v-if="searchQuery"
-            type="button"
-            class="text-foreground-muted"
+            :icon="mdiClose"
+            variant="ghost"
+            size="sm"
+            :label="t('clear')"
             @click="searchQuery = ''; geocodingResults = []"
-          >✕</button>
+          />
         </div>
 
         <!-- Search results below form -->
@@ -1102,7 +1110,7 @@ onUnmounted(() => {
   position: absolute;
   top: 10px;
   left: 10px;
-  z-index: 1000;
+  z-index: var(--z-map-control);
   min-width: 320px;
   max-width: 450px;
 }
@@ -1129,7 +1137,7 @@ onUnmounted(() => {
   position: absolute;
   bottom: 20px;
   left: 10px;
-  z-index: 1000;
+  z-index: var(--z-map-control);
 }
 
 :deep(.maplibregl-ctrl-icon) {

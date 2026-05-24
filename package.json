@@ -9,7 +9,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "typecheck": "vue-tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "devDependencies": {
     "@nuxt/content": "^3.6.3",
@@ -22,6 +24,7 @@
     "@types/uuid": "^10.0.0",
     "nuxt": "^4.0.3",
     "tailwindcss": "^4.3.0",
+    "vitest": "^4.1.7",
     "vue-tsc": "^2.2.8"
   },
   "pnpm": {
@@ -29,7 +32,9 @@
       "@types/splitpanes>vue": "^3.0.0",
       "serialize-javascript": "^7.0.4"
     },
-    "onlyBuiltDependencies": ["better-sqlite3"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
   },
   "dependencies": {
     "@indoorequal/vue-maplibre-gl": "^8.4.1",

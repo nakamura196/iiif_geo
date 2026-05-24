@@ -6,6 +6,17 @@
    classes they use are actually emitted. */
 @source "../../node_modules/hi-design-system/vue/**/*.{vue,ts}";
 
+/* Coordinated stacking scale for overlay chrome. Native <dialog> (DsDialog)
+   uses the top layer, so it always sits above these. Map-internal controls
+   live below the drawer. Use via `z-[var(--z-...)]` or `z-index: var(--z-...)`. */
+:root {
+  --z-map-control: 1000;
+  --z-drawer-scrim: 1500;
+  --z-drawer: 1600;
+  --z-snackbar: 2000;
+  --z-toast: 2100;
+}
+
 /* App-wide preference: no underlines on links (DS base.css underlines them).
    Kept intentionally; remove if DS-style underlined links are desired. */
 a {

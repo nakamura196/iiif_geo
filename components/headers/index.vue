@@ -59,12 +59,12 @@ const { mobile, mdAndUp } = useResponsive();
   <Teleport to="body">
     <div
       v-if="drawer"
-      class="fixed inset-0 z-[1500] bg-black/40"
+      class="fixed inset-0 z-[var(--z-drawer-scrim)] bg-black/40"
       @click="drawer = false"
     ></div>
     <nav
       v-if="drawer"
-      class="ds-drawer fixed z-[1600] flex flex-col bg-surface shadow-xl"
+      class="ds-drawer fixed z-[var(--z-drawer)] flex flex-col bg-surface shadow-xl"
       :class="
         mobile
           ? 'inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl'

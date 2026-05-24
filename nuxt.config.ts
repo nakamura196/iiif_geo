@@ -94,10 +94,7 @@ export default defineNuxtConfig({
           content: String(headConfig.imageHeight),
         },
         { property: "og:image:alt", content: headConfig.siteName },
-        {
-          property: "og:locale",
-          content: headConfig.lang === "ja" ? "ja_JP" : "en_US",
-        },
+        // og:locale + htmlAttrs.lang are set per active locale in app.vue.
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: headConfig.siteName },
         { name: "twitter:description", content: headConfig.description },
