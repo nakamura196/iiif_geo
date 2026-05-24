@@ -27,7 +27,7 @@ const requiredStatementValues = computed(() => {
 });
 </script>
 <template>
-  <v-container>
+  <div class="ds-container py-4">
     <h2>{{ $t("rights") }}</h2>
 
     <template v-if="manifest.requiredStatement">
@@ -47,5 +47,5 @@ const requiredStatementValues = computed(() => {
         </a>
       </div>
     </template>
-  </v-container>
+  </div>
 </template>

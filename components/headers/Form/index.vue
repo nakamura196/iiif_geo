@@ -35,22 +35,25 @@ const examples = [
 const { locale } = useI18n();
 </script>
 <template>
-  <v-container>
-    <v-text-field
+  <div class="ds-container py-2">
+    <DsInput
       v-model="u"
       :label="/*('canvas_url')*/ 'Canvas URL'"
-      single-line
-      hide-details
-      variant="outlined"
-      density="compact"
       class="mt-2 mb-4"
-      clearable
-    ></v-text-field>
+    />
 
-    <v-btn @click="add" class="ma-1" color="primary">{{ $t("add") }}</v-btn>
+    <div class="flex flex-wrap gap-2">
+      <DsButton variant="primary" @click="add">{{ $t("add") }}</DsButton>
 
-    <v-btn v-for="(ex, i) in examples" @click="u = ex.value" class="ma-1">{{
-      `${$t("ex")} ${i + 1}: ${ex.label[locale === "en" ? "en" : "ja"]}`
-    }}</v-btn>
-  </v-container>
+      <DsButton
+        v-for="(ex, i) in examples"
+        :key="i"
+        variant="secondary"
+        @click="u = ex.value"
+        >{{
+          `${$t("ex")} ${i + 1}: ${ex.label[locale === "en" ? "en" : "ja"]}`
+        }}</DsButton
+      >
+    </div>
+  </div>
 </template>

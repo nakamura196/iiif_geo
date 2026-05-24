@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { mdiMagnify, mdiImageFilterCenterFocus } from "@mdi/js";
-import { useI18n } from "vue-i18n";
 
 interface Item {
   uuid: string;
@@ -16,26 +15,6 @@ interface PropType {
 withDefaults(defineProps<PropType>(), {
   height: () => 0,
 });
-
-const itemsPerPage = ref(100);
-
-const { t } = useI18n();
-
-const headers = [
-  { title: "ID", key: "id" },
-  {
-    title: t("name"),
-    key: "name",
-  },
-  {
-    title: t("tag"),
-    key: "tag",
-  },
-  {
-    title: "",
-    key: "btn",
-  },
-];
 
 const search = ref("");
 
@@ -59,6 +38,17 @@ const items = computed(() => {
   }
 
   return items;
+});
+
+const filteredItems = computed(() => {
+  const q = (search.value || "").toLocaleUpperCase();
+  if (!q) return items.value;
+  return items.value.filter(
+    (it) =>
+      filterOnlyCapsText(it.id, q) ||
+      filterOnlyCapsText(it.name, q) ||
+      filterOnlyCapsText(it.tag, q)
+  );
 });
 
 function kanaToHira(str: string) {
@@ -107,52 +97,52 @@ watch(() => action.value?.id, (newId) => {
 </script>
 
 <template>
-  <div class="pa-4" :style="`height: ${height}px; overflow-y: auto;`">
-    <v-text-field
-      v-model="search"
-      :append-icon="mdiMagnify"
-      :label="$t('search')"
-      single-line
-      hide-details
-      variant="outlined"
-      density="compact"
-      class="mt-2 mb-4"
-      clearable
-    ></v-text-field>
+  <div class="p-4" :style="`height: ${height}px; overflow-y: auto;`">
+    <div class="mb-4 mt-2 flex items-center gap-2">
+      <DsIcon :path="mdiMagnify" size="1.25rem" class="text-foreground-muted" />
+      <input
+        v-model="search"
+        :placeholder="$t('search')"
+        class="ds-input focus:ds-input-focus flex-1"
+      />
+    </div>
 
-    <v-data-table
-      :custom-filter="filterOnlyCapsText"
-      :_height="height"
-      v-model:items-per-page="itemsPerPage"
-      :headers="headers"
-      :items="items"
-      item-value="id"
-      density="compact"
-      :search="search"
-    >
-      <template v-slot:item="{ item, index }">
-        <tr :class="{ 'selected-row': item.uuid === action.id }">
-          <td>{{ item.id }}</td>
-          <td>{{ item.name }}</td>
-          <td>{{ item.tag }}</td>
-          <td>
-            <v-btn
-              class="ma-1"
-              color="primary"
-              size="small"
+    <table class="w-full border-collapse text-sm">
+      <thead>
+        <tr class="border-b border-border text-left text-foreground-muted">
+          <th class="px-2 py-1">ID</th>
+          <th class="px-2 py-1">{{ $t('name') }}</th>
+          <th class="px-2 py-1">{{ $t('tag') }}</th>
+          <th class="px-2 py-1"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="item in filteredItems"
+          :key="item.uuid"
+          class="border-b border-border"
+          :class="{ 'selected-row': item.uuid === action.id }"
+        >
+          <td class="px-2 py-1">{{ item.id }}</td>
+          <td class="px-2 py-1">{{ item.name }}</td>
+          <td class="px-2 py-1">{{ item.tag }}</td>
+          <td class="px-2 py-1">
+            <DsIconButton
+              :icon="mdiImageFilterCenterFocus"
+              variant="primary"
+              size="sm"
+              :label="$t('search')"
               @click="select(item.uuid)"
-            >
-              <v-icon>{{ mdiImageFilterCenterFocus }}</v-icon>
-            </v-btn>
+            />
           </td>
         </tr>
-      </template>
-    </v-data-table>
+      </tbody>
+    </table>
   </div>
 </template>
 
 <style scoped>
 .selected-row {
-  background-color: rgba(var(--v-theme-primary), 0.1);
+  background-color: var(--color-surface-muted);
 }
 </style>

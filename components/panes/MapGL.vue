@@ -2,7 +2,7 @@
 import { Map, NavigationControl, Marker, Popup, type LngLatLike, type MapSourceDataEvent } from "maplibre-gl";
 import { mdiLayers, mdiMagnify, mdiMapMarker } from "@mdi/js";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useDisplay } from "vuetify";
+import { useResponsive } from "~/composables/useResponsive";
 
 interface PropType {
   zoom?: number;
@@ -12,7 +12,7 @@ interface PropType {
 }
 
 const { t } = useI18n();
-const { mobile, mdAndUp } = useDisplay();
+const { mobile, mdAndUp } = useResponsive();
 
 const props = withDefaults(defineProps<PropType>(), {
   zoom: 6,
@@ -933,86 +933,82 @@ onUnmounted(() => {
 
     <!-- Search form (top-left) -->
     <div class="search-container">
-      <v-card elevation="2">
-        <v-text-field
-          v-model="searchQuery"
-          :placeholder="t('placeSearch')"
-          density="compact"
-          variant="solo"
-          flat
-          hide-details
-          clearable
-          @click:clear="geocodingResults = []"
-        >
-          <template v-slot:prepend-inner>
-            <v-icon size="small">{{ mdiMagnify }}</v-icon>
-          </template>
-        </v-text-field>
+      <DsCard class="overflow-hidden">
+        <div class="flex items-center gap-2 px-3 py-2">
+          <DsIcon :path="mdiMagnify" size="1.25rem" class="text-foreground-muted" />
+          <input
+            v-model="searchQuery"
+            :placeholder="t('placeSearch')"
+            class="ds-input focus:ds-input-focus border-0 shadow-none flex-1"
+          />
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="text-foreground-muted"
+            @click="searchQuery = ''; geocodingResults = []"
+          >✕</button>
+        </div>
 
         <!-- Search results below form -->
         <div v-if="searchQuery.trim()" class="search-results-container">
-          <v-progress-linear v-if="isSearching" indeterminate></v-progress-linear>
+          <div v-if="isSearching" class="h-0.5 w-full overflow-hidden bg-surface-muted">
+            <div class="h-full w-1/3 animate-pulse bg-primary"></div>
+          </div>
 
-          <v-list v-if="geocodingResults.length > 0" density="compact" class="search-results-list">
-            <v-list-item
-              v-for="(result, index) in geocodingResults"
-              :key="`geo-${index}`"
-              @click="selectGeocodingResult(result)"
-              class="search-result-item"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small" color="primary">{{ mdiMapMarker }}</v-icon>
-              </template>
-              <v-list-item-title class="text-wrap">
-                {{ result.display_name }}
-              </v-list-item-title>
-              <v-list-item-subtitle v-if="result.type">
-                {{ result.type }}
-              </v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
+          <ul v-if="geocodingResults.length > 0" class="search-results-list">
+            <li v-for="(result, index) in geocodingResults" :key="`geo-${index}`">
+              <button
+                type="button"
+                class="search-result-item flex w-full items-start gap-2 px-3 py-2 text-left"
+                @click="selectGeocodingResult(result)"
+              >
+                <DsIcon :path="mdiMapMarker" size="1.25rem" class="mt-0.5 flex-none text-primary" />
+                <span class="min-w-0">
+                  <span class="block break-words">{{ result.display_name }}</span>
+                  <span v-if="result.type" class="block text-sm text-foreground-muted">{{ result.type }}</span>
+                </span>
+              </button>
+            </li>
+          </ul>
 
           <!-- No results -->
-          <div v-if="!isSearching && geocodingResults.length === 0" class="pa-3 text-center text-grey">
+          <div v-if="!isSearching && geocodingResults.length === 0" class="p-3 text-center text-foreground-muted">
             {{ t('結果が見つかりません') }}
           </div>
         </div>
-      </v-card>
+      </DsCard>
     </div>
 
     <!-- Layer selector button -->
     <div class="layer-selector">
-      <v-menu
+      <DsMenu
         v-model="showLayerMenu"
         :close-on-content-click="false"
-        location="top"
+        placement="top"
       >
-        <template v-slot:activator="{ props }">
-          <v-btn
+        <template #activator="{ props }">
+          <DsIconButton
             v-bind="props"
-            icon
-            size="small"
-            elevation="2"
-            color="white"
-            :title="t('レイヤー')"
-          >
-            <v-icon>{{ mdiLayers }}</v-icon>
-          </v-btn>
+            :icon="mdiLayers"
+            variant="secondary"
+            :label="t('レイヤー')"
+            class="bg-surface shadow"
+          />
         </template>
 
-        <v-card min-width="200">
-          <v-list density="compact">
-            <v-list-item
-              v-for="(style, index) in mapStyles"
-              :key="style.id"
-              @click="() => { switchMapStyle(index); showLayerMenu = false; }"
-              :active="currentStyleIndex === index"
-            >
-              <v-list-item-title>{{ style.name }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-      </v-menu>
+        <DsCard class="min-w-[200px] overflow-hidden p-1">
+          <ul>
+            <li v-for="(style, index) in mapStyles" :key="style.id">
+              <button
+                type="button"
+                class="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-surface-muted"
+                :class="currentStyleIndex === index ? 'bg-surface-muted font-medium' : ''"
+                @click="switchMapStyle(index); showLayerMenu = false"
+              >{{ style.name }}</button>
+            </li>
+          </ul>
+        </DsCard>
+      </DsMenu>
     </div>
   </div>
 </template>

@@ -2,10 +2,10 @@
 import { Map, NavigationControl, type LngLatLike } from "maplibre-gl";
 import { mdiLayers, mdiImage, mdiEye, mdiEyeOff, mdiViewSplitVertical } from "@mdi/js";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useDisplay } from "vuetify";
+import { useResponsive } from "~/composables/useResponsive";
 
 const { t } = useI18n();
-const { mobile, mdAndUp } = useDisplay();
+const { mobile, mdAndUp } = useResponsive();
 const route = useRoute();
 const router = useRouter();
 
@@ -438,118 +438,112 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <v-app>
-    <v-app-bar color="primary" density="compact">
-      <v-app-bar-title>{{ title || "IIIF Image Overlay on Map" }}</v-app-bar-title>
+  <div class="flex h-screen flex-col">
+    <header
+      class="flex flex-none items-center gap-2 bg-primary px-2 text-primary-foreground"
+      style="height: 48px"
+    >
+      <span class="truncate font-medium">{{ title || "IIIF Image Overlay on Map" }}</span>
 
-      <v-spacer></v-spacer>
+      <div class="flex-1"></div>
 
-      <v-btn icon @click="() => router.push(`/?${route.fullPath.split('?')[1] || ''}`)" title="標準表示に戻る">
-        <v-icon>{{ mdiViewSplitVertical }}</v-icon>
-      </v-btn>
-    </v-app-bar>
+      <DsIconButton
+        :icon="mdiViewSplitVertical"
+        variant="ghost"
+        label="標準表示に戻る"
+        class="!text-primary-foreground hover:!bg-primary-hover"
+        @click="() => router.push(`/?${route.fullPath.split('?')[1] || ''}`)"
+      />
+    </header>
 
-    <v-main>
+    <main class="relative min-h-0 flex-1">
       <div class="map-container">
         <div ref="mapContainer" class="map"></div>
 
         <!-- Layer selector button -->
         <div class="layer-selector">
-          <v-menu
+          <DsMenu
             v-model="showLayerMenu"
             :close-on-content-click="false"
-            location="top"
+            placement="top"
           >
-            <template v-slot:activator="{ props }">
-              <v-btn
+            <template #activator="{ props }">
+              <DsIconButton
                 v-bind="props"
-                icon
-                size="small"
-                elevation="2"
-                color="white"
-                :title="t('レイヤー')"
-              >
-                <v-icon>{{ mdiLayers }}</v-icon>
-              </v-btn>
+                :icon="mdiLayers"
+                variant="secondary"
+                :label="t('レイヤー')"
+                class="bg-surface shadow"
+              />
             </template>
 
-            <v-card min-width="200">
-              <v-list density="compact">
-                <v-list-item
-                  v-for="(style, index) in mapStyles"
-                  :key="style.id"
-                  @click="() => { switchMapStyle(index); showLayerMenu = false; }"
-                  :active="currentStyleIndex === index"
-                >
-                  <v-list-item-title>{{ style.name }}</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-card>
-          </v-menu>
+            <DsCard class="min-w-[200px] overflow-hidden p-1">
+              <ul>
+                <li v-for="(style, index) in mapStyles" :key="style.id">
+                  <button
+                    type="button"
+                    class="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-surface-muted"
+                    :class="currentStyleIndex === index ? 'bg-surface-muted font-medium' : ''"
+                    @click="() => { switchMapStyle(index); showLayerMenu = false; }"
+                  >
+                    {{ style.name }}
+                  </button>
+                </li>
+              </ul>
+            </DsCard>
+          </DsMenu>
         </div>
 
         <!-- Image controls button -->
         <div class="image-controls-button">
-          <v-btn
-            icon
-            size="small"
-            elevation="2"
-            color="white"
+          <DsIconButton
+            :icon="mdiImage"
+            variant="secondary"
+            label="画像設定"
+            class="bg-surface shadow"
             @click="showImageControls = true"
-            title="画像設定"
-          >
-            <v-icon>{{ mdiImage }}</v-icon>
-          </v-btn>
+          />
         </div>
       </div>
-    </v-main>
+    </main>
 
     <!-- Image controls dialog -->
-    <v-dialog v-model="showImageControls" max-width="400">
-      <v-card>
-        <v-card-title>画像設定</v-card-title>
-        <v-card-text>
+    <DsDialog v-model="showImageControls" maxWidth="400px">
+      <template #default="{ close }">
+        <h2 class="mb-4 text-lg font-medium">画像設定</h2>
+        <div>
           <!-- Visibility toggle -->
-          <v-switch
-            v-model="imageVisible"
-            color="primary"
-            hide-details
-            class="mb-4"
-          >
-            <template v-slot:label>
-              <div class="d-flex align-center">
-                <v-icon :icon="imageVisible ? mdiEye : mdiEyeOff" class="mr-2"></v-icon>
-                <span>{{ imageVisible ? '表示' : '非表示' }}</span>
-              </div>
-            </template>
-          </v-switch>
+          <DsSwitch v-model="imageVisible" class="mb-4">
+            <span class="flex items-center gap-2">
+              <DsIcon :path="imageVisible ? mdiEye : mdiEyeOff" size="1.25rem" />
+              {{ imageVisible ? '表示' : '非表示' }}
+            </span>
+          </DsSwitch>
 
           <!-- Opacity slider -->
           <div class="mt-4">
-            <v-label>透明度</v-label>
-            <v-slider
+            <label class="text-sm text-foreground-muted">透明度</label>
+            <DsSlider
               v-model="imageOpacity"
               :min="0"
               :max="1"
               :step="0.05"
-              hide-details
               :disabled="!imageVisible"
             >
-              <template v-slot:prepend>
-                <span style="width: 50px; text-align: right; display: inline-block;">
+              <template #prepend>
+                <span class="inline-block w-[50px] text-right">
                   {{ (imageOpacity * 100).toFixed(0) }}%
                 </span>
               </template>
-            </v-slider>
+            </DsSlider>
           </div>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="showImageControls = false">閉じる</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-app>
+        </div>
+        <div class="mt-4 flex justify-end">
+          <DsButton variant="ghost" @click="showImageControls = false">閉じる</DsButton>
+        </div>
+      </template>
+    </DsDialog>
+  </div>
 </template>
 
 <style scoped>

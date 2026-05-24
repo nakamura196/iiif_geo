@@ -12,26 +12,29 @@ watch(
 );
 </script>
 <template>
-  <v-app>
-    <Headers></Headers>
-
-    <v-main>
+  <div class="flex h-screen flex-col">
+    <Headers />
+    <main class="relative min-h-0 flex-1">
       <template v-if="ready">
-        <PanesMain></PanesMain>
+        <PanesMain />
       </template>
       <template v-else>
-        <HeadersForm></HeadersForm>
+        <HeadersForm />
       </template>
 
-      <v-snackbar v-model="snackbar">
-        {{ "URLが不正です。" }}
-
-        <template v-slot:actions>
-          <v-btn color="pink" variant="text" @click="snackbar = false">
-            Close
-          </v-btn>
-        </template>
-      </v-snackbar>
-    </v-main>
-  </v-app>
+      <div
+        v-if="snackbar"
+        class="fixed bottom-4 left-1/2 z-[2000] flex -translate-x-1/2 items-center gap-3 rounded-md bg-foreground px-4 py-2 text-sm text-background shadow-lg"
+      >
+        <span>URLが不正です。</span>
+        <button
+          type="button"
+          class="font-medium underline"
+          @click="snackbar = false"
+        >
+          Close
+        </button>
+      </div>
+    </main>
+  </div>
 </template>

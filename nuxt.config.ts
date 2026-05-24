@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import { headConfig } from "./meta.config";
 
 const baseURL = process.env.NUXT_PUBLIC_BASE_URL || "";
@@ -24,7 +25,10 @@ export default defineNuxtConfig({
   modules: ["@nuxt/content", "@nuxtjs/i18n"],
 
   typescript: {
-    typeCheck: true,
+    // 開発サーバーでのインライン型チェックは無効化（vue-tsc/Volar のプラグイン
+    // 不整合で起動時に "plugin is not a function" が出るため）。
+    // 型チェックは IDE(Volar) と CI/コミット前の `pnpm nuxt typecheck` で行う。
+    typeCheck: false,
     strict: true,
   },
 
@@ -97,19 +101,40 @@ export default defineNuxtConfig({
           type: "image/x-icon",
           href: `${baseURL}${headConfig.favicon}`,
         },
+        // Fonts for hi-design-system (Inter + Noto Sans JP)
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap",
+        },
       ],
     },
   },
 
-  css: ["@/assets/styles/vuetify.css", "@/assets/styles/main.css"],
-
-  build: {
-    transpile: ["vuetify"],
-  },
+  css: ["@/assets/styles/main.css"],
 
   components: {
     global: true,
     dirs: ["~/components"],
+  },
+
+  build: {
+    // hi-design-system ships raw .vue SFCs under its `vue` subpath — transpile
+    // so Nuxt/Vite compiles them when consumed from node_modules.
+    transpile: ["hi-design-system"],
+  },
+
+  vite: {
+    plugins: [tailwindcss()],
+    optimizeDeps: {
+      // 実行時に発見される CJS/大型依存を事前バンドルし、初回ロードの再最適化リロードを防ぐ
+      include: ["@mdi/js", "openseadragon", "splitpanes", "maplibre-gl"],
+    },
   },
 
   compatibilityDate: "2024-09-26",

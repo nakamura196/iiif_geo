@@ -2,7 +2,7 @@
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import { mdiChevronDown, mdiCog } from "@mdi/js";
+import { mdiChevronDown } from "@mdi/js";
 
 const { settings, panesConfig } = usePanes();
 
@@ -105,65 +105,37 @@ function getLabel(id: string) {
       <pane :size="item.size" v-for="(item, c) in items">
         <splitpanes horizontal @resize="resizeV($event, c)">
           <pane :size="e.size" v-for="e in item.items">
-            <v-layout :style="`height: ${layoutHeight}px`">
-              <v-system-bar window>
-                <!-- <v-icon icon="mdi-message" class="me-2"></v-icon> -->
-
-                <span>{{ getLabel(e.componentKey) }}</span>
-
-                <v-spacer></v-spacer>
-
-                <!--
-
-                <v-spacer></v-spacer>
-
-                <v-btn variant="text">
-                  <v-icon>{{ mdiMinus }}</v-icon>
-                </v-btn>
-
-                <v-btn variant="text" class="ms-2">
-                  <v-icon>{{ mdiCheckboxBlankOutline }}</v-icon>
-                </v-btn>
-
-                <v-btn variant="text" class="ms-2">
-                  <v-icon>{{ mdiClose }}</v-icon>
-                </v-btn>
-                -->
-
-                <v-btn variant="flat" class="ma-1" :size="isMobile ? 'x-small' : 'x-small'">
-                  <!--  class="ms-2" -->
-                  <v-icon :size="isMobile ? 'small' : 'default'">{{ mdiCog }}</v-icon>
-                </v-btn>
-
-                <v-menu>
-                  <template v-slot:activator="{ props }">
-                    <v-btn
-                      v-bind="props"
-                      variant="flat"
-                      class="ma-1"
-                      :size="isMobile ? 'x-small' : 'x-small'"
-                    >
-                      <!--  class="ms-2" -->
-                      <v-icon :size="isMobile ? 'small' : 'default'">{{ mdiChevronDown }}</v-icon>
-                    </v-btn>
-                  </template>
-                  <v-list>
-                    <v-list-item
-                      v-for="(item, index) in panesConfig"
-                      :key="index"
-                      :value="item.id"
-                      @click="
-                        () => {
-                          e.componentKey = item.id;
-                        }
-                      "
-                    >
-                      <v-list-item-title>{{ item.label }}</v-list-item-title>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
-              </v-system-bar>
-            </v-layout>
+            <div
+              class="flex items-center gap-1 border-b border-border bg-surface-muted px-2 py-1 text-foreground"
+              :style="`height: ${barHeight}px`"
+            >
+              <span class="truncate text-sm">{{ getLabel(e.componentKey) }}</span>
+              <div class="flex-1"></div>
+              <DsMenu align="end">
+                <template #activator="{ props }">
+                  <DsIconButton
+                    v-bind="props"
+                    :icon="mdiChevronDown"
+                    variant="ghost"
+                    size="sm"
+                    label="select pane"
+                  />
+                </template>
+                <DsCard class="overflow-hidden p-1">
+                  <ul class="min-w-32">
+                    <li v-for="(item, index) in panesConfig" :key="index">
+                      <button
+                        type="button"
+                        class="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-surface-muted"
+                        @click="e.componentKey = item.id"
+                      >
+                        {{ item.label }}
+                      </button>
+                    </li>
+                  </ul>
+                </DsCard>
+              </DsMenu>
+            </div>
 
             <component
               :height="

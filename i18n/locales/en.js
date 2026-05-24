@@ -1,5 +1,6 @@
 export default {
     "add": "Add",
+    "menu": "Menu",
     "help": "Help",
     "search": "Search",
     "list": "List",
@@ -9,6 +10,11 @@ export default {
     "annotation": "Annotation",
     "reset": "Reset",
     "home": "Home",
+    "previous": "Previous",
+    "next": "Next",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fullPage": "Full screen",
     "close": "Close",
     "detail": "Detail",
     "空中写真": "Aerial Photograph",

@@ -4,21 +4,17 @@ import { mdiPlusCircle } from "@mdi/js";
 const dialog = ref(false);
 </script>
 <template>
-  <v-btn variant="text" @click="dialog = !dialog" class="ma-1">
-    <v-icon class="mr-1">{{ mdiPlusCircle }}</v-icon>
+  <DsButton variant="ghost" @click="dialog = !dialog">
+    <DsIcon :path="mdiPlusCircle" size="1.25rem" />
     {{ $t("add") }}
+  </DsButton>
 
-    <v-dialog v-model="dialog">
-      <v-card>
-        <v-card-text>
-          <HeadersForm />
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="dialog = false">{{
-            $t("close")
-          }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-btn>
+  <DsDialog v-model="dialog" max-width="40rem">
+    <HeadersForm />
+    <div class="mt-6">
+      <DsButton variant="primary" block @click="dialog = false">{{
+        $t("close")
+      }}</DsButton>
+    </div>
+  </DsDialog>
 </template>

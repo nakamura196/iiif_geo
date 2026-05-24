@@ -17,10 +17,10 @@ import {
   mdiShape,
 } from "@mdi/js";
 import { calculateImageRotation, calculateImageRotationAdvanced, findNearestThreePoints, calculateLocalRotation } from "~/utils/calculateImageRotation";
-import { useDisplay } from "vuetify";
+import { useResponsive } from "~/composables/useResponsive";
 
 const { $OpenSeadragon } = useNuxtApp();
-const { mobile, mdAndUp } = useDisplay();
+const { mobile, mdAndUp } = useResponsive();
 
 const { featuresMap, action, canvases, pageIndex } = useSettings();
 
@@ -1182,119 +1182,36 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 </script>
 <template>
   <div style="height: 100%; display: flex; flex-direction: column">
-    <div style="padding: 8px; flex: 0 0 auto">
+    <div style="padding: 8px; flex: 0 0 auto" class="flex flex-wrap gap-1">
       <!-- モバイルでは基本的なボタンのみ表示 -->
-      <v-btn class="ma-1" size="small" icon id="previous">
-        <v-icon>{{ mdiArrowLeft }}</v-icon>
-      </v-btn>
-      <v-btn class="ma-1" size="small" icon id="next">
-        <v-icon>{{ mdiArrowRight }}</v-icon>
-      </v-btn>
-      
+      <DsIconButton id="previous" :icon="mdiArrowLeft" variant="secondary" size="sm" :label="$t('previous')" />
+      <DsIconButton id="next" :icon="mdiArrowRight" variant="secondary" size="sm" :label="$t('next')" />
+
       <!-- デスクトップでのみ表示するボタン -->
       <template v-if="mdAndUp">
-        <v-btn class="ma-1" size="small" icon id="zoom-in">
-          <v-icon>{{ mdiPlus }}</v-icon>
-        </v-btn>
-        <v-btn class="ma-1" size="small" icon id="zoom-out">
-          <v-icon>{{ mdiMinus }}</v-icon>
-        </v-btn>
-        <v-btn class="ma-1" size="small" icon id="home">
-          <v-icon>{{ mdiHome }}</v-icon>
-        </v-btn>
-        <v-btn class="ma-1" size="small" icon id="full-page">
-          <v-icon>{{ mdiFullscreen }}</v-icon>
-        </v-btn>
-        <!-- リセットボタンは回転ダイアログ内に統合
-        <v-btn
-          class="ma-1"
-          size="small"
-          icon
-          @click="init()"
-          :title="/*回転の初期化*/ $t('reset')"
-        >
-          <v-icon>{{ mdiRestore }}</v-icon>
-        </v-btn>
-        -->
-        <!-- 自動回転ボタンは回転ダイアログ内に統合
-        <v-btn
-          class="ma-1"
-          size="small"
-          icon
-          @click="calculateRotation()"
-          :title="/*自動回転*/ $t('autoRotate')"
-          color="secondary"
-          :loading="isCalculatingRotation"
-          :disabled="isCalculatingRotation"
-        >
-          <v-icon>{{ mdiAutoFix }}</v-icon>
-        </v-btn>
-        -->
+        <DsIconButton id="zoom-in" :icon="mdiPlus" variant="secondary" size="sm" :label="$t('zoomIn')" />
+        <DsIconButton id="zoom-out" :icon="mdiMinus" variant="secondary" size="sm" :label="$t('zoomOut')" />
+        <DsIconButton id="home" :icon="mdiHome" variant="secondary" size="sm" :label="$t('home')" />
+        <DsIconButton id="full-page" :icon="mdiFullscreen" variant="secondary" size="sm" :label="$t('fullPage')" />
       </template>
 
       <!-- アノテーション設定ボタン（モバイルでも表示） -->
-      <v-btn
-        class="ma-1"
-        size="small"
-        icon
+      <DsIconButton
+        :icon="mdiMessage"
+        variant="secondary"
+        size="sm"
+        :label="$t('annotation')"
         @click="showAnnotationDialog = true"
-        :title="$t('annotation')"
-      >
-        <v-icon>{{ mdiMessage }}</v-icon>
-      </v-btn>
+      />
 
       <!-- 回転角度調整ボタン -->
-      <v-btn
-        class="ma-1"
-        size="small"
-        icon
+      <DsIconButton
+        :icon="mdiRotateRight"
+        variant="secondary"
+        size="sm"
+        :label="$t('angle')"
         @click="showRotationDialog = true"
-        :title="/*角度*/ $t('angle')"
-      >
-        <v-icon>{{ mdiRotateRight }}</v-icon>
-      </v-btn>
-
-      <!-- 自動回転トグルボタン（局所回転） -->
-      <!-- うまく動かなかったのでコメントアウト
-      <v-btn
-        class="ma-1"
-        :color="autoRotateOnSelect ? 'success' : 'default'"
-        size="small"
-        icon
-        @click="autoRotateOnSelect = !autoRotateOnSelect"
-        :title="autoRotateOnSelect ? '選択時の局所回転: ON' : '選択時の局所回転: OFF'"
-      >
-        <v-icon>{{ mdiCrosshairsGps }}</v-icon>
-        <v-badge
-          v-if="autoRotateOnSelect"
-          dot
-          color="success"
-          offset-x="-8"
-          offset-y="-8"
-        ></v-badge>
-      </v-btn>
-      -->
-
-      <!-- クラスタリングトグルボタンはアノテーション設定ダイアログ内に統合 -->
-      <!--
-      <v-btn
-        class="ma-1"
-        :color="enableClustering ? 'success' : 'default'"
-        size="small"
-        icon
-        @click="enableClustering = !enableClustering"
-        :title="enableClustering ? 'クラスタリング: ON' : 'クラスタリング: OFF'"
-      >
-        <v-icon>{{ mdiShape }}</v-icon>
-        <v-badge
-          v-if="enableClustering"
-          dot
-          color="success"
-          offset-x="-8"
-          offset-y="-8"
-        ></v-badge>
-      </v-btn>
-      -->
+      />
     </div>
 
     <div
@@ -1303,94 +1220,71 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
     ></div>
 
     <!-- 回転角度調整ダイアログ -->
-    <v-dialog v-model="showRotationDialog" max-width="500">
-      <v-card>
-        <v-card-title>{{ $t('angle') }}</v-card-title>
-        <v-card-text>
-          <v-slider
+    <DsDialog v-model="showRotationDialog" maxWidth="500px">
+      <template #default="{ close }">
+        <h2 class="mb-4 text-lg font-medium">{{ $t('angle') }}</h2>
+        <div>
+          <DsSlider
             v-model="rotate2"
+            :min="-180"
             :max="180"
             :step="1"
-            :min="-180"
-            hide-details
-            class="mb-4"
             @update:modelValue="update()"
           >
-            <template v-slot:prepend>
-              <span style="width: 60px; text-align: right; display: inline-block;">{{ rotate2.toFixed(1) }}°</span>
+            <template #prepend>
+              <span class="inline-block w-[60px] text-right">{{ rotate2.toFixed(1) }}°</span>
             </template>
-          </v-slider>
+          </DsSlider>
 
-          <v-text-field
-            v-model.number="rotate2"
+          <label class="mt-4 block text-sm text-foreground-muted">{{ $t('angle') }}</label>
+          <input
             type="number"
-            :label="$t('angle')"
-            density="compact"
-            hide-details
-            variant="outlined"
-            suffix="°"
-            @update:modelValue="update()"
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn
-            color="warning"
-            variant="outlined"
-            @click="resetRotation"
-            :title="$t('reset')"
-          >
-            <v-icon start>{{ mdiRotateLeft }}</v-icon>
-            {{ $t('reset') }}
-          </v-btn>
-          <v-btn
-            color="secondary"
-            variant="outlined"
-            @click="calculateRotation()"
-            :title="$t('autoRotate')"
-            :loading="isCalculatingRotation"
-            :disabled="isCalculatingRotation"
-          >
-            <v-icon start>{{ mdiAutoFix }}</v-icon>
-            {{ $t('autoRotate') }}
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn text @click="showRotationDialog = false">{{ $t('close') }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            class="ds-input focus:ds-input-focus mt-1"
+            :value="rotate2"
+            @input="rotate2 = Number(($event.target as HTMLInputElement).value); update()"
+          />
+        </div>
+        <div class="mt-4 flex items-center gap-2">
+          <DsButton variant="secondary" @click="resetRotation">
+            <DsIcon :path="mdiRotateLeft" size="1.25rem" /> {{ $t('reset') }}
+          </DsButton>
+          <DsButton variant="secondary" :disabled="isCalculatingRotation" @click="calculateRotation()">
+            <DsIcon :path="mdiAutoFix" size="1.25rem" /> {{ $t('autoRotate') }}
+          </DsButton>
+          <div class="flex-1"></div>
+          <DsButton variant="ghost" @click="showRotationDialog = false">{{ $t('close') }}</DsButton>
+        </div>
+      </template>
+    </DsDialog>
 
     <!-- アノテーション設定ダイアログ -->
-    <v-dialog v-model="showAnnotationDialog" max-width="500">
-      <v-card>
-        <v-card-title>{{ $t('annotation') }}</v-card-title>
-        <v-card-text>
+    <DsDialog v-model="showAnnotationDialog" maxWidth="500px">
+      <template #default="{ close }">
+        <h2 class="mb-4 text-lg font-medium">{{ $t('annotation') }}</h2>
+        <div>
           <!-- アノテーション表示/非表示 -->
-          <v-switch
+          <DsSwitch
             v-model="showAnnotations"
-            color="primary"
             :label="showAnnotations ? $t('annotation') + ': ON' : $t('annotation') + ': OFF'"
-            hide-details
             class="mb-4"
-          ></v-switch>
+          />
 
           <!-- クラスタリング設定 -->
-          <v-switch
+          <DsSwitch
             v-model="enableClustering"
-            color="success"
-            :label="enableClustering ? 'クラスタリング: ON' : 'クラスタリング: OFF'"
-            hide-details
             :disabled="!showAnnotations"
-          ></v-switch>
-          <p v-if="!showAnnotations" class="text-caption text-grey mt-2">
+            :label="enableClustering ? 'クラスタリング: ON' : 'クラスタリング: OFF'"
+          />
+          <p v-if="!showAnnotations" class="mt-2 text-sm text-foreground-muted">
             アノテーションを表示するとクラスタリング設定が有効になります
           </p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="showAnnotationDialog = false">{{ $t('close') }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        </div>
+        <div class="mt-4 flex items-center gap-2">
+          <div class="flex-1"></div>
+          <DsButton variant="ghost" @click="showAnnotationDialog = false">{{ $t('close') }}</DsButton>
+        </div>
+      </template>
+    </DsDialog>
   </div>
 </template>
 <style scoped>

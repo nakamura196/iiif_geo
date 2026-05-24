@@ -1,5 +1,6 @@
 export default {
     "add": "登録",
+    "menu": "メニュー",
     "help": "ヘルプ",
     "search": "検索",
     "list": "一覧",
@@ -9,6 +10,11 @@ export default {
     "annotation": "注釈",
     "reset": "リセット",
     "home": "ホーム",
+    "previous": "前へ",
+    "next": "次へ",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "fullPage": "全画面",
     "close": "閉じる",
     "detail": "詳細",
     "空中写真": "空中写真",

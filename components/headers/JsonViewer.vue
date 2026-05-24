@@ -52,68 +52,52 @@ const openInNewTab = () => {
 
 <template>
   <div>
-    <v-btn
-      variant="text"
-      @click="openJsonViewer"
-      class="ma-1"
-    >
-      <v-icon class="mr-1">{{ mdiCodeJson }}</v-icon>
+    <DsButton variant="ghost" @click="openJsonViewer">
+      <DsIcon :path="mdiCodeJson" size="1.25rem" />
       {{ $t('viewJson') }}
-    </v-btn>
+    </DsButton>
 
-    <v-dialog v-model="dialog" max-width="800">
-      <v-card>
-        <v-card-title class="d-flex align-center">
-          <span>{{ $t('jsonData') }}</span>
-          <v-spacer></v-spacer>
-          <v-btn
-            icon
-            @click="dialog = false"
-            variant="text"
-            size="small"
-          >
-            <v-icon>{{ mdiClose }}</v-icon>
-          </v-btn>
-        </v-card-title>
-        
-        <v-card-text>
-          <div class="mb-2">
-            <v-chip label size="small" class="mr-2">URL</v-chip>
-            <code>{{ currentUrl }}</code>
-          </div>
-          
-          <v-textarea
-            v-model="jsonData"
-            readonly
-            rows="15"
-            variant="outlined"
-            class="json-viewer"
-          ></v-textarea>
-        </v-card-text>
-        
-        <v-card-actions>
-          <v-btn
-            color="primary"
-            @click="openInNewTab"
-            :disabled="!currentUrl"
-          >
-            {{ $t('openInNewTab') }}
-          </v-btn>
-          <v-btn
-            @click="copyToClipboard"
-          >
-            {{ $t('copyToClipboard') }}
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn
-            variant="text"
-            @click="dialog = false"
-          >
-            {{ $t('close') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <DsDialog v-model="dialog" max-width="50rem">
+      <div class="flex items-center gap-2">
+        <h2 class="text-xl text-foreground">{{ $t('jsonData') }}</h2>
+        <span class="flex-1"></span>
+        <DsIconButton
+          :icon="mdiClose"
+          variant="ghost"
+          size="sm"
+          :label="$t('close')"
+          @click="dialog = false"
+        />
+      </div>
+
+      <div class="mt-4 mb-2 flex items-center gap-2">
+        <span
+          class="rounded-sm bg-surface-muted px-2 py-0.5 text-xs text-foreground-muted"
+          >URL</span
+        >
+        <code class="json-url">{{ currentUrl }}</code>
+      </div>
+
+      <textarea
+        v-model="jsonData"
+        readonly
+        rows="15"
+        class="ds-input focus:ds-input-focus json-viewer"
+      ></textarea>
+
+      <div class="mt-6 flex flex-wrap items-center gap-2">
+        <DsButton variant="primary" :disabled="!currentUrl" @click="openInNewTab">
+          {{ $t('openInNewTab') }}
+        </DsButton>
+        <DsButton variant="secondary" @click="copyToClipboard">
+          {{ $t('copyToClipboard') }}
+        </DsButton>
+        <span class="flex-1"></span>
+        <DsButton variant="ghost" @click="dialog = false">
+          {{ $t('close') }}
+        </DsButton>
+      </div>
+    </DsDialog>
   </div>
 </template>
 
@@ -121,10 +105,11 @@ const openInNewTab = () => {
 .json-viewer {
   font-family: monospace;
   font-size: 12px;
+  resize: vertical;
 }
 
-code {
-  background-color: #f5f5f5;
+.json-url {
+  background-color: var(--color-surface-muted);
   padding: 2px 4px;
   border-radius: 3px;
   font-size: 12px;

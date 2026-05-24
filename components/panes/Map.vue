@@ -9,7 +9,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 // @ts-ignore
 import { MarkerClusterGroup } from "leaflet.markercluster";
 import { LMap, LTileLayer, LControlLayers } from "@vue-leaflet/vue-leaflet";
-import { useDisplay } from "vuetify";
+import { useResponsive } from "~/composables/useResponsive";
 
 interface PropType {
   zoom?: number;
@@ -19,7 +19,7 @@ interface PropType {
 }
 
 const { t } = useI18n();
-const { mobile, mdAndUp } = useDisplay();
+const { mobile, mdAndUp } = useResponsive();
 
 const props = withDefaults(defineProps<PropType>(), {
   zoom: 6,

@@ -1,3 +1,11 @@
+@import "tailwindcss";
+@import "hi-design-system";
+
+/* The DS Vue components now live in node_modules (hi-design-system/vue), which
+   Tailwind ignores by default — register them as a source so the ds-* utility
+   classes they use are actually emitted. */
+@source "../../node_modules/hi-design-system/vue/**/*.{vue,ts}";
+
 * {
   text-transform: none !important;
 }

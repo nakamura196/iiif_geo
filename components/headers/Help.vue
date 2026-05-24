@@ -14,21 +14,17 @@ const { data } = await useAsyncData<ContentData | null>(`help-${locale.value}`, 
 const dialog = ref(false);
 </script>
 <template>
-  <v-btn variant="text" @click="dialog = !dialog" class="ma-1">
-    <v-icon class="mr-1">{{ mdiInformation }}</v-icon>
+  <DsButton variant="ghost" @click="dialog = !dialog">
+    <DsIcon :path="mdiInformation" size="1.25rem" />
     {{ $t("help") }}
+  </DsButton>
 
-    <v-dialog v-model="dialog">
-      <v-card>
-        <v-card-text>
-          <ContentRenderer v-if="data" class="nuxt-content" :value="data" />
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" block @click="dialog = false">{{
-            $t("close")
-          }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-btn>
+  <DsDialog v-model="dialog" max-width="48rem">
+    <ContentRenderer v-if="data" class="nuxt-content" :value="data" />
+    <div class="mt-6">
+      <DsButton variant="primary" block @click="dialog = false">{{
+        $t("close")
+      }}</DsButton>
+    </div>
+  </DsDialog>
 </template>
