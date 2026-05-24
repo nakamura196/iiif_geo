@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  mdiPlusCircle,
-  mdiClose,
-  mdiLinkVariant,
-  mdiArrowRight,
-} from "@mdi/js";
+import { mdiPlusCircle, mdiLinkVariant, mdiArrowRight } from "@mdi/js";
 
 const dialog = ref(false);
 const u = ref("");
@@ -31,20 +26,12 @@ const add = (value?: string) => {
 
   <DsDialog v-model="dialog" max-width="34rem">
     <!-- Header -->
-    <div class="flex items-center gap-2">
-      <DsIcon :path="mdiPlusCircle" size="1.5rem" class="shrink-0 text-primary" />
-      <h2 class="shrink-0 text-xl font-semibold text-foreground">
-        {{ $t("add") }}
-      </h2>
-      <span class="flex-1"></span>
-      <DsIconButton
-        :icon="mdiClose"
-        variant="ghost"
-        size="sm"
-        :label="$t('close')"
-        @click="dialog = false"
-      />
-    </div>
+    <DsDialogHeader
+      :icon="mdiPlusCircle"
+      :title="$t('add')"
+      :close-label="$t('close')"
+      @close="dialog = false"
+    />
 
     <p class="mt-3 text-sm text-foreground-muted">
       {{

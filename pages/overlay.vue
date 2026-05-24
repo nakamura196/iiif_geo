@@ -6,7 +6,6 @@ import {
   mdiEye,
   mdiEyeOff,
   mdiViewSplitVertical,
-  mdiClose,
 } from "@mdi/js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useResponsive } from "~/composables/useResponsive";
@@ -519,20 +518,13 @@ onUnmounted(() => {
     <!-- Image controls dialog -->
     <DsDialog v-model="showImageControls" maxWidth="400px">
       <template #default="{ close }">
-        <div class="mb-4 flex items-center gap-2">
-          <DsIcon :path="mdiImage" size="1.5rem" class="shrink-0 text-primary" />
-          <h2 class="shrink-0 text-xl font-semibold text-foreground">
-            {{ t("imageSettings") }}
-          </h2>
-          <span class="flex-1"></span>
-          <DsIconButton
-            :icon="mdiClose"
-            variant="ghost"
-            size="sm"
-            :label="t('close')"
-            @click="close"
-          />
-        </div>
+        <DsDialogHeader
+          class="mb-4"
+          :icon="mdiImage"
+          :title="t('imageSettings')"
+          :close-label="t('close')"
+          @close="close"
+        />
         <div>
           <!-- Visibility toggle -->
           <DsSwitch v-model="imageVisible" class="mb-4">

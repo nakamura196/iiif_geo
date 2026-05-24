@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  mdiCodeJson,
-  mdiClose,
-  mdiContentCopy,
-  mdiCheck,
-  mdiOpenInNew,
-} from "@mdi/js";
+import { mdiCodeJson, mdiContentCopy, mdiCheck, mdiOpenInNew } from "@mdi/js";
 
 const { canvases } = useSettings();
 
@@ -72,20 +66,12 @@ const openInNewTab = () => {
 
     <DsDialog v-model="dialog" max-width="50rem">
       <!-- Header -->
-      <div class="flex items-center gap-2">
-        <DsIcon :path="mdiCodeJson" size="1.5rem" class="shrink-0 text-primary" />
-        <h2 class="shrink-0 text-xl font-semibold text-foreground">
-          {{ $t("jsonData") }}
-        </h2>
-        <span class="flex-1"></span>
-        <DsIconButton
-          :icon="mdiClose"
-          variant="ghost"
-          size="sm"
-          :label="$t('close')"
-          @click="dialog = false"
-        />
-      </div>
+      <DsDialogHeader
+        :icon="mdiCodeJson"
+        :title="$t('jsonData')"
+        :close-label="$t('close')"
+        @close="dialog = false"
+      />
 
       <!-- Source URL -->
       <div

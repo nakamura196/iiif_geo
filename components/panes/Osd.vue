@@ -10,7 +10,6 @@ import {
   mdiAutoFix,
   mdiRotateRight,
   mdiRotateLeft,
-  mdiClose,
 } from "@mdi/js";
 import { calculateImageRotation, calculateImageRotationAdvanced, findNearestThreePoints, calculateLocalRotation } from "~/utils/calculateImageRotation";
 import { useResponsive } from "~/composables/useResponsive";
@@ -1221,12 +1220,13 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
     <!-- 回転角度調整ダイアログ -->
     <DsDialog v-model="showRotationDialog" maxWidth="500px">
       <template #default="{ close }">
-        <div class="mb-4 flex items-center gap-2">
-          <DsIcon :path="mdiRotateRight" size="1.5rem" class="shrink-0 text-primary" />
-          <h2 class="shrink-0 text-xl font-semibold text-foreground">{{ $t('angle') }}</h2>
-          <span class="flex-1"></span>
-          <DsIconButton :icon="mdiClose" variant="ghost" size="sm" :label="$t('close')" @click="close" />
-        </div>
+        <DsDialogHeader
+          class="mb-4"
+          :icon="mdiRotateRight"
+          :title="$t('angle')"
+          :close-label="$t('close')"
+          @close="close"
+        />
         <div>
           <DsSlider
             v-model="rotate2"
@@ -1264,12 +1264,13 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
     <!-- アノテーション設定ダイアログ -->
     <DsDialog v-model="showAnnotationDialog" maxWidth="500px">
       <template #default="{ close }">
-        <div class="mb-4 flex items-center gap-2">
-          <DsIcon :path="mdiMessage" size="1.5rem" class="shrink-0 text-primary" />
-          <h2 class="shrink-0 text-xl font-semibold text-foreground">{{ $t('annotation') }}</h2>
-          <span class="flex-1"></span>
-          <DsIconButton :icon="mdiClose" variant="ghost" size="sm" :label="$t('close')" @click="close" />
-        </div>
+        <DsDialogHeader
+          class="mb-4"
+          :icon="mdiMessage"
+          :title="$t('annotation')"
+          :close-label="$t('close')"
+          @close="close"
+        />
         <div class="flex flex-col gap-3">
           <!-- アノテーション表示/非表示 -->
           <DsSwitch

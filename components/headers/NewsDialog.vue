@@ -2,7 +2,7 @@
 // Always-mounted news dialog (opened from the menu item, useful on the viewer
 // page where the landing-page list isn't shown). Renders the shared list from
 // useNews(); open state lives there too.
-import { mdiBullhorn, mdiClose } from "@mdi/js";
+import { mdiBullhorn } from "@mdi/js";
 
 const { isOpen, newsEntries, hasUnread } = useNews();
 const { tr } = useTr();
@@ -10,20 +10,12 @@ const { tr } = useTr();
 <template>
   <DsDialog v-model="isOpen" max-width="40rem">
     <!-- Header -->
-    <div class="flex items-center gap-2">
-      <DsIcon :path="mdiBullhorn" size="1.5rem" class="shrink-0 text-primary" />
-      <h2 class="shrink-0 text-xl font-semibold text-foreground">
-        {{ $t("news") }}
-      </h2>
-      <span class="flex-1"></span>
-      <DsIconButton
-        :icon="mdiClose"
-        variant="ghost"
-        size="sm"
-        :label="$t('close')"
-        @click="isOpen = false"
-      />
-    </div>
+    <DsDialogHeader
+      :icon="mdiBullhorn"
+      :title="$t('news')"
+      :close-label="$t('close')"
+      @close="isOpen = false"
+    />
 
     <!-- List -->
     <ul class="mt-3 max-h-[65vh] divide-y divide-border overflow-y-auto pr-1">

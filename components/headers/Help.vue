@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiHelpCircle, mdiClose } from "@mdi/js";
+import { mdiHelpCircle } from "@mdi/js";
 
 const { locale } = useI18n();
 
@@ -25,20 +25,12 @@ const dialog = ref(false);
 
   <DsDialog v-model="dialog" max-width="48rem">
     <!-- Header -->
-    <div class="flex items-center gap-2">
-      <DsIcon :path="mdiHelpCircle" size="1.5rem" class="shrink-0 text-primary" />
-      <h2 class="shrink-0 text-xl font-semibold text-foreground">
-        {{ $t("help") }}
-      </h2>
-      <span class="flex-1"></span>
-      <DsIconButton
-        :icon="mdiClose"
-        variant="ghost"
-        size="sm"
-        :label="$t('close')"
-        @click="dialog = false"
-      />
-    </div>
+    <DsDialogHeader
+      :icon="mdiHelpCircle"
+      :title="$t('help')"
+      :close-label="$t('close')"
+      @close="dialog = false"
+    />
 
     <!-- Body -->
     <div class="nuxt-content mt-3 max-h-[65vh] overflow-y-auto pr-1">

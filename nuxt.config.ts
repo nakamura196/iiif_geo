@@ -84,22 +84,38 @@ export default defineNuxtConfig({
           property: "og:image",
           content: `${appURL}${headConfig.image}`,
         },
+        { property: "og:image:type", content: headConfig.imageType },
+        {
+          property: "og:image:width",
+          content: String(headConfig.imageWidth),
+        },
+        {
+          property: "og:image:height",
+          content: String(headConfig.imageHeight),
+        },
+        { property: "og:image:alt", content: headConfig.siteName },
         {
           property: "og:locale",
-          content: "ja_JP",
+          content: headConfig.lang === "ja" ? "ja_JP" : "en_US",
         },
-        { name: "twitter:card", content: "summary" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: headConfig.siteName },
+        { name: "twitter:description", content: headConfig.description },
+        {
+          name: "twitter:image",
+          content: `${appURL}${headConfig.image}`,
+        },
       ],
       link: [
         {
           rel: "icon",
           type: "image/svg+xml",
-          href: `${baseURL}/favicon.svg`,
+          href: `${baseURL}/favicon.svg?v=${headConfig.faviconVersion}`,
         },
         {
           rel: "alternate icon",
           type: "image/x-icon",
-          href: `${baseURL}${headConfig.favicon}`,
+          href: `${baseURL}${headConfig.favicon}?v=${headConfig.faviconVersion}`,
         },
         // Fonts for hi-design-system (Inter + Noto Sans JP)
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
