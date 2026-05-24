@@ -24,6 +24,12 @@
     "tailwindcss": "^4.3.0",
     "vue-tsc": "^2.2.8"
   },
+  "pnpm": {
+    "overrides": {
+      "@types/splitpanes>vue": "^3.0.0",
+      "serialize-javascript": "^7.0.4"
+    }
+  },
   "dependencies": {
     "@indoorequal/vue-maplibre-gl": "^8.4.1",
     "@mdi/js": "^7.4.47",

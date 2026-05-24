@@ -29,9 +29,11 @@ const { mobile, mdAndUp } = useResponsive();
     <!-- Always show Search and License in header, regardless of screen size -->
     <template v-if="canvases.length > 0">
       <HeadersSearch></HeadersSearch>
-      <HeadersLicense
-        class="!text-primary-foreground hover:!bg-primary-hover"
-      ></HeadersLicense>
+      <div @click="drawer = false">
+        <HeadersLicense
+          class="!text-primary-foreground hover:!bg-primary-hover"
+        ></HeadersLicense>
+      </div>
     </template>
 
     <!-- Always show hamburger menu for other items -->

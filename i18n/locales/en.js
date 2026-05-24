@@ -38,4 +38,11 @@ export default {
     "地名検索": "Place Search (OpenStreetMap)",
     "placeSearch": "Place Search",
     "結果が見つかりません": "No results found",
+    "filterByTag": "Filter by Tag",
+    "linkType.primaryTopicOf": "Detail Page",
+    "linkType.exactMatch": "Exact Match",
+    "linkType.closeMatch": "Close Match",
+    "linkType.seeAlso": "See Also",
+    "linkType.subjectOf": "Subject Of",
+    "image": "Image",
 }
