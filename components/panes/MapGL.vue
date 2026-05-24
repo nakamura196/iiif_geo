@@ -195,7 +195,7 @@ const focusCurrentLocation = () => {
           currentLocationMarker.value.remove();
         }
         
-        currentLocationMarker.value = new Marker({ color: '#4080FF' })
+        currentLocationMarker.value = new Marker({ color: mapColors.currentLocation })
           .setLngLat(currentLngLat)
           .setPopup(new Popup().setHTML(t('現在地')))
           .addTo(mapInstance.value as any);
@@ -256,7 +256,7 @@ const switchMapStyle = (index: number) => {
     
     // Re-add current location marker if it existed
     if (currentLocationData) {
-      currentLocationMarker.value = new Marker({ color: '#4080FF' })
+      currentLocationMarker.value = new Marker({ color: mapColors.currentLocation })
         .setLngLat(currentLocationData.lngLat)
         .setPopup(new Popup().setHTML(currentLocationData.popup))
         .addTo(mapInstance.value as any);
@@ -323,11 +323,11 @@ const setupClusteringWithData = (geojson: any) => {
         'circle-color': [
           'step',
           ['get', 'point_count'],
-          '#51bbd6',
+          mapColors.clusterSmall,
           10,
-          '#f1f075',
+          mapColors.clusterMedium,
           30,
-          '#f28cb1'
+          mapColors.clusterLarge
         ],
         'circle-radius': 20
       }
@@ -349,9 +349,9 @@ const setupClusteringWithData = (geojson: any) => {
         'text-size': 14
       },
       paint: {
-        'text-color': '#000000',
-        'text-halo-color': '#ffffff',
-        'text-halo-width': 2
+        'text-color': mapColors.clusterText,
+        'text-halo-color': 'rgba(0,0,0,0.35)',
+        'text-halo-width': 1
       }
     });
   } catch (e) {
@@ -369,12 +369,12 @@ const setupClusteringWithData = (geojson: any) => {
         'circle-color': [
           'case',
           ['==', ['get', 'id'], selectedMarkerId.value || ''],
-          '#FF0000',
-          '#3FB1CE'
+          mapColors.markerSelected,
+          mapColors.marker
         ],
         'circle-radius': 8,
         'circle-stroke-width': 1,
-        'circle-stroke-color': '#fff'
+        'circle-stroke-color': mapColors.markerStroke
       }
     });
   } catch (e) {
@@ -471,8 +471,8 @@ const setupClusteringWithData = (geojson: any) => {
       mapInstance.value!.setPaintProperty('unclustered-point', 'circle-color', [
         'case',
         ['==', ['get', 'id'], selectedMarkerId.value],
-        '#FF0000',
-        '#3FB1CE'
+        mapColors.markerSelected,
+        mapColors.marker
       ]);
     } catch (e) {
       console.error('Failed to update paint property:', e);
@@ -509,10 +509,10 @@ const setupClusteringWithData = (geojson: any) => {
     }
     if (parsedLinks.length > 0) {
       linksHtml = parsedLinks.map((link: any) =>
-        `<a target="_blank" href="${link.identifier}">${translateLinkType(link.type)}</a>`
+        `<a target="_blank" rel="noopener noreferrer" href="${link.identifier}">${translateLinkType(link.type)}</a>`
       ).join(' | ');
     } else if (properties.url) {
-      linksHtml = `<a target="_blank" href="${properties.url}">${t("detail")}</a>`;
+      linksHtml = `<a target="_blank" rel="noopener noreferrer" href="${properties.url}">${t("detail")}</a>`;
     }
 
     // depictionsの表示を生成（サムネイル画像として表示）
@@ -530,8 +530,8 @@ const setupClusteringWithData = (geojson: any) => {
     if (parsedDepictions.length > 0) {
       depictionsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">` +
         parsedDepictions.map((dep: any) =>
-          `<a target="_blank" href="${dep["@id"]}" title="${dep.title || ''}">
-            <img src="${dep["@id"]}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+          `<a target="_blank" rel="noopener noreferrer" href="${dep["@id"]}" title="${dep.title || ''}">
+            <img src="${dep["@id"]}" alt="${dep.title || ''}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
           </a>`
         ).join('') + `</div>`;
     }
@@ -773,7 +773,7 @@ const initializeMap = () => {
         }
         
         // Add marker for specified coordinates
-        const focusMarker = new Marker({ color: '#FF4444' })
+        const focusMarker = new Marker({ color: mapColors.focus })
           .setLngLat([lng, lat])
           .setPopup(new Popup().setHTML(`${t('座標')}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`))
           .addTo(mapInstance.value as any);
@@ -893,8 +893,8 @@ watch(
             mapInstance.value.setPaintProperty('unclustered-point', 'circle-color', [
               'case',
               ['==', ['get', 'id'], selectedMarkerId.value],
-              '#FF0000',
-              '#3FB1CE'
+              mapColors.markerSelected,
+              mapColors.marker
             ]);
           }
         }
@@ -972,12 +972,12 @@ const selectGeocodingResult = (result: any) => {
   });
 
   // Add a temporary marker for the geocoded location
-  new Marker({ color: '#FF4444' })
+  new Marker({ color: mapColors.focus })
     .setLngLat([lng, lat])
     .setPopup(new Popup().setHTML(`
       <div>
         <strong>${result.display_name}</strong>
-        ${result.type ? `<div style="margin-top: 4px; font-size: 0.9em; color: #666;">${result.type}</div>` : ''}
+        ${result.type ? `<div style="margin-top: 4px; font-size: 0.9em; color: var(--color-foreground-muted);">${result.type}</div>` : ''}
       </div>
     `))
     .addTo(mapInstance.value as any)
@@ -1122,7 +1122,7 @@ onUnmounted(() => {
 }
 
 .search-result-item:hover {
-  background-color: #f5f5f5;
+  background-color: var(--color-surface-muted);
 }
 
 .layer-selector {
@@ -1133,7 +1133,7 @@ onUnmounted(() => {
 }
 
 :deep(.maplibregl-ctrl-icon) {
-  background-color: white;
+  background-color: var(--color-surface);
   border: none;
   cursor: pointer;
   width: 30px;
@@ -1144,6 +1144,6 @@ onUnmounted(() => {
 }
 
 :deep(.maplibregl-ctrl-icon:hover) {
-  background-color: #f0f0f0;
+  background-color: var(--color-surface-muted);
 }
 </style>

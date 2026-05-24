@@ -147,10 +147,11 @@ const focusCurrentLocation = () => {
           currentLocationMarker.value.remove();
         }
         
-        // 現在地マーカーを作成
+        // 現在地マーカーを作成（useMapColors.currentLocation）
         currentLocationMarker.value = L.marker(currentLatLng, {
-          icon: L.icon({
-            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI4IiBmaWxsPSIjNDA4MEZGIiBmaWxsLW9wYWNpdHk9IjAuMyIgc3Ryb2tlPSIjNDA4MEZGIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI0IiBmaWxsPSIjNDA4MEZGIi8+PC9zdmc+',
+          icon: L.divIcon({
+            className: "current-location-marker",
+            html: `<span style="display:block;width:24px;height:24px;border-radius:50%;box-sizing:border-box;background:${mapColors.currentLocation}33;border:2px solid ${mapColors.currentLocation};position:relative;"><span style="position:absolute;inset:7px;border-radius:50%;background:${mapColors.currentLocation};"></span></span>`,
             iconSize: [24, 24],
             iconAnchor: [12, 12],
           })
@@ -248,7 +249,8 @@ const onLeafletReady = (mapInstance: L.Map) => {
         if (map.value) {
           const focusMarker = L.marker([lat, lng], {
             icon: L.icon({
-              iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgMkM4LjEzIDIgNSA1LjEzIDUgOWMwIDUuMjUgNyAxMyA3IDEzczctNy43NSA3LTEzYzAtMy44Ny0zLjEzLTctNy03em0wIDkuNWMtMS4zOCAwLTIuNS0xLjEyLTIuNS0yLjVzMS4xMi0yLjUgMi41LTIuNSAyLjUgMS4xMiAyLjUgMi41LTEuMTIgMi41LTIuNSAyLjV6IiBmaWxsPSIjRkY0NDQ0Ii8+PC9zdmc+',
+              // Teardrop pin tinted from useMapColors.focus.
+              iconUrl: `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z' fill='${encodeURIComponent(mapColors.focus)}'/></svg>`,
               iconSize: [30, 30],
               iconAnchor: [15, 30],
               popupAnchor: [0, -30]
@@ -332,13 +334,41 @@ const initializeMarkerCluster = (map: L.Map) => {
     markerCluster = L.markerClusterGroup({
       removeOutsideVisibleBounds: true,
       chunkedLoading: true,
+      iconCreateFunction: clusterIcon,
     });
     map.addLayer(markerCluster);
   }
 };
 
+// Brand marker / cluster icons (shared palette — see composables/useMapColors).
+// Circle markers + teal cluster ramp mirror the MapLibre GL view so both map
+// modes look identical and on-brand.
+const circleIcon = (color: string) =>
+  L.divIcon({
+    className: "annotation-marker",
+    html: `<span style="display:block;width:16px;height:16px;border-radius:50%;background:${color};border:1px solid ${mapColors.markerStroke};box-shadow:0 0 2px rgba(0,0,0,0.4);"></span>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+    popupAnchor: [0, -10],
+  });
+
+const clusterIcon = (cluster: any) => {
+  const count = cluster.getChildCount();
+  const bg =
+    count >= 30
+      ? mapColors.clusterLarge
+      : count >= 10
+        ? mapColors.clusterMedium
+        : mapColors.clusterSmall;
+  return L.divIcon({
+    className: "annotation-cluster",
+    html: `<div style="width:40px;height:40px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;color:${mapColors.clusterText};font-weight:bold;font-size:14px;box-shadow:0 0 5px rgba(0,0,0,0.5);text-shadow:-1px -1px 0 rgba(0,0,0,.35),1px -1px 0 rgba(0,0,0,.35),-1px 1px 0 rgba(0,0,0,.35),1px 1px 0 rgba(0,0,0,.35);">${count}</div>`,
+    iconSize: [40, 40],
+  });
+};
+
 const display = () => {
-  
+
   // 現在のマーカーをすべて削除
   if (markerCluster) {
     markerCluster.clearLayers();
@@ -369,7 +399,9 @@ const display = () => {
       continue;
     }
 
-    const marker = L.marker([coordinates[1], coordinates[0]]);
+    const marker = L.marker([coordinates[1], coordinates[0]], {
+      icon: circleIcon(mapColors.marker),
+    });
 
     // @ts-ignore
     marker.id = feature.id;
@@ -417,10 +449,10 @@ const display = () => {
     let linksHtml = '';
     if (displayLinks.length > 0) {
       linksHtml = displayLinks.map((link: any) =>
-        `<a target="_blank" href="${link.identifier}">${translateLinkType(link.type)}</a>`
+        `<a target="_blank" rel="noopener noreferrer" href="${link.identifier}">${translateLinkType(link.type)}</a>`
       ).join(' | ');
     } else if (legacyUrl) {
-      linksHtml = `<a target="_blank" href="${legacyUrl}">${t("detail")}</a>`;
+      linksHtml = `<a target="_blank" rel="noopener noreferrer" href="${legacyUrl}">${t("detail")}</a>`;
     }
 
     // depictionsの表示を生成（サムネイル画像として表示）
@@ -428,8 +460,8 @@ const display = () => {
     if (displayDepictions.length > 0) {
       depictionsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">` +
         displayDepictions.map((dep: any) =>
-          `<a target="_blank" href="${dep["@id"]}" title="${dep.title || ''}">
-            <img src="${dep["@id"]}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+          `<a target="_blank" rel="noopener noreferrer" href="${dep["@id"]}" title="${dep.title || ''}">
+            <img src="${dep["@id"]}" alt="${dep.title || ''}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
           </a>`
         ).join('') + `</div>`;
     }
@@ -528,27 +560,10 @@ watch(
       center_.value = [coordinates[1], coordinates[0]];
 
       for (const marker of markers) {
-        let iconUrl =
-          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png";
-        if (marker.id === value.id) {
-          iconUrl =
-            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png";
-
-          /*
-          window.setTimeout(function () {
-            marker.openPopup();
-          }, 1000 / 2);
-          */
-          //
-        }
-
         marker.setIcon(
-          L.icon({
-            iconUrl,
-            iconSize: [25, 41],
-            iconAnchor: [12, 41], // アイコンのアンカーポイントを指定します。
-            popupAnchor: [0, -41], // ポップアップのアンカーポイントを指定します。
-          })
+          circleIcon(
+            marker.id === value.id ? mapColors.markerSelected : mapColors.marker
+          )
         );
       }
 

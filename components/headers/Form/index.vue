@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { mdiMapMarker, mdiImage, mdiLayers, mdiArrowRight, mdiOpenInNew } from "@mdi/js";
+import {
+  mdiMapMarker,
+  mdiImage,
+  mdiLayers,
+  mdiArrowRight,
+  mdiOpenInNew,
+  mdiLinkVariant,
+  mdiGithub,
+} from "@mdi/js";
 
 const u = ref("");
-
-const baseURL = useRuntimeConfig().public.appURL;
 
 const localePath = useLocalePath();
 
@@ -17,41 +23,7 @@ const add = () => {
   );
 };
 
-const examples = [
-  {
-    label: {
-      ja: "ラベルを含む例",
-      en: "Example with labels",
-    },
-    description: {
-      ja: "メタデータとラベルを含む完全な例",
-      en: "Full example with metadata and labels",
-    },
-    value: baseURL + "/canvas_extra.json",
-  },
-  {
-    label: {
-      ja: "シンプルな例",
-      en: "Simple example",
-    },
-    description: {
-      ja: "基本的なジオリファレンス設定",
-      en: "Basic georeference setup",
-    },
-    value: baseURL + "/canvas.json",
-  },
-  {
-    label: {
-      ja: "マニフェストの例",
-      en: "Manifest example",
-    },
-    description: {
-      ja: "IIIFマニフェスト形式の例",
-      en: "IIIF manifest format example",
-    },
-    value: baseURL + "/manifest.json",
-  },
-];
+const examples = useIiifExamples();
 
 const features = [
   {
@@ -89,7 +61,8 @@ const features = [
   },
 ];
 
-const { locale } = useI18n();
+const { isEn, tr } = useTr();
+const { newsEntries, hasUnread } = useNews();
 
 const inputCard = ref<HTMLElement | null>(null);
 
@@ -99,108 +72,208 @@ const selectExample = (value: string) => {
     inputCard.value?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 };
+
+// A whisper of 青海波 (seigaiha) wave behind the hero. The shared
+// `ds-texture-wave` token draws in brand brown — invisible on the brown hero —
+// so we paint a light-stroked variant here instead.
+const heroWave = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><g fill='none' stroke='%23ffffff' stroke-width='1'><circle cx='20' cy='20' r='20'/><circle cx='20' cy='20' r='11'/><circle cx='0' cy='0' r='20'/><circle cx='0' cy='0' r='11'/><circle cx='40' cy='0' r='20'/><circle cx='40' cy='0' r='11'/><circle cx='0' cy='40' r='20'/><circle cx='0' cy='40' r='11'/><circle cx='40' cy='40' r='20'/><circle cx='40' cy='40' r='11'/></g></svg>")`;
+const heroGlow =
+  "radial-gradient(60% 75% at 50% 0%, rgba(255,255,255,0.16), transparent 70%)";
 </script>
 <template>
   <div class="h-full overflow-y-auto bg-surface">
     <!-- Hero -->
-    <section class="bg-primary px-4 py-16 text-center text-primary-foreground">
-      <h1 class="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+    <section
+      class="relative isolate overflow-hidden bg-primary px-4 py-20 text-center text-primary-foreground sm:py-24"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 -z-10"
+        :style="{ background: heroGlow }"
+      ></div>
+      <div
+        class="pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
+        :style="{ backgroundImage: heroWave, backgroundSize: '40px 40px' }"
+      ></div>
+
+      <span class="ds-eyebrow !text-accent-200">
+        {{ isEn ? "IIIF Georeferencing" : "IIIF ジオリファレンス" }}
+      </span>
+      <h1 class="ds-display mt-3 !text-primary-foreground">
         IIIF Georeference Viewer
       </h1>
-      <p class="mx-auto mb-8 max-w-xl text-base opacity-90 sm:text-lg">
+      <p class="mx-auto mt-4 max-w-xl text-base opacity-90 sm:text-lg">
         {{
-          locale === "en"
+          isEn
             ? "Visualize historical maps and images with geographic context"
             : "歴史的な地図や画像を地理的コンテキストで可視化"
         }}
       </p>
 
-      <!-- Main input -->
+      <!-- Main input — a single search-bar pill -->
       <div
         ref="inputCard"
-        class="mx-auto flex max-w-2xl items-center gap-2 rounded-2xl bg-surface p-4 shadow-lg"
+        class="mx-auto mt-9 flex max-w-2xl items-stretch gap-2 rounded-2xl bg-surface p-2 text-left shadow-xl ring-1 ring-black/5"
       >
-        <DsInput
-          v-model="u"
-          class="flex-1"
-          :label="locale === 'en' ? 'Enter Canvas URL' : 'Canvas URLを入力'"
-          placeholder="https://example.com/canvas.json"
-          @keyup.enter="add"
-        />
-        <DsButton variant="primary" :disabled="!u" @click="add">
+        <div class="flex flex-1 items-center gap-2 pl-3">
+          <DsIcon
+            :path="mdiLinkVariant"
+            size="1.25rem"
+            class="shrink-0 text-foreground-subtle"
+          />
+          <input
+            v-model="u"
+            type="url"
+            :placeholder="
+              isEn
+                ? 'Paste a Canvas or Manifest URL'
+                : 'Canvas / Manifest URL を貼り付け'
+            "
+            class="w-full bg-transparent py-2 text-sm text-foreground outline-none placeholder:text-foreground-subtle"
+            @keyup.enter="add"
+          />
+        </div>
+        <!-- rounded-xl (16px) = outer rounded-2xl (24px) − p-2 (8px), so the
+             button corners nest concentrically inside the search-bar pill. -->
+        <DsButton
+          variant="primary"
+          class="!rounded-xl px-5"
+          :disabled="!u"
+          @click="add"
+        >
+          <span class="hidden sm:inline">{{ isEn ? "View" : "表示" }}</span>
           <DsIcon :path="mdiArrowRight" size="1.25rem" />
         </DsButton>
       </div>
+      <p class="mt-3 text-xs text-primary-foreground/70">
+        {{ isEn ? "or try an example below" : "またはサンプルから試す" }}
+      </p>
     </section>
 
     <!-- Examples -->
-    <section class="px-4 py-12">
-      <h2 class="mb-8 text-center text-2xl font-semibold text-foreground">
-        {{ locale === "en" ? "Try Examples" : "サンプルを試す" }}
-      </h2>
-      <div class="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 md:grid-cols-3">
+    <section class="mx-auto w-full max-w-5xl px-4 py-14">
+      <div class="ds-section-header">
+        <h2 class="text-2xl font-semibold text-foreground">
+          {{ isEn ? "Try Examples" : "サンプルを試す" }}
+        </h2>
+        <span class="ds-rule"></span>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="(ex, i) in examples"
           :key="i"
-          class="flex flex-col rounded-xl border border-border bg-surface p-5 transition-shadow hover:shadow-lg"
+          class="group flex flex-col rounded-xl border border-border bg-surface p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-200 hover:shadow-md"
         >
-          <span
-            class="mb-3 inline-flex w-fit rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground"
-          >
-            {{ locale === "en" ? "Example" : "例" }} {{ i + 1 }}
-          </span>
-          <h3 class="mb-1 text-base font-semibold text-foreground">
-            {{ ex.label[locale === "en" ? "en" : "ja"] }}
-          </h3>
-          <p class="mb-4 flex-1 text-sm text-foreground-muted">
-            {{ ex.description[locale === "en" ? "en" : "ja"] }}
-          </p>
-          <div class="flex items-center gap-2">
-            <DsButton
-              variant="secondary"
-              class="flex-1"
-              @click="selectExample(ex.value)"
-            >
-              {{ locale === "en" ? "Load Example" : "読み込む" }}
-            </DsButton>
+          <div class="mb-3 flex items-start justify-between">
+            <span class="ds-eyebrow">
+              {{ isEn ? "Example" : "例" }} {{ i + 1 }}
+            </span>
             <a
               :href="ex.value"
               target="_blank"
               rel="noopener"
-              :aria-label="locale === 'en' ? 'Open in new tab' : '新しいタブで開く'"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground-muted hover:bg-surface-muted"
+              :aria-label="isEn ? 'Open in new tab' : '新しいタブで開く'"
+              class="-mt-1 -mr-1 inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-subtle no-underline transition-colors hover:bg-surface-muted hover:text-link"
             >
-              <DsIcon :path="mdiOpenInNew" size="1.25rem" />
+              <DsIcon :path="mdiOpenInNew" size="1.1rem" />
             </a>
           </div>
+          <h3 class="mb-1 text-base font-semibold text-foreground">
+            {{ tr(ex.label) }}
+          </h3>
+          <p class="mb-4 flex-1 text-sm text-foreground-muted">
+            {{ tr(ex.description) }}
+          </p>
+          <DsButton variant="secondary" block @click="selectExample(ex.value)">
+            {{ isEn ? "Load Example" : "読み込む" }}
+            <DsIcon :path="mdiArrowRight" size="1.1rem" />
+          </DsButton>
         </div>
       </div>
     </section>
 
     <!-- Features -->
-    <section class="bg-surface-muted px-4 py-12">
-      <h2 class="mb-8 text-center text-2xl font-semibold text-foreground">
-        {{ locale === "en" ? "Features" : "機能" }}
-      </h2>
-      <div class="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2 md:grid-cols-3">
-        <div
-          v-for="(feature, i) in features"
-          :key="i"
-          class="flex flex-col items-center p-6 text-center"
-        >
+    <section class="bg-surface-muted">
+      <div class="mx-auto w-full max-w-5xl px-4 py-14">
+        <div class="ds-section-header">
+          <h2 class="text-2xl font-semibold text-foreground">
+            {{ isEn ? "Features" : "機能" }}
+          </h2>
+          <span class="ds-rule"></span>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <div
-            class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground"
+            v-for="(feature, i) in features"
+            :key="i"
+            class="flex items-start gap-4 rounded-xl border border-border bg-surface p-5"
           >
-            <DsIcon :path="feature.icon" size="2rem" />
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-muted text-primary"
+            >
+              <DsIcon :path="feature.icon" size="1.5rem" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-foreground">
+                {{ tr(feature.title) }}
+              </h3>
+              <p class="mt-1 text-sm text-foreground-muted">
+                {{ tr(feature.description) }}
+              </p>
+            </div>
           </div>
-          <h3 class="mb-1 text-base font-semibold text-foreground">
-            {{ feature.title[locale === "en" ? "en" : "ja"] }}
-          </h3>
-          <p class="text-sm text-foreground-muted">
-            {{ feature.description[locale === "en" ? "en" : "ja"] }}
-          </p>
         </div>
       </div>
     </section>
+
+    <!-- News -->
+    <section class="mx-auto w-full max-w-5xl px-4 py-14">
+      <div class="ds-section-header">
+        <h2 class="text-2xl font-semibold text-foreground">
+          {{ isEn ? "News" : "お知らせ" }}
+        </h2>
+        <span class="ds-rule"></span>
+      </div>
+      <ul class="divide-y divide-border">
+        <li
+          v-for="(n, i) in newsEntries"
+          :key="n.date"
+          class="flex flex-col gap-1 py-4 sm:flex-row sm:gap-5"
+        >
+          <time class="shrink-0 text-sm text-foreground-muted sm:w-28 sm:pt-0.5">
+            {{ tr(n.dateLabel) }}
+          </time>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-medium text-foreground">{{ tr(n.title) }}</span>
+              <span
+                v-if="i === 0 && hasUnread"
+                class="rounded-full bg-accent px-1.5 py-0.5 text-[0.625rem] font-semibold leading-none text-accent-foreground"
+              >
+                New
+              </span>
+            </div>
+            <p v-if="n.detail" class="mt-1 text-sm text-foreground-muted">
+              {{ tr(n.detail) }}
+            </p>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Footer -->
+    <footer
+      class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-border px-4 py-8 text-sm text-foreground-muted"
+    >
+      <span>IIIF Georeference Viewer</span>
+      <span class="text-border-strong">·</span>
+      <a
+        href="https://github.com/nakamura196/iiif_geo"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-1.5 no-underline hover:text-link"
+      >
+        <DsIcon :path="mdiGithub" size="1.1rem" />
+        GitHub
+      </a>
+    </footer>
   </div>
 </template>

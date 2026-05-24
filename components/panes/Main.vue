@@ -2,9 +2,7 @@
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import { mdiChevronDown } from "@mdi/js";
-
-const { settings, panesConfig } = usePanes();
+const { settings } = usePanes();
 
 interface PropType {
   offset?: number;
@@ -59,15 +57,20 @@ watch(isMobile, () => {
   setSize();
 });
 
-onMounted(() => {
-  window.addEventListener("resize", () => {
-    windowHeight.value = window.innerHeight - props.offset;
-    windowWidth.value = window.innerWidth;
-    isMobile.value = window.innerWidth < 768;
-  });
-});
+const onResize = () => {
+  windowHeight.value = window.innerHeight - props.offset;
+  windowWidth.value = window.innerWidth;
+  isMobile.value = window.innerWidth < 768;
+};
+onMounted(() => window.addEventListener("resize", onResize, { passive: true }));
+onUnmounted(() => window.removeEventListener("resize", onResize));
 
-const barHeight = computed(() => isMobile.value ? 40 : 48);
+// アプリ上部 <Headers/> 分の高さ補正。splitpanes コンテナと各ペインの
+// コンポーネント高さをビューポートからこの値だけ差し引いて算出する。
+const barHeight = computed(() => (isMobile.value ? 40 : 48));
+
+// ペイン領域に使える実高さ（ビューポート − アプリヘッダー）。
+const contentHeight = computed(() => windowHeight.value - barHeight.value);
 
 const resizeV = (e: any, c: number) => {
   for (let i = 0; i < e.length; i++) {
@@ -80,68 +83,22 @@ const resizeH = (e: any) => {
     items.value[i].size = e[i].size;
   }
 };
-
-const layoutHeight = 0; // 32
-
-function getLabel(id: string) {
-  let label = "";
-  panesConfig.value.forEach((pane) => {
-    if (pane.id === id) {
-      label = pane.label || "";
-    }
-  });
-
-  return label;
-}
 </script>
 <template>
   <div>
     <splitpanes
       @resize="resizeH($event)"
-      :style="`height: ${windowHeight - barHeight}px`"
-      class2="default-theme"
+      :style="`height: ${contentHeight}px`"
       :horizontal="isMobile"
     >
-      <pane :size="item.size" v-for="(item, c) in items">
+      <pane :size="item.size" v-for="(item, c) in items" :key="c">
         <splitpanes horizontal @resize="resizeV($event, c)">
-          <pane :size="e.size" v-for="e in item.items">
-            <div
-              class="flex items-center gap-1 border-b border-border bg-surface-muted px-2 py-1 text-foreground"
-              :style="`height: ${barHeight}px`"
-            >
-              <span class="truncate text-sm">{{ getLabel(e.componentKey) }}</span>
-              <div class="flex-1"></div>
-              <DsMenu align="end">
-                <template #activator="{ props }">
-                  <DsIconButton
-                    v-bind="props"
-                    :icon="mdiChevronDown"
-                    variant="ghost"
-                    size="sm"
-                    label="select pane"
-                  />
-                </template>
-                <DsCard class="overflow-hidden p-1">
-                  <ul class="min-w-32">
-                    <li v-for="(item, index) in panesConfig" :key="index">
-                      <button
-                        type="button"
-                        class="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-surface-muted"
-                        @click="e.componentKey = item.id"
-                      >
-                        {{ item.label }}
-                      </button>
-                    </li>
-                  </ul>
-                </DsCard>
-              </DsMenu>
-            </div>
-
+          <pane :size="e.size" v-for="e in item.items" :key="e.id">
             <component
               :height="
                 isMobile
-                  ? ((windowHeight - barHeight) * item.size) / 100 - layoutHeight
-                  : ((windowHeight - barHeight) * e.size) / 100 - layoutHeight
+                  ? (contentHeight * item.size) / 100
+                  : (contentHeight * e.size) / 100
               "
               :width="isMobile ? windowWidth : (windowWidth * item.size) / 100"
               :key="e.id"
@@ -160,7 +117,7 @@ function getLabel(id: string) {
 </template>
 <style>
 .splitpanes__splitter {
-  background-color: #ccc;
+  background-color: var(--color-border);
   position: relative;
 }
 
@@ -168,13 +125,13 @@ function getLabel(id: string) {
 @media (max-width: 767px) {
   .splitpanes--horizontal > .splitpanes__splitter {
     height: 8px;
-    background-color: #999;
+    background-color: var(--color-border-strong);
     cursor: ns-resize;
   }
-  
+
   .splitpanes--vertical > .splitpanes__splitter {
     width: 8px;
-    background-color: #999;
+    background-color: var(--color-border-strong);
     cursor: ew-resize;
   }
 }
@@ -184,7 +141,7 @@ function getLabel(id: string) {
   left: 0;
   top: 0;
   transition: opacity 0.4s;
-  background-color: rgba(255, 0, 0, 0.3);
+  background-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
   opacity: 0;
   z-index: 1;
 }

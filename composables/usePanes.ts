@@ -40,8 +40,6 @@ export const usePanes = () => {
     panes: [],
   }));
 
-  const panesConfig = useState<PanesConfig[]>("panesConfig", () => []);
-
   // ペインの開閉状態は settings.panes を唯一の真実源とする
   // （ヘッダー側に別の boolean を持たせない）。
   const isPaneOpen = (id: string) =>
@@ -90,7 +88,6 @@ export const usePanes = () => {
 
   return {
     settings,
-    panesConfig,
     isPaneOpen,
     openPane,
     closePane,

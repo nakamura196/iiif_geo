@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiMagnify } from "@mdi/js";
+import { mdiFormatListBulleted } from "@mdi/js";
 
 const { togglePane, restorePaneFromQuery } = usePanes();
 
@@ -8,10 +8,10 @@ onMounted(() => restorePaneFromQuery("search"));
 
 <template>
   <DsButton
-    variant="primary"
+    variant="secondary"
     class="mx-1 !rounded-full"
     @click="togglePane('search')"
   >
-    <DsIcon :path="mdiMagnify" size="1.25rem" />{{ $t("list") }}</DsButton
+    <DsIcon :path="mdiFormatListBulleted" size="1.25rem" />{{ $t("list") }}</DsButton
   >
 </template>

@@ -26,13 +26,13 @@ watch(
         v-if="snackbar"
         class="fixed bottom-4 left-1/2 z-[2000] flex -translate-x-1/2 items-center gap-3 rounded-md bg-foreground px-4 py-2 text-sm text-background shadow-lg"
       >
-        <span>URLが不正です。</span>
+        <span>{{ $t("invalidUrl") }}</span>
         <button
           type="button"
           class="font-medium underline"
           @click="snackbar = false"
         >
-          Close
+          {{ $t("close") }}
         </button>
       </div>
     </main>

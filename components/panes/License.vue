@@ -28,24 +28,41 @@ const requiredStatementValues = computed(() => {
 </script>
 <template>
   <div class="ds-container py-4">
-    <h2>{{ $t("rights") }}</h2>
+    <h2 class="text-lg font-semibold text-foreground">{{ $t("rights") }}</h2>
 
     <template v-if="manifest.requiredStatement">
-      <h3>{{ requiredStatementLabel }}</h3>
+      <h3 class="mt-4 text-sm font-semibold text-foreground-muted">
+        {{ requiredStatementLabel }}
+      </h3>
       <div
         v-for="(value, index) in requiredStatementValues"
         :key="index"
+        class="mt-1 text-sm text-foreground"
         v-html="value"
       ></div>
     </template>
 
     <template v-if="manifest.rights">
-      <h3>{{ $t("license") }}</h3>
-      <div>
-        <a :href="manifest.rights" target="_blank">
+      <h3 class="mt-4 text-sm font-semibold text-foreground-muted">
+        {{ $t("license") }}
+      </h3>
+      <div class="mt-1">
+        <a
+          :href="manifest.rights"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="break-all text-sm text-link"
+        >
           {{ manifest.rights }}
         </a>
       </div>
     </template>
+
+    <p
+      v-if="!manifest.requiredStatement && !manifest.rights"
+      class="mt-2 text-sm text-foreground-subtle"
+    >
+      —
+    </p>
   </div>
 </template>

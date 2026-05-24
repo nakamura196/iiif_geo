@@ -1,12 +1,6 @@
 // composables/useViewer.ts
 import { ref } from "vue";
-export interface PanesConfig {
-  id?: string;
-  label?: string;
-  size?: number;
-  items?: PanesConfig[];
-  componentKey?: string;
-}
+import type { PanesConfig } from "./usePanes";
 
 export function useViewer() {
   const ready = ref(false);

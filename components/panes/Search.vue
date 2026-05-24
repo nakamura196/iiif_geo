@@ -193,7 +193,8 @@ watch(
       >
     </div>
 
-    <table class="w-full border-collapse text-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-sm">
       <thead>
         <tr class="border-b border-border text-left text-foreground-muted">
           <th class="px-2 py-1"></th>
@@ -204,6 +205,14 @@ watch(
         </tr>
       </thead>
       <tbody>
+        <tr v-if="filteredItems.length === 0">
+          <td
+            colspan="5"
+            class="px-2 py-6 text-center text-sm text-foreground-subtle"
+          >
+            {{ $t("結果が見つかりません") }}
+          </td>
+        </tr>
         <tr
           v-for="item in filteredItems"
           :key="item.uuid"
@@ -218,21 +227,27 @@ watch(
               alt=""
             />
           </td>
-          <td class="px-2 py-1">{{ item.id }}</td>
+          <td
+            class="max-w-[12rem] truncate px-2 py-1 text-foreground-muted"
+            :title="item.id"
+          >
+            {{ item.id }}
+          </td>
           <td class="px-2 py-1">{{ item.name }}</td>
           <td class="px-2 py-1">{{ item.tag }}</td>
           <td class="px-2 py-1">
             <DsIconButton
               :icon="mdiImageFilterCenterFocus"
-              variant="primary"
+              variant="ghost"
               size="sm"
-              :label="$t('search')"
+              :label="$t('focus')"
               @click="select(item.uuid)"
             />
           </td>
         </tr>
       </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </template>
 

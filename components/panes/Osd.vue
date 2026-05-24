@@ -4,23 +4,19 @@ import {
   mdiMinus,
   mdiHome,
   mdiFullscreen,
-  mdiRestore,
   mdiMessage,
-  mdiMessageOff,
   mdiArrowLeft,
   mdiArrowRight,
   mdiAutoFix,
-  mdiRotate3d,
   mdiRotateRight,
   mdiRotateLeft,
-  mdiCrosshairsGps,
-  mdiShape,
+  mdiClose,
 } from "@mdi/js";
 import { calculateImageRotation, calculateImageRotationAdvanced, findNearestThreePoints, calculateLocalRotation } from "~/utils/calculateImageRotation";
 import { useResponsive } from "~/composables/useResponsive";
 
 const { $OpenSeadragon } = useNuxtApp() as any;
-const { mobile, mdAndUp } = useResponsive();
+const { mdAndUp } = useResponsive();
 
 const { featuresMap, action, canvases, pageIndex } = useSettings();
 
@@ -675,13 +671,13 @@ const updateAnnotationDisplay = () => {
         // 複数の特徴を含むクラスター
         const count = cluster.features.length;
 
-        // マーカー数に応じて色を設定（MapLibre GLと統一）
-        let bgColor = '#51bbd6'; // デフォルト: 水色（10未満）
+        // マーカー数に応じて色を設定（useMapColors で MapLibre GL と統一）
+        let bgColor = mapColors.clusterSmall; // 10未満
 
         if (count >= 30) {
-          bgColor = '#f28cb1'; // ピンク（30以上）
+          bgColor = mapColors.clusterLarge; // 30以上
         } else if (count >= 10) {
-          bgColor = '#f1f075'; // 黄色（10-29）
+          bgColor = mapColors.clusterMedium; // 10-29
         }
 
         overlay_.className = "cluster-icon";
@@ -1219,13 +1215,18 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 
     <div
       id="osd"
-      :style="`flex-grow: 1; flex-basis: 0; background-color: #000000;`"
+      :style="`flex-grow: 1; flex-basis: 0; background-color: var(--color-neutral-900);`"
     ></div>
 
     <!-- 回転角度調整ダイアログ -->
     <DsDialog v-model="showRotationDialog" maxWidth="500px">
       <template #default="{ close }">
-        <h2 class="mb-4 text-lg font-medium">{{ $t('angle') }}</h2>
+        <div class="mb-4 flex items-center gap-2">
+          <DsIcon :path="mdiRotateRight" size="1.5rem" class="shrink-0 text-primary" />
+          <h2 class="shrink-0 text-xl font-semibold text-foreground">{{ $t('angle') }}</h2>
+          <span class="flex-1"></span>
+          <DsIconButton :icon="mdiClose" variant="ghost" size="sm" :label="$t('close')" @click="close" />
+        </div>
         <div>
           <DsSlider
             v-model="rotate2"
@@ -1263,28 +1264,32 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
     <!-- アノテーション設定ダイアログ -->
     <DsDialog v-model="showAnnotationDialog" maxWidth="500px">
       <template #default="{ close }">
-        <h2 class="mb-4 text-lg font-medium">{{ $t('annotation') }}</h2>
-        <div>
+        <div class="mb-4 flex items-center gap-2">
+          <DsIcon :path="mdiMessage" size="1.5rem" class="shrink-0 text-primary" />
+          <h2 class="shrink-0 text-xl font-semibold text-foreground">{{ $t('annotation') }}</h2>
+          <span class="flex-1"></span>
+          <DsIconButton :icon="mdiClose" variant="ghost" size="sm" :label="$t('close')" @click="close" />
+        </div>
+        <div class="flex flex-col gap-3">
           <!-- アノテーション表示/非表示 -->
           <DsSwitch
             v-model="showAnnotations"
             :label="showAnnotations ? $t('annotation') + ': ON' : $t('annotation') + ': OFF'"
-            class="mb-4"
           />
 
           <!-- クラスタリング設定 -->
           <DsSwitch
             v-model="enableClustering"
             :disabled="!showAnnotations"
-            :label="enableClustering ? 'クラスタリング: ON' : 'クラスタリング: OFF'"
+            :label="enableClustering ? $t('clustering') + ': ON' : $t('clustering') + ': OFF'"
           />
-          <p v-if="!showAnnotations" class="mt-2 text-sm text-foreground-muted">
-            アノテーションを表示するとクラスタリング設定が有効になります
+          <p v-if="!showAnnotations" class="text-sm text-foreground-muted">
+            {{ $t('clusteringHelp') }}
           </p>
         </div>
-        <div class="mt-4 flex items-center gap-2">
+        <div class="mt-6 flex items-center gap-2">
           <div class="flex-1"></div>
-          <DsButton variant="ghost" @click="showAnnotationDialog = false">{{ $t('close') }}</DsButton>
+          <DsButton variant="ghost" @click="close">{{ $t('close') }}</DsButton>
         </div>
       </template>
     </DsDialog>
@@ -1301,9 +1306,8 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 }
 
 :deep(.pin-selected) {
-  /* outline: solid #ffeb3b !important; */
-  /* border: 2px solid #ffeb3b !important; */ /* アイコンの境界線 */
-  background-color: #FF0000 !important; /* 選択時の色（MapLibre GLと統一） */
+  /* 値は composables/useMapColors.ts と同期（markerSelected） */
+  background-color: #dc2626 !important;
 }
 
 :deep(.osdc-hover) {
@@ -1316,8 +1320,8 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 :deep(.pin-icon) {
   width: 16px; /* アイコンの幅（MapLibre GLと統一: radius 8 = 直径16px） */
   height: 16px; /* アイコンの高さ */
-  background-color: #3FB1CE; /* アイコンの背景色（MapLibre GLと統一） */
-  border: 1px solid #fff; /* アイコンの境界線（MapLibre GLと統一） */
+  background-color: #4a9aa7; /* useMapColors.marker と同期 */
+  border: 1px solid #fff; /* useMapColors.markerStroke */
   border-radius: 50%; /* 円形にする */
   box-shadow: 0 0 2px #333; /* 影をつける */
 
@@ -1333,7 +1337,7 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 :deep(.cluster-icon) {
   width: 40px !important;
   height: 40px !important;
-  background-color: #51bbd6;
+  background-color: #4a9aa7; /* useMapColors.clusterSmall（数値別の色は JS で設定） */
   border-radius: 50%;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
   display: flex !important;
@@ -1347,7 +1351,7 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
 }
 
 :deep(.cluster-count) {
-  color: #000; /* MapLibre GLと統一: 黒文字 */
+  color: #fff; /* useMapColors.clusterText（teal 背景に白文字） */
   font-weight: bold;
   font-size: 14px;
   text-align: center;
@@ -1355,12 +1359,12 @@ const clusterFeatures = (features: any[], clusterRadius: number, zoomLevel: numb
   line-height: 1;
   user-select: none;
   display: block;
-  /* MapLibre GLと統一: 文字の周りに白い縁 */
+  /* MapLibre GL と統一: 視認性のための暗いハロー */
   text-shadow:
-    -1px -1px 0 #fff,
-     1px -1px 0 #fff,
-    -1px  1px 0 #fff,
-     1px  1px 0 #fff;
+    -1px -1px 0 rgba(0, 0, 0, 0.35),
+     1px -1px 0 rgba(0, 0, 0, 0.35),
+    -1px  1px 0 rgba(0, 0, 0, 0.35),
+     1px  1px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* Spiderfy関連のスタイル */

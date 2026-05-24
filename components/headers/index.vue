@@ -14,6 +14,8 @@ const localePath = useLocalePath();
 
 const drawer = ref(false);
 
+const { hasUnread } = useNews();
+
 const { mobile, mdAndUp } = useResponsive();
 </script>
 <template>
@@ -37,13 +39,21 @@ const { mobile, mdAndUp } = useResponsive();
     </template>
 
     <!-- Always show hamburger menu for other items -->
-    <DsIconButton
-      :icon="mdiMenu"
-      variant="ghost"
-      :label="$t('home')"
-      class="!text-primary-foreground hover:!bg-primary-hover"
-      @click.stop="drawer = !drawer"
-    />
+    <div class="relative">
+      <DsIconButton
+        :icon="mdiMenu"
+        variant="ghost"
+        :label="$t('menu')"
+        class="!text-primary-foreground hover:!bg-primary-hover"
+        @click.stop="drawer = !drawer"
+      />
+      <!-- Unread-news indicator: a small accent dot, ringed in the header color
+           so it stays legible against the brown header. -->
+      <span
+        v-if="hasUnread"
+        class="pointer-events-none absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent ring-2 ring-primary"
+      ></span>
+    </div>
   </header>
 
   <Teleport to="body">
@@ -62,14 +72,16 @@ const { mobile, mdAndUp } = useResponsive();
       "
     >
       <!-- Grab handle (mobile bottom sheet) -->
-      <div v-if="mobile" class="flex justify-center pt-2.5 pb-1">
+      <div v-if="mobile" class="flex justify-center pt-2.5">
         <span class="h-1 w-9 rounded-full bg-border-strong"></span>
       </div>
 
       <!-- Drawer header -->
-      <div class="flex items-center justify-between px-3 py-2">
+      <div
+        class="flex items-center justify-between border-b border-border px-2 py-2"
+      >
         <span
-          class="text-xs font-semibold uppercase tracking-wider text-foreground-muted"
+          class="px-1 text-xs font-semibold uppercase tracking-wider text-foreground-subtle"
         >
           {{ $t("menu") }}
         </span>
@@ -82,7 +94,7 @@ const { mobile, mdAndUp } = useResponsive();
         />
       </div>
 
-      <div class="flex flex-col gap-0.5 p-2 pt-0">
+      <div class="ds-drawer-list flex flex-col gap-0.5 p-2">
         <!-- Only show JsonViewer and FormButton if canvases exist (Search and License are in header) -->
         <template v-if="canvases.length > 0">
           <HeadersJsonViewer></HeadersJsonViewer>
@@ -99,6 +111,7 @@ const { mobile, mdAndUp } = useResponsive();
           {{ $t("home") }}
         </DsButton>
 
+        <HeadersNews></HeadersNews>
         <HeadersGitHub></HeadersGitHub>
         <HeadersHelp></HeadersHelp>
 
@@ -107,14 +120,22 @@ const { mobile, mdAndUp } = useResponsive();
       </div>
     </nav>
   </Teleport>
+
+  <!-- Mounted once, always available: opened from the menu item and the
+       landing-page pill via the shared state in useNews(). -->
+  <HeadersNewsDialog />
 </template>
 
 <style scoped>
 /* Render the drawer's action buttons as left-aligned, full-width list rows.
    The `ds-btn` recipe centres its content, which reads as a toolbar — wrong for
-   a vertical nav. Dialog/menu panels are in the top layer / teleported to
-   <body>, so this only targets the trigger buttons inside the drawer. */
-.ds-drawer :deep(.ds-btn) {
+   a vertical nav.
+
+   `:not(dialog *)` is essential: the menu items (JsonViewer/Add/Help) own
+   <dialog> elements that, while shown in the top layer, are DOM descendants of
+   this list. Without the guard this rule would leak into those dialogs and
+   stretch their close/footer buttons to full width. */
+.ds-drawer-list :deep(.ds-btn:not(dialog *)) {
   width: 100%;
   justify-content: flex-start;
 }

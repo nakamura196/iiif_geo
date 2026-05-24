@@ -6,9 +6,8 @@
    classes they use are actually emitted. */
 @source "../../node_modules/hi-design-system/vue/**/*.{vue,ts}";
 
-* {
-  text-transform: none !important;
-}
+/* App-wide preference: no underlines on links (DS base.css underlines them).
+   Kept intentionally; remove if DS-style underlined links are desired. */
 a {
   text-decoration: none !important;
 }

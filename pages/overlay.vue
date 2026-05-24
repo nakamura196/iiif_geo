@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Map, NavigationControl, type LngLatLike } from "maplibre-gl";
-import { mdiLayers, mdiImage, mdiEye, mdiEyeOff, mdiViewSplitVertical } from "@mdi/js";
+import {
+  mdiLayers,
+  mdiImage,
+  mdiEye,
+  mdiEyeOff,
+  mdiViewSplitVertical,
+  mdiClose,
+} from "@mdi/js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useResponsive } from "~/composables/useResponsive";
 
@@ -308,7 +315,7 @@ const addImageOverlay = async () => {
     });
   } catch (error) {
     console.error('Failed to load IIIF image:', error);
-    alert('IIIF画像の読み込みに失敗しました。プロキシエンドポイントを確認してください。');
+    alert(t('imageLoadError'));
   }
 };
 
@@ -443,14 +450,16 @@ onUnmounted(() => {
       class="flex flex-none items-center gap-2 bg-primary px-2 text-primary-foreground"
       style="height: 48px"
     >
-      <span class="truncate font-medium">{{ title || "IIIF Image Overlay on Map" }}</span>
+      <span class="truncate font-medium">{{
+        title || "IIIF Georeference Viewer"
+      }}</span>
 
       <div class="flex-1"></div>
 
       <DsIconButton
         :icon="mdiViewSplitVertical"
         variant="ghost"
-        label="標準表示に戻る"
+        :label="t('backToStandard')"
         class="!text-primary-foreground hover:!bg-primary-hover"
         @click="() => router.push(`/?${route.fullPath.split('?')[1] || ''}`)"
       />
@@ -499,7 +508,7 @@ onUnmounted(() => {
           <DsIconButton
             :icon="mdiImage"
             variant="secondary"
-            label="画像設定"
+            :label="t('imageSettings')"
             class="bg-surface shadow"
             @click="showImageControls = true"
           />
@@ -510,19 +519,32 @@ onUnmounted(() => {
     <!-- Image controls dialog -->
     <DsDialog v-model="showImageControls" maxWidth="400px">
       <template #default="{ close }">
-        <h2 class="mb-4 text-lg font-medium">画像設定</h2>
+        <div class="mb-4 flex items-center gap-2">
+          <DsIcon :path="mdiImage" size="1.5rem" class="shrink-0 text-primary" />
+          <h2 class="shrink-0 text-xl font-semibold text-foreground">
+            {{ t("imageSettings") }}
+          </h2>
+          <span class="flex-1"></span>
+          <DsIconButton
+            :icon="mdiClose"
+            variant="ghost"
+            size="sm"
+            :label="t('close')"
+            @click="close"
+          />
+        </div>
         <div>
           <!-- Visibility toggle -->
           <DsSwitch v-model="imageVisible" class="mb-4">
             <span class="flex items-center gap-2">
               <DsIcon :path="imageVisible ? mdiEye : mdiEyeOff" size="1.25rem" />
-              {{ imageVisible ? '表示' : '非表示' }}
+              {{ imageVisible ? t("show") : t("hide") }}
             </span>
           </DsSwitch>
 
           <!-- Opacity slider -->
           <div class="mt-4">
-            <label class="text-sm text-foreground-muted">透明度</label>
+            <label class="text-sm text-foreground-muted">{{ t("opacity") }}</label>
             <DsSlider
               v-model="imageOpacity"
               :min="0"
@@ -538,8 +560,8 @@ onUnmounted(() => {
             </DsSlider>
           </div>
         </div>
-        <div class="mt-4 flex justify-end">
-          <DsButton variant="ghost" @click="showImageControls = false">閉じる</DsButton>
+        <div class="mt-6 flex justify-end">
+          <DsButton variant="ghost" @click="close">{{ t("close") }}</DsButton>
         </div>
       </template>
     </DsDialog>
@@ -573,7 +595,7 @@ onUnmounted(() => {
 }
 
 :deep(.maplibregl-ctrl-icon) {
-  background-color: white;
+  background-color: var(--color-surface);
   border: none;
   cursor: pointer;
   width: 30px;
@@ -584,6 +606,6 @@ onUnmounted(() => {
 }
 
 :deep(.maplibregl-ctrl-icon:hover) {
-  background-color: #f0f0f0;
+  background-color: var(--color-surface-muted);
 }
 </style>
