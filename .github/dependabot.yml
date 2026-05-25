@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # Node.js dependencies (pnpm uses the "npm" ecosystem).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    # Supply-chain hardening: don't pull versions published moments ago.
+    # Past incidents (chalk/debug 2025-09, eslint-config-prettier 2025-07,
+    # ua-parser-js 2021) were detected/yanked within hours to days.
+    # Security updates ignore cooldown and apply immediately.
+    cooldown:
+      default-days: 5
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+  # Keep SHA-pinned GitHub Actions up to date (Dependabot rewrites both the SHA
+  # and the human-readable "# vX" comment).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 5
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
