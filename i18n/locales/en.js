@@ -3,6 +3,7 @@ export default {
     "menu": "Menu",
     "help": "Help",
     "news": "News",
+    "privacy": "Privacy Policy",
     "search": "Search",
     "list": "List",
     "name": "Name",

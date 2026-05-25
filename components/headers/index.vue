@@ -114,6 +114,7 @@ const { mobile, mdAndUp } = useResponsive();
         <HeadersNews></HeadersNews>
         <HeadersGitHub></HeadersGitHub>
         <HeadersHelp></HeadersHelp>
+        <HeadersPrivacy></HeadersPrivacy>
 
         <hr class="my-1.5 border-border" />
         <HeadersLanguage></HeadersLanguage>
@@ -124,6 +125,10 @@ const { mobile, mdAndUp } = useResponsive();
   <!-- Mounted once, always available: opened from the menu item and the
        landing-page pill via the shared state in useNews(). -->
   <HeadersNewsDialog />
+
+  <!-- Likewise: opened from the menu item and the landing-page footer link
+       via the shared state in usePrivacy(). -->
+  <HeadersPrivacyDialog />
 </template>
 
 <style scoped>

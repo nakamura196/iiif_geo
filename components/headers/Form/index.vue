@@ -7,6 +7,7 @@ import {
   mdiOpenInNew,
   mdiLinkVariant,
   mdiGithub,
+  mdiShieldLockOutline,
 } from "@mdi/js";
 
 const u = ref("");
@@ -63,6 +64,12 @@ const features = [
 
 const { isEn, tr } = useTr();
 const { newsEntries, hasUnread } = useNews();
+const { open: openPrivacy } = usePrivacy();
+
+// Intro video — swap between the Japanese and English narration uploads so the
+// embed always matches the current UI locale. `:key` on the iframe forces a
+// reload when the locale (and thus the id) changes.
+const videoId = computed(() => (isEn.value ? "RoE5Mm6vSFE" : "3qsZbPXC9qg"));
 
 const inputCard = ref<HTMLElement | null>(null);
 
@@ -147,6 +154,30 @@ const heroGlow =
       <p class="mt-3 text-xs text-primary-foreground/70">
         {{ isEn ? "or try an example below" : "またはサンプルから試す" }}
       </p>
+    </section>
+
+    <!-- Intro video -->
+    <section class="mx-auto w-full max-w-5xl px-4 py-14">
+      <div class="ds-section-header">
+        <h2 class="text-2xl font-semibold text-foreground">
+          {{ isEn ? "Introduction" : "紹介動画" }}
+        </h2>
+        <span class="ds-rule"></span>
+      </div>
+      <div
+        class="overflow-hidden rounded-xl border border-border bg-black shadow-md"
+      >
+        <iframe
+          :key="videoId"
+          class="aspect-video w-full"
+          :src="`https://www.youtube-nocookie.com/embed/${videoId}`"
+          title="IIIF Georeference Viewer"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      </div>
     </section>
 
     <!-- Examples -->
@@ -274,6 +305,15 @@ const heroGlow =
         <DsIcon :path="mdiGithub" size="1.1rem" />
         GitHub
       </a>
+      <span class="text-border-strong">·</span>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 hover:text-link"
+        @click="openPrivacy"
+      >
+        <DsIcon :path="mdiShieldLockOutline" size="1.1rem" />
+        {{ $t("privacy") }}
+      </button>
     </footer>
   </div>
 </template>

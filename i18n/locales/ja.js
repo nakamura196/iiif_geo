@@ -3,6 +3,7 @@ export default {
     "menu": "メニュー",
     "help": "ヘルプ",
     "news": "お知らせ",
+    "privacy": "プライバシーポリシー",
     "search": "検索",
     "list": "一覧",
     "name": "名前",

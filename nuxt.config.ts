@@ -22,7 +22,15 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: ["@nuxt/content", "@nuxtjs/i18n"],
+  modules: ["@nuxt/content", "@nuxtjs/i18n", "nuxt-gtag"],
+
+  gtag: {
+    // 計測 ID は公開値。本番ビルド (`pnpm generate` → .env.production) の
+    // NUXT_PUBLIC_GTAG_ID から runtimeConfig.public.gtag.id へ自動注入される。
+    // dev では enabled:false なので gtag.js を一切読み込まず誤計測しない。
+    // SPA のページ遷移は GA4「拡張計測（履歴イベント）」が自動追跡する。
+    enabled: process.env.NODE_ENV === "production",
+  },
 
   typescript: {
     // 開発サーバーでのインライン型チェックは無効化（vue-tsc/Volar のプラグイン

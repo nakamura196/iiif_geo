@@ -23,6 +23,7 @@
     "@types/splitpanes": "^2.2.6",
     "@types/uuid": "^10.0.0",
     "nuxt": "^4.0.3",
+    "nuxt-gtag": "^4.1.0",
     "tailwindcss": "^4.3.0",
     "vitest": "^4.1.7",
     "vue-tsc": "^2.2.8"
