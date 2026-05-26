@@ -306,6 +306,15 @@ const heroGlow =
         GitHub
       </a>
       <span class="text-border-strong">·</span>
+      <a
+        href="https://nakamura196.github.io/portfolio/"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-1.5 no-underline hover:text-link"
+      >
+        {{ $t("otherTools") }}
+      </a>
+      <span class="text-border-strong">·</span>
       <button
         type="button"
         class="inline-flex items-center gap-1.5 hover:text-link"

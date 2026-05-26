@@ -4,6 +4,7 @@ export default {
     "help": "ヘルプ",
     "news": "お知らせ",
     "privacy": "プライバシーポリシー",
+    "otherTools": "他のツール",
     "search": "検索",
     "list": "一覧",
     "name": "名前",

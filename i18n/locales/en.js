@@ -4,6 +4,7 @@ export default {
     "help": "Help",
     "news": "News",
     "privacy": "Privacy Policy",
+    "otherTools": "Other tools",
     "search": "Search",
     "list": "List",
     "name": "Name",
