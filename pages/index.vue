@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import { useViewer } from "~/composables/useViewer";
+import { normalizeManifestUrl } from "~/utils/manifestUrl";
 const { ready, snackbar, display } = useViewer();
 const route = useRoute();
 
+// Reload the manifest only when the `u` query parameter changes.
+//
+// Watching `route.fullPath` (the previous behaviour) re-ran display() on every
+// route change — including a language switch (`/?u=…` → `/ja?u=…`), where `u`
+// is unchanged. That needlessly tore down and rebuilt the panes, desyncing the
+// view restored from the URL (center / rotation / selected id). Keying on `u`
+// keeps the language switch purely reactive (translations update in place) and
+// leaves the viewer state untouched. See utils/manifestUrl.ts.
 watch(
-  () => route.fullPath,
-  () => {
-    display(route.query.u as string);
+  () => normalizeManifestUrl(route.query.u as string | string[] | undefined),
+  (url) => {
+    display(url);
   },
   { immediate: true }
 );
