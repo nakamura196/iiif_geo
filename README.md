@@ -16,7 +16,7 @@ IIIF Viewer with [IIIF Georeference Extension](https://iiif.io/api/extension/geo
 
 ### 🌐 Website
 
-[Visit the demo page](https://nakamura196.github.io/iiif_geo/) to try it out.
+[Visit the demo page](https://geo.ldas.jp/) to try it out.
 
 ### 📖 Data
 
@@ -29,15 +29,15 @@ Prepare a JSON file following the Full Canvas Example of the Georeference Extens
 https://iiif.io/api/extension/georef/#41-full-canvas-example
 
 Example Canvas file:
-- https://nakamura196.github.io/iiif_geo/canvas.json
-- https://nakamura196.github.io/iiif_geo/canvas_extra.json
+- https://geo.ldas.jp/canvas.json
+- https://geo.ldas.jp/canvas_extra.json
 
 #### 2. IIIF Manifest with Georeference Extension
 
 You can also use a full IIIF Presentation API 3.0 Manifest that includes one or more Canvases with georeference annotations.
 
 Example Manifest file:
-- https://nakamura196.github.io/iiif_geo/manifest.json
+- https://geo.ldas.jp/manifest.json
 
 The viewer will automatically detect whether the provided URL is a Manifest or a Canvas and display the georeferenced content accordingly.
 
@@ -128,7 +128,7 @@ These fields are used for the popup of the marker and the search function.
 
 #### Example
 
-https://nakamura196.github.io/iiif_geo/canvas_extra.json
+https://geo.ldas.jp/canvas_extra.json
 
 #### Marker popup
 
@@ -210,7 +210,7 @@ IIIF [Georeference Extension](https://iiif.io/api/extension/georef/) に対応�
 
 ### 🌐 ウェブサイト
 
-[デモページ](https://nakamura196.github.io/iiif_geo/) で実際にお試しいただけます。
+[デモページ](https://geo.ldas.jp/) で実際にお試しいただけます。
 
 ### 📖 データ
 
@@ -223,15 +223,15 @@ Georeference Extension の Full Canvas Example に従った JSON ファイルを
 https://iiif.io/api/extension/georef/#41-full-canvas-example
 
 Canvas ファイルの例:
-- https://nakamura196.github.io/iiif_geo/canvas.json
-- https://nakamura196.github.io/iiif_geo/canvas_extra.json
+- https://geo.ldas.jp/canvas.json
+- https://geo.ldas.jp/canvas_extra.json
 
 #### 2. Georeference Extension 付きの IIIF Manifest
 
 ジオリファレンスのアノテーションを含む 1 つ以上の Canvas を持つ、IIIF Presentation API 3.0 の Manifest も利用できます。
 
 Manifest ファイルの例:
-- https://nakamura196.github.io/iiif_geo/manifest.json
+- https://geo.ldas.jp/manifest.json
 
 ビューアは、指定された URL が Manifest か Canvas かを自動的に判定し、ジオリファレンスされたコンテンツを表示します。
 
@@ -322,7 +322,7 @@ Feature データには追加のメタデータフィールドを付与できま
 
 #### 例
 
-https://nakamura196.github.io/iiif_geo/canvas_extra.json
+https://geo.ldas.jp/canvas_extra.json
 
 #### マーカーのポップアップ
 
