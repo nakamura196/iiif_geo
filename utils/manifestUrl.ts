@@ -19,8 +19,28 @@
 export function normalizeManifestUrl(
   u: string | string[] | undefined | null
 ): string {
-  if (Array.isArray(u)) return u[0] ?? "";
-  return u ?? "";
+  const raw = Array.isArray(u) ? (u[0] ?? "") : (u ?? "");
+  return rewriteOldHost(raw);
+}
+
+/**
+ * The viewer's own sample files moved from nakamura196.github.io/iiif_geo/ to
+ * geo.ldas.jp/ (2026-09). GitHub Pages answers the old address with a 301 that
+ * carries no `Access-Control-Allow-Origin`, and a browser refuses to follow a
+ * cross-origin redirect without it — so `?u=<old address>` fails to load even
+ * though the redirect itself works. Point such URLs straight at the new host.
+ */
+const OLD_BASES = [
+  "https://nakamura196.github.io/iiif_geo/",
+  "http://nakamura196.github.io/iiif_geo/",
+];
+const NEW_BASE = "https://geo.ldas.jp/";
+
+export function rewriteOldHost(url: string): string {
+  for (const old of OLD_BASES) {
+    if (url.startsWith(old)) return NEW_BASE + url.slice(old.length);
+  }
+  return url;
 }
 
 /**
