@@ -2,6 +2,14 @@
 
 IIIF Viewer with [IIIF Georeference Extension](https://iiif.io/api/extension/georef/)
 
+> **This viewer has moved to [IIIF Kasane](https://kasane.ldas.jp/en/georef/) (2026-10).**
+> geo.ldas.jp now forwards every page, with its URL parameters, to Kasane's `/georef` page.
+> The sample files (`manifest.json`, `canvas.json`, `canvas_extra.json`) stay at geo.ldas.jp.
+> The Nuxt source below is kept for reference and is no longer deployed.
+>
+> **このビューアは [IIIF Kasane](https://kasane.ldas.jp/ja/georef/) に移りました（2026年10月）。**
+> geo.ldas.jp のページは URL の引数ごと Kasane の `/georef` へ転送します。サンプルの JSON は geo.ldas.jp に残します。
+
 [English](#english) | [日本語](#日本語)
 
 <img src="public/assets/images/demo.gif" width="100%" title="demo">
