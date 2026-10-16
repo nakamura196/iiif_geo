@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Moved to IIIF Kasane</title>
+    <link rel="canonical" href="https://kasane.ldas.jp/en/georef/" />
+    <script>
+      // geo.ldas.jp moved into IIIF Kasane's /georef page (2026-10).
+      // GitHub Pages cannot answer with an HTTP 301, so every page of the old
+      // site is this file: it carries the query string over (Kasane reads the
+      // same parameters: u, mapZoom, mapLat, mapLng, zoom, centerX, centerY,
+      // rotation, id, lat, lng, autoRotateOnSelect ...) and picks the language.
+      // /overlay goes to the same page, which has its own image overlay.
+      (function () {
+        var path = window.location.pathname;
+        var lang;
+        if (/^\/ja(\/|$)/.test(path)) lang = 'ja';
+        else if (/^\/en(\/|$)/.test(path)) lang = 'en';
+        else {
+          // The old site (default English) sent visitors at / to the language
+          // they had chosen before (cookie) or to their browser's language.
+          var m = document.cookie.match(/(?:^|;\s*)i18n_redirected=(ja|en)/);
+          if (m) lang = m[1];
+          else lang = (navigator.language || '').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en';
+        }
+
+        // Sample files under the pre-2026-09 address are fetched from geo.ldas.jp
+        // instead: the old host answers with a 301 that has no CORS header.
+        var search = window.location.search;
+        var params = new URLSearchParams(search);
+        var u = params.get('u');
+        var oldBases = ['https://nakamura196.github.io/iiif_geo/', 'http://nakamura196.github.io/iiif_geo/'];
+        for (var i = 0; u && i < oldBases.length; i++) {
+          if (u.indexOf(oldBases[i]) === 0) {
+            params.set('u', 'https://geo.ldas.jp/' + u.slice(oldBases[i].length));
+            search = '?' + params.toString();
+            break;
+          }
+        }
+
+        window.location.replace('https://kasane.ldas.jp/' + lang + '/georef/' + search + window.location.hash);
+      })();
+    </script>
+    <meta http-equiv="refresh" content="0; url=https://kasane.ldas.jp/en/georef/" />
+  </head>
+  <body>
+    <p>IIIF Georeference Viewer has moved to <a href="https://kasane.ldas.jp/en/georef/">IIIF Kasane</a>.</p>
+    <p lang="ja">IIIF Georeference Viewer は <a href="https://kasane.ldas.jp/ja/georef/">IIIF Kasane</a> に移りました。</p>
+  </body>
+</html>
